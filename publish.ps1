@@ -54,13 +54,27 @@ function ConvertTo-JsonString([string]$Value) {
     return '"' + $s + '"'
 }
 
-# 四个原模板（导出用），随版本一起归档，方便下载核对
+# 四个原模板（导出用）+ 两个交付说明文档，随版本一起归档，方便下载核对
 $TemplateNames = @(
     '施工日期（项目版）-0920.docx',
     '施工日志（个人版）-0920.docx',
     '质量日志-项目版-0918.docx',
     '质量日志-个人版_0918.docx'
 )
+# 交付说明文档（与演示同版本归档，另在 docs/ 常驻一份）
+$DocNames = @(
+    '施工日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx',
+    '质量日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx'
+)
+# 文件用途提示
+$FileHints = @{
+    '施工日期（项目版）-0920.docx' = '施工日志 · 项目版'
+    '施工日志（个人版）-0920.docx' = '施工日志 · 个人版'
+    '质量日志-项目版-0918.docx'   = '质量日志 · 项目版'
+    '质量日志-个人版_0918.docx'   = '质量日志 · 个人版'
+    '施工日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx' = '施工日志 字段级实现说明'
+    '质量日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx' = '质量日志 字段级实现说明'
+}
 
 # ---------------------------------------------------------------- 1. 归档源文件
 $verName = ''
@@ -103,13 +117,32 @@ if (-not $RenderOnly) {
         Write-Host "提示：工作区里没找到四个原模板 docx，本次未归档模板。" -ForegroundColor Yellow
     }
 
+    # 交付说明文档：归档进版本目录，并在 docs/ 常驻一份（地址不变，便于长期引用）
+    $docCount = 0
+    $docsRoot = Join-Path $root 'docs'
+    New-Item -ItemType Directory -Force -Path $docsRoot | Out-Null
+    foreach ($dn in $DocNames) {
+        $dp = Join-Path $workspace $dn
+        if (Test-Path $dp) {
+            Copy-Item $dp (Join-Path $verDir $dn) -Force
+            Copy-Item $dp (Join-Path $docsRoot $dn) -Force
+            $docCount++
+        }
+    }
+    if ($docCount -eq 0) {
+        Write-Host "提示：工作区里没找到交付说明文档，本次未归档。" -ForegroundColor Yellow
+    } else {
+        Write-Host "已归档交付说明文档 $docCount 个（另存 docs/）" -ForegroundColor Green
+    }
+
     $meta = '{' + "`n" +
             '  "version": ' + (ConvertTo-JsonString $prdVer) + ',' + "`n" +
             '  "date": ' + (ConvertTo-JsonString $today) + ',' + "`n" +
             '  "note": ' + (ConvertTo-JsonString $Note) + ',' + "`n" +
             '  "source": ' + (ConvertTo-JsonString (Split-Path $Source -Leaf)) + ',' + "`n" +
             '  "htmlFile": ' + (ConvertTo-JsonString $htmlFile) + ',' + "`n" +
-            '  "templates": ' + $tplCount + "`n" +
+            '  "templates": ' + $tplCount + ',' + "`n" +
+            '  "docs": ' + $docCount + "`n" +
             '}' + "`n"
     Write-Utf8NoBom (Join-Path $verDir 'meta.json') $meta
     Write-Host "已归档版本：$verName（模板 $tplCount 个）" -ForegroundColor Green
@@ -175,12 +208,28 @@ foreach ($tn in $TemplateNames) {
     $tp = if ($latest) { Join-Path (Join-Path $root "versions\$($latest.Dir)") $tn } else { '' }
     $size = if ($tp -and (Test-Path $tp)) { '{0:N0} KB' -f ((Get-Item $tp).Length / 1KB) } else { '未归档' }
     $href = if ($latest) { "versions/$($latest.Dir)/$tn" } else { '#' }
-    $tplFileRows += '<li class="tplrow"><span class="tplname">' + [System.Net.WebUtility]::HtmlEncode($tn) + '</span>' +
+    $hint = if ($FileHints.ContainsKey($tn)) { $FileHints[$tn] } else { '' }
+    $tplFileRows += '<li class="tplrow"><span class="tplname">' + [System.Net.WebUtility]::HtmlEncode($tn) +
+                    '<span class="tplhint">' + [System.Net.WebUtility]::HtmlEncode($hint) + '</span></span>' +
                     '<span class="tplsize">' + $size + '</span>' +
                     '<a class="btn ghost" href="' + $href + '" download>下载</a></li>' + "`n"
 }
 if (-not $tplFileRows) {
     $tplFileRows = '<li class="tplrow"><span class="tplname">暂无归档模板</span></li>' + "`n"
+}
+
+$docFileRows = ''
+foreach ($dn in $DocNames) {
+    $dp = Join-Path (Join-Path $root 'docs') $dn
+    $size = if (Test-Path $dp) { '{0:N0} KB' -f ((Get-Item $dp).Length / 1KB) } else { '未归档' }
+    $hint = if ($FileHints.ContainsKey($dn)) { $FileHints[$dn] } else { '' }
+    $docFileRows += '<li class="tplrow"><span class="tplname">' + [System.Net.WebUtility]::HtmlEncode($dn) +
+                    '<span class="tplhint">' + [System.Net.WebUtility]::HtmlEncode($hint) + '</span></span>' +
+                    '<span class="tplsize">' + $size + '</span>' +
+                    '<a class="btn ghost" href="docs/' + $dn + '" download>下载</a></li>' + "`n"
+}
+if (-not $docFileRows) {
+    $docFileRows = '<li class="tplrow"><span class="tplname">暂无交付说明文档</span></li>' + "`n"
 }
 $tplVerLabel = if ($latest) { 'V' + $latest.Ver + '（' + $latest.Date + '）' } else { '—' }
 $updatedAt = (Get-Date).ToString('yyyy-MM-dd HH:mm')
@@ -300,6 +349,8 @@ li.tplrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:
 li.tplrow:last-child{border-bottom:0}
 .tplname{flex:1;font-weight:500;color:#162a44;word-break:break-all}
 .tplsize{color:#9aa6b6;font-size:12px;white-space:nowrap}
+.tplhint{display:block;color:#6b7c92;font-size:12px;font-weight:400;margin-top:2px}
+h3{font-size:16px;margin:26px 0 12px;color:#162a44}
 .btn{display:inline-block;padding:8px 16px;border-radius:4px;background:#175bdd;color:#fff;text-decoration:none;font-weight:500;white-space:nowrap}
 .btn:hover{background:#1450c4}
 .btn.ghost{background:#fff;color:#175bdd;border:1px solid #b9cff5}
@@ -322,6 +373,13 @@ footer{margin-top:28px;color:#86909c;font-size:12px;text-align:center}
 {{TPLFILES}}    </ul>
   </div>
 
+  <h3>交付说明文档</h3>
+  <div class="card">
+    <div class="meta">字段级实现说明，与演示同版本归档；另在 <code>docs/</code> 下常驻一份，地址长期不变</div>
+    <ul class="tplist">
+{{DOCFILES}}    </ul>
+  </div>
+
   <div class="tips">
     <p><b>四个模板分别对应</b>：<code>施工日期（项目版）</code> → 施工日志·项目版；<code>施工日志（个人版）</code> → 施工日志·个人版；<code>质量日志-项目版</code> → 质量日志·项目版；<code>质量日志-个人版</code> → 质量日志·个人版。</p>
     <p><b>用途</b>：可以拿它们和演示里导出的 Word 逐字比对 —— 除了被替换成数据的字段，其余版式应当一模一样。</p>
@@ -336,8 +394,9 @@ footer{margin-top:28px;color:#86909c;font-size:12px;text-align:center}
 $tplOut = $tplPage
 $tplOut = $tplOut.Replace('{{TPLVER}}', $tplVerLabel)
 $tplOut = $tplOut.Replace('{{TPLFILES}}', $tplFileRows)
+$tplOut = $tplOut.Replace('{{DOCFILES}}', $docFileRows)
 Write-Utf8NoBom (Join-Path $root 'templates.html') $tplOut
-Write-Host "已重建模板下载页（$($TemplateNames.Count) 个模板）" -ForegroundColor Green
+Write-Host "已重建模板下载页（$($TemplateNames.Count) 个模板 + $($DocNames.Count) 个交付说明文档）" -ForegroundColor Green
 
 if ($RenderOnly) { return }
 
