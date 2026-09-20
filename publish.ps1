@@ -448,6 +448,23 @@ if ($NoPush) { Write-Host "已跳过推送（-NoPush）" -ForegroundColor Yellow
 
 $push = Invoke-Git @('-c', 'http.sslBackend=openssl', 'push', '-u', 'origin', 'HEAD')
 
+# 网络类失败（连不上 / 超时 / 重置）自动重试：国内访问 github.com 经常间歇性抽风。
+# 只对网络类错误重试，认证类错误不重试（重试也没用）。
+$netErr = 'Could not connect to server|Connection was reset|Failed to connect|timed out|timeout|Recv failure|Empty reply from server|The remote end hung up'
+if ($push.Code -ne 0 -and $push.Text -match $netErr) {
+    $delays = @(3, 8, 15, 25)
+    for ($i = 0; $i -lt $delays.Count; $i++) {
+        Write-Host ""
+        Write-Host "连不上 github.com（第 $($i + 1) 次）。$($delays[$i]) 秒后自动重试……" -ForegroundColor Yellow
+        Start-Sleep -Seconds $delays[$i]
+        $push = Invoke-Git @('-c', 'http.sslBackend=openssl', 'push', '-u', 'origin', 'HEAD')
+        if ($push.Code -eq 0) {
+            Write-Host "重试成功。" -ForegroundColor Green
+            break
+        }
+    }
+}
+
 # 远程已有提交（通常是建仓库时勾了 Add README）→ 自动合并后再推一次。
 # 报错形如：! [rejected]  HEAD -> main (fetch first)
 if ($push.Code -ne 0 -and $push.Text -match 'fetch first|non-fast-forward|\[rejected\]') {
@@ -465,6 +482,26 @@ if ($push.Code -ne 0 -and $push.Text -match 'fetch first|non-fast-forward|\[reje
         Write-Host "原始报错：$($pull.Text)" -ForegroundColor DarkGray
         throw "自动合并未完成"
     }
+}
+
+if ($push.Code -ne 0 -and $push.Text -match $netErr) {
+    Write-Host ""
+    Write-Host "暂时连不上 github.com（网络问题，不是内容或令牌的问题）。" -ForegroundColor Red
+    Write-Host "本次内容已经提交到本地，一条都不会丢。三种办法任选：" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "  ① 稍后重试：过几分钟再双击一次 发布更新.bat（脚本会先把本地待推送的提交推上去）" -ForegroundColor Cyan
+    Write-Host "  ② 换网络：手机热点 / 关掉代理或 VPN 再试（国内到 github.com 经常被间歇性阻断）" -ForegroundColor Cyan
+    Write-Host "  ③ 先只提交不推送：以后网络好了再推" -ForegroundColor Cyan
+    Write-Host "       git -C `"$root`" push -u origin HEAD" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  诊断命令（在 PowerShell 里跑）：" -ForegroundColor Cyan
+    Write-Host "       Test-NetConnection github.com -Port 443 -InformationLevel Detailed" -ForegroundColor DarkGray
+    Write-Host "       Resolve-DnsName github.com -Type A | Select-Object IPAddress" -ForegroundColor DarkGray
+    Write-Host "  如果换 DNS 能通：把本机 DNS 改成 223.5.5.5 / 119.29.29.29 再试" -ForegroundColor Cyan
+    Write-Host "  如果 SSH 22 通、443 不通：改用 SSH 推送（首次配置.bat 里换成 git@github.com:账号/仓库.git）" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "原始报错：$($push.Text)" -ForegroundColor DarkGray
+    throw "推送未完成（网络原因）"
 }
 
 if ($push.Code -ne 0) {
