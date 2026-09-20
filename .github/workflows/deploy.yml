@@ -35,8 +35,11 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          # 整个仓库根目录就是站点根目录
+          # 仓库根目录就是站点根目录；排除 .git 与样例文档，只发布真正的站点文件
           path: .
+          exclude: |
+            .git/**
+            samples/**
 
       - id: deployment
         uses: actions/deploy-pages@v4
