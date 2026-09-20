@@ -1,33 +1,18 @@
-# 雄安科创园 · 施工/质量日志交互演示
+# 雄安科创园 · 施工/质量日志 演示站
 
-一个**单文件**的交互演示页：台账（项目版父 / 个人版子）→ 填写 → 预览 → **导出带数据的 Word 日志**。
-导出是在**原模板文件上只替换文字**，版式与原文件完全一致。
+一个**版本化发布**的静态站点：地址固定不变，每次发布只更新内容。
+做法与「北京无线局项目 / demo-site」完全一致。
 
-在线地址（部署后）：
-```
-https://<你的用户名>.github.io/<仓库名>/
-```
-
----
-
-## 仓库内容
-
-```
-index.html                       演示页（单文件，内嵌四个原模板，可离线打开）
-samples/                         四个日志的导出样例（原版式 + 数据），可直接下载查看
-  ├─ 施工日期（项目版）-0920.docx
-  ├─ 施工日志（个人版）-0920.docx
-  ├─ 质量日志-项目版-0918.docx
-  └─ 质量日志-个人版_0918.docx
-.github/workflows/deploy.yml     推送 main 后自动发布到 GitHub Pages
-.nojekyll                        让 GitHub Pages 不做 Jekyll 处理
-```
+- 打开演示：`latest.html`（永远是最新版）
+- 历史版本：`versions/<日期>-v<版本>/`（每一版都能单独打开、单独下载）
+- 首次配置：双击 `首次配置.bat`
+- 日常更新：双击 `发布更新.bat`，填写更新说明即可
 
 ---
 
-## 部署步骤（在本机执行）
+## 一、首次配置（只做一次）
 
-### 1. 在 GitHub 新建一个空仓库
+### 1. 在 GitHub 建一个空仓库
 
 打开 https://github.com/new
 
@@ -35,83 +20,148 @@ samples/                         四个日志的导出样例（原版式 + 数�
 - 可见性：**Public**（免费版 GitHub Pages 需要公开仓库）
 - **不要**勾选 Add README / .gitignore / license（保持空仓库）
 
-### 2. 在本机把 site 目录推上去
+### 2. 双击 `首次配置.bat`
 
-在 PowerShell 里执行（把 `你的用户名` 和 `xiongan-log-demo` 换成实际值）：
+会依次问你：
 
-```powershell
-cd "D:\雄安\site"
+| 提示 | 填什么 |
+|---|---|
+| GitHub 账号名 | `Windsky-alt` |
+| 仓库名 | 你刚建的名字，例如 `xiongan-log-demo` |
+| 提交用的姓名 | 你的名字（只用于 git 提交记录） |
+| 提交用的邮箱 | 你的邮箱（只用于 git 提交记录） |
+| 粘贴令牌 | **直接回车跳过**（推荐） |
 
-git init -b main
-git add -A
-git commit -m "雄安科创园 施工/质量日志交互演示：台账 + 导出带数据 Word"
+> 跳过令牌后，第一次推送会弹出浏览器登录窗口，选 **Browser / 浏览器**，
+> 在网页里点一下 **Authorize** 授权即可，不用去建令牌。
+> 授权一次以后就记住了，以后发布不再登录。
 
-git remote add origin https://github.com/你的用户名/xiongan-log-demo.git
-git push -u origin main
-```
-
-> 如果 push 时要求登录：GitHub 早已不支持账号密码。
-> 请用 **Personal Access Token**（Settings → Developer settings → Personal access tokens → Fine-grained tokens，
-> 勾上该仓库的 `Contents: Read and write`），在密码位置粘贴 token。
-> 或者本机装 GitHub CLI 后执行 `gh auth login`，再用 `gh repo create` 建仓推送。
-
-### 3. 打开 Pages
-
-仓库页面 → **Settings** → 左侧 **Pages** → Source 选 **GitHub Actions**（不要选 Deploy from a branch）。
-
-做完这一步，刚才的 push 会自动触发 `deploy.yml`。到仓库 **Actions** 标签页能看到运行进度，
-变绿后访问：
+脚本会顺带设好两个**必须**的本地配置：
 
 ```
-https://你的用户名.github.io/xiongan-log-demo/
+http.sslBackend = openssl                    # 本机 schannel 握手会失败
+credential.gitHubAuthModes = browser         # 避免被要求输入账号密码
 ```
 
----
+### 3. 双击 `发布更新.bat` 推第一次
 
-## 以后怎么更新
+填个更新说明（可留空），跑完仓库里才会有 `main` 分支。
 
-改完演示页后，把新版本复制进 `site` 再提交即可：
+### 4. 开启 GitHub Pages
 
-```powershell
-# 1) 把最新的演示页覆盖到站点
-Copy-Item "D:\雄安\雄安科创园_施工日志演示_v4.html" "D:\雄安\site\index.html" -Force
+仓库页面 → **Settings** → 左侧 **Pages**
 
-# 2) 提交并推送（自动重新部署）
-cd "D:\雄安\site"
-git add -A
-git commit -m "更新演示页"
-git push
+- **Source** 选 **Deploy from a branch**
+- **Branch** 选 **main**，目录选 **/ (root)**
+- 点 **Save**
+
+> 注意：是 **Deploy from a branch**，**不是** GitHub Actions。
+> 这套站点是纯静态文件，用分支发布最简单；反而第一次跑之前分支还不存在，选不到。
+
+等 1～2 分钟，访问：
+
 ```
-
-推送后大约 30～60 秒，线上就是最新版（Actions 变绿即生效）。
-
-> 说明：`index.html` 里内嵌了四个模板，所以每次改动都会产生约 400KB+ 的 diff，仓库体积增长偏快。
-> 如果哪天觉得仓库太大，可以改成把模板放到 `templates/` 目录、页面运行时 `fetch` 加载，
-> 那样页面只有 100KB 左右、模板永不改动，git 历史会干净很多。
-
----
-
-## 本地预览
-
-`index.html` 是自包含的，双击就能用（导出功能在本地 `file://` 下也能工作）。
-如果想让本地预览和线上完全一致，起一个静态服务：
-
-```powershell
-cd "D:\雄安\site"
-python -m http.server 8080     # 然后访问 http://127.0.0.1:8080/
+https://Windsky-alt.github.io/你的仓库名/
+https://Windsky-alt.github.io/你的仓库名/latest.html
 ```
 
 ---
 
-## 使用说明
+## 二、日常更新
 
-1. 左侧切「施工日志 / 质量日志」
-2. 台账是**父子结构**：父行是项目版（每天一条、自动生成），展开后是按「人员配置」自动生成的个人版子日志
-3. 操作栏统一为 **填写 / 预览 / 删除**
-4. 左侧勾选框可多选，点上方 **导出** 批量导出 Word
-5. 「本周施工计划执行情况」里带红色 `*` 的是必填，留空会拦截保存
-6. 导出的文件名形如 `2026-09-19_施工日志_个人版_张三.docx`
+1. 改好工作区里的演示页（`D:\雄安\雄安科创园_施工日志演示_v4.html`）
+2. 双击本目录下的 **`发布更新.bat`**
+3. 按提示输入本次更新说明（可留空直接回车）
 
-导出的 Word 用四个原模板：
-`施工日期（项目版）-0920.docx`、`施工日志（个人版）-0920.docx`、
-`质量日志-项目版-0918.docx`、`质量日志-个人版_0918.docx`。
+脚本会自动：
+
+- 把演示页快照归档到 `versions\<今天>-v<版本>\`
+- 覆盖 `latest.html`
+- 把四个原模板 docx 一起归档（方便在网页上下载核对）
+- 重建首页 `index.html`（最新版卡片 + 历史版本表格）
+- `git add / commit / push`
+
+**地址不变**，约 30 秒后线上即最新版。
+
+### 想让这次更新单独占一行历史？
+
+改演示页里的版本号：
+
+```html
+<div class="app" data-prd-version="1.0" data-updated="2026-09-20">
+```
+
+把它改成 `1.1` 再发布，历史列表就会多一行 `V1.1`。
+不改的话，同一天发布会**覆盖当天那一版**（脚本会提示）。
+
+---
+
+## 三、目录说明
+
+```
+index.html                      首页（由 publish.ps1 自动生成，不要手改）
+latest.html                     最新版演示（固定入口）
+versions/
+  2026-09-20-v1.0/
+    index.html                  该版本的演示页（浏览器打开直接显示）
+    施工日志演示-V1.0.html        同一份内容，带扩展名，供「下载」用
+    施工日期（项目版）-0920.docx   四个原模板，随版本归档
+    施工日志（个人版）-0920.docx
+    质量日志-项目版-0918.docx
+    质量日志-个人版_0918.docx
+    meta.json                   版本号 / 日期 / 更新说明
+publish.ps1                     发布脚本（双击 bat 时调用）
+setup.ps1                       首次配置脚本
+fix-auth.ps1                    认证修复脚本
+首次配置.bat / 发布更新.bat / 修复登录.bat
+.nojekyll                       让 GitHub Pages 不做 Jekyll 处理
+```
+
+---
+
+## 四、出问题怎么办
+
+### 推送失败
+
+脚本会打印原始报错并给出对应处理。常见几种：
+
+| 报错 | 原因与处理 |
+|---|---|
+| `Authentication failed` / `Repository not found` | 令牌过期，或令牌没勾选这个仓库 → 重新跑 `首次配置.bat` |
+| 弹出登录窗口 | 选 **Browser / 浏览器** → 网页里点 **Authorize** |
+| 被要求输入 Username / Password | Username 填账号名，Password **粘贴令牌**（不是账号密码） |
+| `Connection was reset` / `timeout` | 网络抖动，重跑一次；国内访问 GitHub 不稳时多试几次 |
+| `schannel: AcquireCredentialsHandle failed` | 双击 **`修复登录.bat`**，或执行 `git config --local http.sslBackend openssl` |
+
+### 网页打开是 404
+
+- Settings → Pages 里 Source 是否选了 **Deploy from a branch** + **main** + **/ (root)**
+- 仓库是否 **Public**
+- 第一次开启后要等 **1～2 分钟**
+- 刚 push 完看仓库里有没有 `index.html`（首页）—— 它是发布脚本生成的
+
+### 国内访问 github.io 很慢
+
+GitHub Pages 在国内确实不稳。如果实在打不开，
+可以把同一个仓库再推一份到 Gitee，用 Gitee Pages（国内秒开）：
+
+```powershell
+git remote add gitee https://gitee.com/你的用户名/仓库名.git
+git push gitee main
+```
+
+然后在 Gitee 仓库「服务 → Gitee Pages」里开启部署（需实名，且每次推送后要在网页点一次「更新」）。
+
+---
+
+## 五、这个演示是什么
+
+施工 / 质量日志的交互原型：
+
+- **台账**是父子结构：父行 = 项目版（每天一条，自动生成），展开后是按「人员配置」自动生成的个人版子日志
+- 操作栏统一为 **填写 / 预览 / 删除**
+- 左侧勾选框可多选，点上方 **导出** 批量导出 Word
+- 「本周施工计划执行情况」里带红色 `*` 的是必填，留空会拦截保存
+- 演示是**完全自包含的单文件 HTML**（四个 Word 模板以 base64 内嵌），无外部依赖，可离线打开、可直接转发
+- **导出**是在**原模板文件上只替换文字**，生成带数据的 Word 日志 ——
+  版式、字体、页边距、分页全部沿用原文件，一个字符都没动
