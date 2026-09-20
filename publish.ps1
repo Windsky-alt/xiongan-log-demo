@@ -149,7 +149,7 @@ foreach ($it in $items) {
     $link = "versions/$($it.Dir)/index.html"
     $htmlLink = "versions/$($it.Dir)/$($it.Html)"
     $tplCell = if ($it.Tpl -gt 0) {
-        '<a class="dl" href="versions/' + $it.Dir + '/施工日期（项目版）-0920.docx">模板</a>'
+        '<a class="dl" href="templates.html">4 个模板</a>'
     } else { '<span class="muted">—</span>' }
     $noteCell = if ($it.Note) { [System.Net.WebUtility]::HtmlEncode($it.Note) } else { '<span class="muted">—</span>' }
     $rows += '<tr><td class="ver">V' + $it.Ver + '</td><td>' + $it.Date + '</td><td>' + $noteCell + '</td>' +
@@ -164,9 +164,25 @@ $latestNote = if ($latest -and $latest.Note) { [System.Net.WebUtility]::HtmlEnco
 $latestHtml = if ($latest) {
     '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Html + '" download>下载演示文件（HTML）</a>'
 } else { '' }
+# 「下载原模板」指向独立的模板页（四个文件各一个下载按钮）
 $latestTpl = if ($latest -and $latest.Tpl -gt 0) {
-    '<a class="btn ghost" href="versions/' + $latest.Dir + '/施工日期（项目版）-0920.docx">下载原模板（Word）</a>'
+    '<a class="btn ghost" href="templates.html">下载原模板（Word，共 4 个）</a>'
 } else { '' }
+
+# 模板页要用的四个文件列表（含字节数，缺失的标出来）
+$tplFileRows = ''
+foreach ($tn in $TemplateNames) {
+    $tp = if ($latest) { Join-Path (Join-Path $root "versions\$($latest.Dir)") $tn } else { '' }
+    $size = if ($tp -and (Test-Path $tp)) { '{0:N0} KB' -f ((Get-Item $tp).Length / 1KB) } else { '未归档' }
+    $href = if ($latest) { "versions/$($latest.Dir)/$tn" } else { '#' }
+    $tplFileRows += '<li class="tplrow"><span class="tplname">' + [System.Net.WebUtility]::HtmlEncode($tn) + '</span>' +
+                    '<span class="tplsize">' + $size + '</span>' +
+                    '<a class="btn ghost" href="' + $href + '" download>下载</a></li>' + "`n"
+}
+if (-not $tplFileRows) {
+    $tplFileRows = '<li class="tplrow"><span class="tplname">暂无归档模板</span></li>' + "`n"
+}
+$tplVerLabel = if ($latest) { 'V' + $latest.Ver + '（' + $latest.Date + '）' } else { '—' }
 $updatedAt = (Get-Date).ToString('yyyy-MM-dd HH:mm')
 
 $tpl = @'
@@ -237,7 +253,8 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
   <div class="tips">
     <p><b>地址说明</b>：<code>latest.html</code> 始终指向最新版，可长期作为固定入口；<code>versions/</code> 下是按日期归档的历史快照，用于回溯「当时那一版长什么样」。</p>
     <p><b>下载演示文件</b>：演示是<b>完全自包含的单文件 HTML</b>（四个 Word 模板已内嵌为 base64，无外部 JS/CSS/图片依赖）。点「下载演示文件（HTML）」保存到本地后，双击即可离线打开，也能直接转发给别人。</p>
-    <p><b>关于导出</b>：演示里的「导出」会在<b>原模板文件上只替换文字</b>，生成带数据的 Word 日志，版式与原文件完全一致。四个原模板随版本一起归档，可点右侧「模板」下载核对。</p>
+    <p><b>关于导出</b>：演示里的「导出」会在<b>原模板文件上只替换文字</b>，生成带数据的 Word 日志，版式与原文件完全一致。</p>
+    <p><b>原模板下载</b>：四个原模板随版本一起归档 —— 点上方「下载原模板（Word，共 4 个）」进入模板页，可分别下载：施工日期（项目版）、施工日志（个人版）、质量日志（项目版）、质量日志（个人版）。</p>
     <p><b>如何更新</b>：在本地 <code>demo-site</code> 目录双击 <code>发布更新.bat</code>，填写更新说明即可。地址不变，无需再逐个发文件。</p>
   </div>
 
@@ -259,6 +276,68 @@ $out = $out.Replace('{{LATESTTPL}}', $latestTpl)
 $out = $out.Replace('{{ROWS}}', $rows)
 Write-Utf8NoBom (Join-Path $root 'index.html') $out
 Write-Host "已重建首页（共 $($items.Count) 个版本）" -ForegroundColor Green
+
+# 重建模板下载页
+$tplPage = @'
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>原模板下载 · 雄安科创园 施工/质量日志</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.7 "Microsoft YaHei",system-ui,sans-serif;color:#26364d;background:#f4f7fb}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 60px}
+h1{font-size:22px;margin:0 0 6px;color:#162a44}
+.sub{color:#6b7c92;margin:0 0 24px}
+.back{display:inline-block;margin-bottom:18px;color:#175bdd;text-decoration:none;font-size:13px}
+.back:hover{text-decoration:underline}
+.card{background:#fff;border:1px solid #dce7f7;border-radius:8px;padding:18px 22px;box-shadow:0 6px 20px rgba(23,91,221,.06)}
+.meta{color:#6b7c92;font-size:13px;margin-bottom:14px}
+ul.tplist{list-style:none;margin:0;padding:0}
+li.tplrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #eef2f8}
+li.tplrow:last-child{border-bottom:0}
+.tplname{flex:1;font-weight:500;color:#162a44;word-break:break-all}
+.tplsize{color:#9aa6b6;font-size:12px;white-space:nowrap}
+.btn{display:inline-block;padding:8px 16px;border-radius:4px;background:#175bdd;color:#fff;text-decoration:none;font-weight:500;white-space:nowrap}
+.btn:hover{background:#1450c4}
+.btn.ghost{background:#fff;color:#175bdd;border:1px solid #b9cff5}
+.btn.ghost:hover{background:#f2f7ff}
+.tips{margin-top:22px;padding:16px 18px;background:#fff;border:1px solid #e2e9f3;border-radius:6px;color:#4e5969;font-size:13px}
+.tips b{color:#175bdd}
+code{background:#f2f4f7;padding:1px 5px;border-radius:3px;font-family:Consolas,monospace}
+footer{margin-top:28px;color:#86909c;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 返回首页</a>
+  <h1>原模板下载</h1>
+  <p class="sub">演示里的「导出」就是在下面这四个原模板上只替换文字生成的，版式与原文件完全一致。</p>
+
+  <div class="card">
+    <div class="meta">对应版本：{{TPLVER}}</div>
+    <ul class="tplist">
+{{TPLFILES}}    </ul>
+  </div>
+
+  <div class="tips">
+    <p><b>四个模板分别对应</b>：<code>施工日期（项目版）</code> → 施工日志·项目版；<code>施工日志（个人版）</code> → 施工日志·个人版；<code>质量日志-项目版</code> → 质量日志·项目版；<code>质量日志-个人版</code> → 质量日志·个人版。</p>
+    <p><b>用途</b>：可以拿它们和演示里导出的 Word 逐字比对 —— 除了被替换成数据的字段，其余版式应当一模一样。</p>
+    <p><b>提示</b>：浏览器可能会问「是否保留多个文件」，逐个点下载即可。</p>
+  </div>
+
+  <footer>雄安科创园指挥工地 · 施工/质量日志 演示原型</footer>
+</div>
+</body>
+</html>
+'@
+$tplOut = $tplPage
+$tplOut = $tplOut.Replace('{{TPLVER}}', $tplVerLabel)
+$tplOut = $tplOut.Replace('{{TPLFILES}}', $tplFileRows)
+Write-Utf8NoBom (Join-Path $root 'templates.html') $tplOut
+Write-Host "已重建模板下载页（$($TemplateNames.Count) 个模板）" -ForegroundColor Green
 
 if ($RenderOnly) { return }
 
