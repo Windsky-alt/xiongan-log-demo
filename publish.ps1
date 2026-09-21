@@ -63,7 +63,7 @@ $TemplateNames = @(
 )
 # 交付说明文档（与演示同版本归档，另在 docs/ 常驻一份）
 $DocNames = @(
-    '施工日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx',
+    '施工日志需求文档（0921）.docx',
     '质量日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx'
 )
 # 文件用途提示
@@ -72,9 +72,13 @@ $FileHints = @{
     '施工日志（个人版）-0920.docx' = '施工日志 · 个人版'
     '质量日志-项目版-0918.docx'   = '质量日志 · 项目版'
     '质量日志-个人版_0918.docx'   = '质量日志 · 个人版'
-    '施工日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx' = '施工日志 字段级实现说明'
+    '施工日志需求文档（0921）.docx' = '施工日志 需求与字段实现说明（最新）'
     '质量日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx' = '质量日志 字段级实现说明'
 }
+# 已下线的旧文件：每次发布从 docs/ 与新版本目录里清掉，避免下载页残留旧版
+$RetiredDocs = @(
+    '施工日志_开发实现说明版_项目版和个人版_字段级蓝白_交付版.docx'
+)
 
 # ---------------------------------------------------------------- 1. 归档源文件
 $verName = ''
@@ -133,6 +137,14 @@ if (-not $RenderOnly) {
         Write-Host "提示：工作区里没找到交付说明文档，本次未归档。" -ForegroundColor Yellow
     } else {
         Write-Host "已归档交付说明文档 $docCount 个（另存 docs/）" -ForegroundColor Green
+    }
+
+    # 清理已下线的旧文档：docs/ 里删掉；版本目录里也删掉（保持归档与新口径一致）
+    foreach ($rn in $RetiredDocs) {
+        $old1 = Join-Path $docsRoot $rn
+        $old2 = Join-Path $verDir $rn
+        if (Test-Path $old1) { Remove-Item $old1 -Force; Write-Host "已下线 docs\$rn" -ForegroundColor DarkGray }
+        if (Test-Path $old2) { Remove-Item $old2 -Force }
     }
 
     $meta = '{' + "`n" +
