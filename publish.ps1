@@ -66,6 +66,17 @@ $DocNames = @(
     '施工日志需求文档（0921）.docx',
     '质量日志需求文档0921.docx'
 )
+# 演示页运行时依赖。既复制到站点根目录，也随当前版本归档，
+# 使 latest.html 与 versions/<版本>/index.html 中的相对链接都能正常打开。
+$WebAssetNames = @(
+    '移动端_BIM管理原型.html',
+    'BIM模型_示意背景.png',
+    '三维交底_嵌入页.html',
+    '施工工艺交底_嵌入页.html',
+    '实测实量_测量记录台账_嵌入页.html',
+    '全景区域挂接_原型.html',
+    'BIM统一模型_交互原型.html'
+)
 # 文件用途提示
 $FileHints = @{
     '施工日期（项目版）-0920.docx' = '施工日志 · 项目版'
@@ -108,6 +119,20 @@ if (-not $RenderOnly) {
     # 带扩展名的独立文件名：浏览器点「下载演示文件」时才能存成 .html
     $htmlFile = "施工日志演示-V$prdVer.html"
     Copy-Item $Source (Join-Path $verDir $htmlFile) -Force
+
+    # 同步演示页依赖，避免发布后移动端入口、BIM 页面及业务嵌入页出现 404。
+    $assetCount = 0
+    foreach ($an in $WebAssetNames) {
+        $ap = Join-Path $workspace $an
+        if (Test-Path $ap) {
+            Copy-Item $ap (Join-Path $root $an) -Force
+            Copy-Item $ap (Join-Path $verDir $an) -Force
+            $assetCount++
+        } else {
+            Write-Host "提示：未找到演示依赖 $an" -ForegroundColor Yellow
+        }
+    }
+    Write-Host "已同步演示依赖 $assetCount 个" -ForegroundColor Green
 
     # 归档四个原模板
     $tplCount = 0
@@ -154,6 +179,7 @@ if (-not $RenderOnly) {
             '  "note": ' + (ConvertTo-JsonString $Note) + ',' + "`n" +
             '  "source": ' + (ConvertTo-JsonString (Split-Path $Source -Leaf)) + ',' + "`n" +
             '  "htmlFile": ' + (ConvertTo-JsonString $htmlFile) + ',' + "`n" +
+            '  "assets": ' + $assetCount + ',' + "`n" +
             '  "templates": ' + $tplCount + ',' + "`n" +
             '  "docs": ' + $docCount + "`n" +
             '}' + "`n"

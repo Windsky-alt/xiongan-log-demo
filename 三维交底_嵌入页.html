@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>三维交底</title>
+<style>
+html,body{margin:0;min-height:100%;background:#fff}
+#bim-brief{border:0!important;background:#fff!important;min-height:100%!important}
+#bim-brief>header,#bim-brief .shell>aside,#bim-brief .tabs{display:none!important}
+#bim-brief .shell{display:block!important}
+#bim-brief .shell>main{border-radius:0!important;min-height:100%!important}
+#bim-brief .shell .content{padding:0!important}
+#bim-brief .briefing-layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:570px}
+#bim-brief .group-pane{border-right:1px solid #e7edf5;padding:22px 14px 22px 20px;background:#fff}
+#bim-brief .group-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;color:#26364d;margin:0 0 20px;padding:0 5px}
+#bim-brief .group-head button{padding:3px 9px;font-size:19px;line-height:1.2}
+#bim-brief .group-tree{display:grid;gap:3px}
+#bim-brief .group-node{width:100%;display:flex;align-items:center;gap:7px;border:0!important;background:transparent!important;text-align:left;padding:9px 7px!important;color:#46566d!important}
+#bim-brief .group-node.selected{background:#eaf3ff!important;color:#207bf0!important}
+#bim-brief .group-node .group-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bim-brief .group-node .group-count{color:#73839a;font-size:12px}
+#bim-brief .group-node .caret{color:#8fa2b9;min-width:13px}
+#bim-brief .briefing-workspace{min-width:0;padding:22px}
+#bim-brief #b-upload:disabled{opacity:.5;cursor:not-allowed;background:#8fb5ec;color:#fff}
+#bim-brief .op-menu{position:fixed;z-index:9;min-width:168px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #e5eaf2;border-radius:5px;box-shadow:0 7px 24px #172b4d2b;padding:5px 0}
+#bim-brief .op-menu button{display:block;width:100%;padding:9px 18px;border:0;border-radius:0;text-align:left;background:#fff;color:#48566b;white-space:nowrap}
+#bim-brief .op-menu button:hover,#bim-brief .op-menu button:focus{background:#eaf3ff;color:#287efa}
+#bim-brief .op-menu button.danger{color:#e4565e}
+#bim-brief .dialog.records{width:min(1320px,calc(100vw - 36px))!important;min-height:560px}
+#bim-brief .dialog.records .db{max-height:calc(100vh - 145px);padding:24px 28px}
+#bim-brief .dialog.times{width:min(550px,calc(100vw - 36px));min-height:440px}
+#bim-brief .dialog.times .db{max-height:calc(100vh - 145px);padding:20px 22px}
+#bim-brief .dialog.times .record-grid table{min-width:0}
+#bim-brief .record-tabs{display:flex;gap:38px;border-bottom:1px solid #d7dce5;margin:0 0 20px}
+#bim-brief .record-tabs button{border:0;border-radius:0;padding:4px 0 10px;background:none;color:#3e4b5b;font-size:16px}
+#bim-brief .record-tabs button.selected{color:#287efa;border-bottom:2px solid #287efa}
+#bim-brief .record-tools{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 24px;min-height:40px}
+#bim-brief .record-tools input{width:min(500px,100%)}
+#bim-brief .record-tools select{min-width:220px}
+#bim-brief .record-grid{border:1px solid #c9ddff;min-height:320px;overflow:auto}
+#bim-brief .record-grid table{width:100%;min-width:600px;table-layout:auto;border-collapse:collapse;white-space:nowrap}
+#bim-brief .record-grid th,#bim-brief .record-grid td{text-align:center;height:50px;padding:10px;border-right:1px solid #c9ddff;border-bottom:1px solid #c9ddff;font-size:14px}
+#bim-brief .record-grid th{background:#f9fbff;color:#3e4958;font-weight:600}
+#bim-brief .record-grid tr>*:last-child{border-right:0}
+#bim-brief .record-grid tbody tr:last-child td{border-bottom:0}
+#bim-brief .record-grid .record-empty{min-height:300px;display:flex;align-items:center;justify-content:center;color:#929aa5;gap:10px}
+#bim-brief .record-grid .record-empty span{font-size:28px;color:#9ba9b8}
+#bim-brief .record-grid .count-link{color:#287efa;background:transparent;border:0}
+@media(max-width:650px){#bim-brief .dialog.records .db{padding:15px}#bim-brief .record-tabs{gap:15px}#bim-brief .record-tabs button{font-size:13px}#bim-brief .record-tools{flex-wrap:wrap}#bim-brief .record-tools select{min-width:0}}
+@media(max-width:650px){#bim-brief .briefing-layout{grid-template-columns:1fr}#bim-brief .group-pane{border-right:0;border-bottom:1px solid #e7edf5;padding:15px}#bim-brief .briefing-workspace{padding:15px}#bim-brief .group-tree{max-height:180px;overflow:auto}}
+</style>
+</head>
+<body>
+<div id="bim-brief"><style>
+#bim-brief{font:14px 'Microsoft YaHei',sans-serif;color:#424c5c;background:linear-gradient(120deg,#e6f1ff,#f8f8fc);position:relative;border:1px solid #e5ebf4;min-height:660px}#bim-brief *{box-sizing:border-box}#bim-brief button,#bim-brief input,#bim-brief select{font:inherit}#bim-brief button{cursor:pointer;border:1px solid #dce2ed;border-radius:3px;background:#fff;color:#586174;padding:8px 13px}#bim-brief button:hover{background:#edf4ff;color:#347dff}#bim-brief .primary{background:#377fff;color:white;border-color:#377fff}#bim-brief .link{color:#347dff;border:0;background:transparent;padding:4px}#bim-brief .danger{color:#ed6060}#bim-brief header{min-height:70px;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;gap:16px;flex-wrap:wrap}#bim-brief .brand{font-size:22px;font-weight:700;color:#377fff}#bim-brief .topnav{display:flex;gap:24px;color:#263747}#bim-brief .user{background:white;padding:10px 14px;border-radius:7px;font-size:12px}#bim-brief .shell{display:grid;grid-template-columns:158px 1fr}#bim-brief aside{padding:18px 10px}#bim-brief .nav{padding:14px 12px;color:#263747}#bim-brief .nav.active{color:#377fff;background:#dfebff;border-radius:4px}#bim-brief main{background:#fff;border-radius:12px 0 0 0;min-width:0;min-height:600px}#bim-brief .tabs{padding:18px 22px;background:linear-gradient(90deg,#edf5ff,#faf9fc);border-bottom:1px solid #edf0f5;color:#347dff}#bim-brief .content{padding:22px}#bim-brief .filters,#bim-brief .bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}#bim-brief .filters{padding-bottom:22px;border-bottom:1px solid #edf0f5}#bim-brief input,#bim-brief select{border:1px solid #d9dfeb;border-radius:3px;padding:9px 10px;background:white;color:#465266;max-width:100%}#bim-brief input::placeholder{color:#a4aabb}#bim-brief .bar{justify-content:space-between;margin:20px 0 14px}#bim-brief .muted{color:#919aaa;font-size:12px}#bim-brief .scroll{overflow:auto}#bim-brief table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}#bim-brief th{background:#eff0f3;font-weight:600;text-align:left;padding:15px 12px}#bim-brief td{padding:17px 12px;border-bottom:1px solid #e9edf4}#bim-brief tr:hover td{background:#fafcff}#bim-brief .tag{background:#eef5ff;color:#377fff;padding:3px 7px;font-size:12px}#bim-brief .foot{text-align:right;padding:22px 0;color:#7b8595;font-size:12px}#bim-brief .overlay{position:absolute;inset:0;background:#17263f55;z-index:10;padding:60px 18px;display:flex;align-items:flex-start;justify-content:center}#bim-brief .dialog{width:580px;max-width:100%;background:white;border-radius:6px;box-shadow:0 10px 45px #18335c33;overflow:hidden}#bim-brief .dialog.wide{width:760px}#bim-brief .dh{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid #e7eaf1;font-size:17px}#bim-brief .db{padding:24px;max-height:510px;overflow:auto}#bim-brief .df{padding:14px 22px;border-top:1px solid #e7eaf1;display:flex;justify-content:flex-end;gap:10px}#bim-brief .field{display:block;margin-bottom:20px}#bim-brief .field>span{display:block;margin-bottom:10px}#bim-brief .field input:not([type=radio]),#bim-brief .field select{width:100%}#bim-brief .radios{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}#bim-brief .info{background:#f5f8fc;padding:14px;line-height:1.9;margin-bottom:20px}#bim-brief .menu{display:flex;flex-direction:column;gap:4px}#bim-brief .menu button{text-align:left;border:0;padding:12px}#bim-brief .toast{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fff;border:1px solid #b6d9c9;box-shadow:0 4px 18px #29416622;padding:12px 24px;z-index:20;max-width:90%}#bim-brief .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}#bim-brief .modelcard{border:1px solid #e5eaf2;border-radius:4px;padding:16px}#bim-brief .thumb{height:110px;background:#f5f8fc;display:grid;place-items:center;margin-bottom:12px}#bim-brief .cube{width:65px;height:65px;border:2px solid #90b2df;background:#dbeaff;transform:rotate(-30deg) skew(15deg);box-shadow:12px 12px 0 #bfd1e9}#bim-brief .empty{text-align:center;padding:60px;color:#929aab}#bim-brief .qr{text-align:center;padding:10px 0 20px}#bim-brief .qr canvas{max-width:180px}#bim-brief .error{color:#e45b5b;margin-top:12px}#bim-brief .viewer{background:#eff4f9;height:230px;display:grid;place-items:center;margin-bottom:14px}
+@media(max-width:850px){#bim-brief .topnav{display:none}#bim-brief .shell{grid-template-columns:120px 1fr}#bim-brief .content{padding:16px}#bim-brief .brand{font-size:19px}}@media(max-width:480px){#bim-brief .shell{display:block}#bim-brief aside{display:none}#bim-brief .user{display:none}#bim-brief .overlay{padding:24px 8px}#bim-brief .db{padding:18px}}
+</style>
+<header><div class="brand">雄安科创园智慧工地</div><div class="topnav"><span>首页</span><span>个人中心</span><span>人员管理</span><span style="color:#377fff">更多⌄</span></div><div class="user">雄安科创园项目部　│　系统管理员</div></header>
+<div class="shell"><aside><div class="nav" style="color:#377fff">BIM应用　⌄</div><div class="nav active">三维交底</div></aside><main><div class="tabs">个人中心　×　　<span style="border-bottom:2px solid #377fff;padding-bottom:18px">三维交底　×</span></div><div class="content"><div class="briefing-layout"><section class="group-pane" aria-label="模型分组"><div class="group-head"><span>分组名称</span><button type="button" class="primary" id="b-add-group" aria-label="新建分组">＋</button></div><div id="b-tree" class="group-tree" role="tree"></div></section><div class="briefing-workspace"><div class="filters"><label>模型名称　<input id="b-name" placeholder="请输入模型名称" style="width:190px"></label><button class="primary" id="b-search">搜索</button><button id="b-reset">重置</button></div><div class="bar"><span id="b-count"></span><div><span class="muted" id="b-upload-tip">请选择左侧分组　</span><button id="b-view">▦ 卡片</button> <button class="primary" id="b-upload" disabled>＋ 上传模型</button></div></div><div id="b-list"></div><div class="foot" id="b-foot"></div></div></div></div></main></div><div id="b-modal"></div><div id="b-op-menu"></div><div id="b-toast" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(()=>{const root=document.getElementById('bim-brief'),$=s=>root.querySelector(s);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let card=false,filter='',selectedGroup='全部',seq=7,active=null,timer;const groups=[{name:'主体结构',parent:'全部'},{name:'脚手架工程',parent:'全部'},{name:'机电安装',parent:'全部'}],collapsed=new Set();
+const names=['梁柱核心区节点三维交底','脚手架搭设节点','泵管支设','墙钢筋定位','板钢筋定位','柱筋定位卡具'];let rows=names.map((name,i)=>({id:i+1,name,group:i===1?'脚手架工程':i===2?'机电安装':'主体结构',type:i===1?'rvt':'rfa',size:[8.43,17.4,1.27,3.66,9.61,2.4][i],versions:[{v:1,date:'2026-09-22 09:30',by:'系统管理员',note:'首次上传',file:null}],logs:[],bim:[]}));
+rows[0].logs=[
+  {person:'刘耀宇',phone:'17731085339',channel:'appweb',date:'2026-09-21 10:25:18'},
+  {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-21 12:11:04'},
+  {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-21 15:32:09'},
+  {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-22 08:46:31'},
+  {person:'路阳',phone:'17334397700',channel:'appweb',date:'2026-09-22 09:06:23'}
+];
+function toast(t){clearTimeout(timer);$('#b-toast').innerHTML='<div class="toast">'+esc(t)+'</div>';timer=setTimeout(()=>$('#b-toast').innerHTML='',3000)}
+function close(){$('#b-modal').innerHTML=''}
+function closeMenu(){const menu=$('#b-op-menu');menu.innerHTML='';delete menu.dataset.modelId}
+function modal(title,body,footer='',wide=false,kind=''){closeMenu();$('#b-modal').innerHTML='<div class="overlay"><section role="dialog" aria-modal="true" aria-label="'+esc(title)+'" class="dialog '+(wide?'wide':'')+' '+kind+'"><div class="dh">'+esc(title)+'<button class="link" id="b-close" aria-label="关闭">×</button></div><div class="db">'+body+'</div>'+(footer?'<div class="df">'+footer+'</div>':'')+'</section></div>';$('#b-close').onclick=close;const cancel=$('#b-cancel');if(cancel)cancel.onclick=close;$('#b-close').focus()}
+const cancel='<button id="b-cancel">取消</button>', save='<button class="primary" id="b-save">确定</button>';
+function descendants(name){const result=[name];for(let i=0;i<result.length;i++)groups.filter(g=>g.parent===result[i]).forEach(g=>result.push(g.name));return result}
+function renderTree(){
+  const branch=(name,depth)=>{
+    const children=groups.filter(g=>g.parent===name);
+    const count=name==='全部'?rows.length:rows.filter(r=>descendants(name).includes(r.group)).length;
+    const node='<button type="button" role="treeitem" aria-selected="'+(selectedGroup===name)+'" '+(children.length?'aria-expanded="'+(!collapsed.has(name))+'"':'')+' class="group-node '+(selectedGroup===name?'selected':'')+'" style="padding-left:'+(7+depth*17)+'px!important" data-group="'+esc(name)+'"><span class="caret">'+(children.length?(collapsed.has(name)?'›':'⌄'):'·')+'</span><span class="group-name">'+esc(name)+'</span><span class="group-count">'+count+'</span></button>';
+    return node+(collapsed.has(name)?'':children.map(g=>branch(g.name,depth+1)).join(''));
+  };
+  $('#b-tree').innerHTML=branch('全部',0);
+}
+function render(){
+  renderTree();
+  const list=rows.filter(r=>r.name.includes(filter)&&(selectedGroup==='全部'||descendants(selectedGroup).includes(r.group)));
+  $('#b-count').innerHTML='共 <span style="color:#377fff">'+list.length+'</span> 条';
+  $('#b-foot').textContent='共 '+list.length+' 条　　10条/页　　 ‹　 1　 ›';
+  $('#b-view').textContent=card?'☷ 列表':'▦ 卡片';
+  $('#b-upload').disabled=selectedGroup==='全部';
+  $('#b-upload-tip').hidden=selectedGroup!=='全部';
+  $('#b-list').innerHTML=!list.length?'<div class="empty">暂无模型，请上传模型或调整搜索条件</div>':card?'<div class="cards">'+list.map(r=>'<div class="modelcard"><button class="thumb" style="width:100%" data-action="preview" data-id="'+r.id+'" aria-label="查看'+esc(r.name)+'"><span class="cube"></span></button><button class="link" data-action="preview" data-id="'+r.id+'">'+esc(r.name)+'</button><p class="muted">'+esc(r.group)+'　V'+r.versions.length+'　'+r.size+' MB</p><p class="muted">上传人：系统管理员</p>'+(r.bim.length?'<span class="tag">已挂接'+r.bim.length+'处</span>':'')+actions(r)+'</div>').join('')+'</div>':'<div class="scroll"><table><thead><tr><th>模型名称</th><th>所属分组</th><th>版本</th><th>上传人</th><th>大小 / 类型</th><th>更新时间</th><th>操作</th></tr></thead><tbody>'+list.map(r=>'<tr><td><button class="link" data-action="preview" data-id="'+r.id+'">'+esc(r.name)+'</button>'+(r.bim.length?'<span class="tag">已挂接'+r.bim.length+'处</span>':'')+'</td><td>'+esc(r.group)+'</td><td><span class="tag">V'+r.versions.length+'</span></td><td>系统管理员</td><td>'+r.size+' MB / '+r.type.toUpperCase()+'</td><td>'+r.versions.at(-1).date+'</td><td>'+actions(r)+'</td></tr>').join('')+'</tbody></table></div>'
+}
+function actions(r){return ['二维码','分享','更多'].map((x,i)=>'<button class="link" data-action="'+['qr','share','menu'][i]+'" data-id="'+r.id+'">'+x+(i===2?'⌄':'')+'</button>').join(' ')}
+function download(file,name){if(!file){toast('示例记录未附原始模型，请上传文件后体验下载');return}const url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function upload(r){
+  if(!r&&selectedGroup==='全部'){toast('请先在左侧选择具体分组');return}
+  const fields=(r?'<div class="info">'+esc(r.name)+'<br>当前版本 V'+r.versions.length+' → 新版本 V'+(r.versions.length+1)+'</div>':'<label class="field"><span>模型名称</span><input id="b-newname" maxlength="80" placeholder="未填写时使用文件名称"></label><div class="info">上传到：'+esc(selectedGroup)+'</div>')+'<label class="field"><span>选择模型文件 *</span><input type="file" id="b-file" accept=".rvt,.rfa,.ifc,.glb,.gltf"></label><div class="muted">支持格式以正式接入的模型转换服务为准。本原型保存文件和版本信息，不进行BIM转换。</div><div id="b-error" class="error" role="alert"></div>';
+  modal(r?'更新模型':'上传模型',fields,cancel+save);
+  $('#b-save').onclick=()=>{
+    const f=$('#b-file').files[0];
+    if(!f){$('#b-error').textContent='请选择模型文件';return}
+    if(!/\.(rvt|rfa|ifc|glb|gltf)$/i.test(f.name)){$('#b-error').textContent='请选择支持的模型格式';return}
+    let row=r;
+    if(!row){row={id:seq++,name:$('#b-newname').value.trim()||f.name.replace(/\.[^.]+$/,''),group:selectedGroup,versions:[],logs:[],bim:[]};rows.unshift(row)}
+    row.type=f.name.split('.').at(-1).toLowerCase();row.size=(f.size/1048576).toFixed(2);
+    row.versions.push({v:row.versions.length+1,date:new Date().toLocaleString('sv-SE').slice(0,16),by:'系统管理员',note:r?'更新模型':'首次上传',file:f});
+    close();render();toast(r?'新版本已保存（原型）':'模型文件已添加（原型）')
+  }
+}
+function sharing(r,isQr){modal(isQr?'模型二维码':'分享模型','<div class="info">'+esc(r.name)+'　<span class="tag">V'+r.versions.length+'</span><br><span class="muted">分享固定指向当前版本，更新模型后原分享版本保持不变。</span></div>'+(isQr?'<div class="qr" id="b-qr"></div>':'')+'<label class="field"><span>分享链接</span><input readonly id="b-url" value="https://example.com/bim/share/'+r.id+'/v'+r.versions.length+'"></label><span>有效期</span><div class="radios">'+['永久','7天','30天','半年','自定义'].map((x,i)=>'<label><input type="radio" name="b-exp" value="'+x+'" '+(!i?'checked':'')+'> '+x+'</label>').join('')+'</div><input aria-label="到期日期" id="b-date" type="date" hidden><div class="muted" style="margin-top:18px">原型示例链接，正式部署后用于扫码和外部访问。</div>',cancel+'<button class="primary" id="b-save">'+(isQr?'下载二维码':'复制链接')+'</button>');root.querySelectorAll('[name=b-exp]').forEach(x=>x.onchange=()=>$('#b-date').hidden=x.value!=='自定义');if(isQr){if(typeof qrcode==='function'){const q=qrcode(0,'M');q.addData($('#b-url').value);q.make();$('#b-qr').innerHTML=q.createSvgTag(4,16);$('#b-qr').querySelector('svg').style.width='180px';$('#b-qr').querySelector('svg').style.height='180px'}else{$('#b-qr').textContent='二维码组件未加载，请稍后重试'}}$('#b-save').onclick=async()=>{if(!$('#b-date').hidden&&(!$('#b-date').value||$('#b-date').value<=new Date().toISOString().slice(0,10))){toast('请选择未来的到期日期');return}if(isQr){const svg=$('#b-qr svg');if(!svg){toast('二维码组件未加载');return}download(new Blob([svg.outerHTML],{type:'image/svg+xml'}),r.name+'-二维码.svg');toast('已下载示例链接二维码');return}try{await navigator.clipboard.writeText($('#b-url').value);toast('已复制示例链接')}catch{$('#b-url').select();toast('请复制已选中的示例链接')}}}
+function toggleMenu(r,trigger){
+  const target=$('#b-op-menu');
+  if(target.dataset.modelId===String(r.id)){closeMenu();target.dataset.modelId='';return}
+  const options=[['download','下载'],['rename','重命名'],['update','更新模型'],['versions','版本管理'],['bim','BIM模型挂接'],['logs','查看记录'],['delete','删除']];
+  target.innerHTML='<div class="op-menu" role="menu" aria-label="'+esc(r.name)+'操作">'+options.map(([action,label])=>'<button type="button" role="menuitem" '+(action==='delete'?'class="danger"':'')+' data-action="'+action+'" data-id="'+r.id+'">'+label+'</button>').join('')+'</div>';
+  target.dataset.modelId=String(r.id);
+  const menu=target.firstElementChild,rect=trigger.getBoundingClientRect();
+  const left=Math.max(8,Math.min(rect.left,window.innerWidth-menu.offsetWidth-8));
+  const top=rect.bottom+menu.offsetHeight+8<=window.innerHeight?rect.bottom+4:Math.max(8,rect.top-menu.offsetHeight-4);
+  menu.style.left=left+'px';menu.style.top=top+'px';
+}
+function openRecords(r,tab='mini'){
+  const body='<div class="record-tabs"><button type="button" data-record-tab="mini" class="'+(tab==='mini'?'selected':'')+'">小程序查看记录</button><button type="button" data-record-tab="appweb" class="'+(tab==='appweb'?'selected':'')+'">APP & WEB 查看记录</button></div><div class="record-tools"><label id="b-team-wrap" '+(tab==='mini'?'':'hidden')+'>班组： <select id="b-team"><option value="">请选择</option></select></label><input id="b-record-search" aria-label="搜索查看人" placeholder="搜索"></div><div class="record-grid" id="b-record-grid"></div>';
+  modal('查看记录',body,'',true,'records');
+  root.querySelectorAll('[data-record-tab]').forEach(b=>b.onclick=()=>openRecords(r,b.dataset.recordTab));
+  $('#b-record-search').oninput=()=>renderRecordTable(r,tab);
+  $('#b-team').onchange=()=>renderRecordTable(r,tab);
+  renderRecordTable(r,tab);
+}
+function renderRecordTable(r,tab){
+  const query=$('#b-record-search').value.trim().toLowerCase();
+  const team=$('#b-team').value;
+  const found=r.logs.filter(l=>(l.channel||'appweb')===tab&&(!team||l.team===team)&&(!query||(l.person||'系统管理员').toLowerCase().includes(query)||(l.phone||'').includes(query)));
+  const people=[];
+  found.forEach(l=>{const name=l.person||'系统管理员',phone=l.phone||'';let item=people.find(x=>x.name===name&&x.phone===phone);if(!item){item={name,phone,team:l.team||'',trade:l.trade||'',wechat:l.wechat||'',avatar:l.avatar||'',events:[]};people.push(item)}item.events.push(l)});
+  const mini=tab==='mini';
+  const head=mini?'<tr><th>序号</th><th>姓名</th><th>手机</th><th>班组</th><th>工种</th><th>微信名</th><th>微信头像</th><th>查看次数</th></tr>':'<tr><th>序号</th><th>姓名</th><th>手机</th><th>查看次数</th></tr>';
+  const body=people.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.name)+'</td><td>'+esc(p.phone)+'</td>'+(mini?'<td>'+esc(p.team)+'</td><td>'+esc(p.trade)+'</td><td>'+esc(p.wechat)+'</td><td>'+esc(p.avatar)+'</td>':'')+'<td><button class="count-link" data-count-index="'+i+'">'+p.events.length+'</button></td></tr>').join('');
+  $('#b-record-grid').innerHTML='<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>'+(people.length?'':'<div class="record-empty"><span>▤</span>暂无数据</div>');
+  root.querySelectorAll('[data-count-index]').forEach(b=>b.onclick=()=>openRecordTimes(r,people[+b.dataset.countIndex],tab));
+}
+function openRecordTimes(r,person,tab){
+  const body='<div class="record-grid"><table><thead><tr><th>序号</th><th>查看时间</th></tr></thead><tbody>'+person.events.map((event,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(event.date)+'</td></tr>').join('')+'</tbody></table></div>';
+  modal('查看次数统计',body,'',false,'times');
+  $('#b-close').onclick=()=>openRecords(r,tab);
+}
+function attachBim(r){
+  window.parent.postMessage({
+    channel:'xa-bim-briefing',action:'bind',briefingType:'三维交底',
+    resourceName:r.name,fileName:r.name+'.'+r.type,sourceId:String(r.id)
+  },'*');
+}
+function act(action,r,trigger){
+  active=r;
+  if(action==='menu'){toggleMenu(r,trigger);return}
+  closeMenu();
+  if(action==='qr'||action==='share'){sharing(r,action==='qr');return}
+  if(action==='download'){download(r.versions.at(-1).file,r.name+'.'+r.type);return}
+  if(action==='update'){upload(r);return}
+  if(action==='bim'){attachBim(r);return}
+  if(action==='rename'){modal('重命名','<label class="field"><span>模型名称 *</span><input id="b-rename" maxlength="80" value="'+esc(r.name)+'"></label><div class="muted">修改显示名称，保留历史版本与分享关系。</div>',cancel+save);$('#b-save').onclick=()=>{const n=$('#b-rename').value.trim();if(!n){toast('请输入模型名称');return}r.name=n;close();render();toast('名称已更新')};return}
+  if(action==='delete'){modal('删除模型','<div class="info">确认删除“'+esc(r.name)+'”？</div><p>删除后，全部版本将不可访问，相关二维码与分享链接失效。</p>',cancel+'<button class="primary" id="b-save" style="background:#ed6060;border-color:#ed6060">确认删除</button>');$('#b-save').onclick=()=>{rows=rows.filter(x=>x.id!==r.id);close();render();toast('模型已删除')};return}
+  if(action==='versions'){modal('版本管理 · '+r.name,'<div class="scroll"><table><thead><tr><th>版本</th><th>上传时间</th><th>上传人</th><th>更新说明</th><th>操作</th></tr></thead><tbody>'+[...r.versions].reverse().map(v=>'<tr><td>V'+v.v+(v.v===r.versions.length?' <span class="tag">当前</span>':'')+'</td><td>'+v.date+'</td><td>'+v.by+'</td><td>'+esc(v.note)+'</td><td><button class="link" data-version="'+v.v+'">查看</button><button class="link" data-dl="'+v.v+'">下载</button></td></tr>').join('')+'</tbody></table></div>','',true);root.querySelectorAll('[data-version]').forEach(b=>b.onclick=()=>preview(r,+b.dataset.version));root.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const v=r.versions[+b.dataset.dl-1];download(v.file,v.file?.name||r.name)});return}
+  if(action==='logs'){openRecords(r);return}
+  if(action==='preview')preview(r,r.versions.length)
+}
+function preview(r,v){r.logs.unshift({v,date:new Date().toLocaleString('sv-SE'),person:'系统管理员',phone:'',channel:'appweb'});modal(r.name+' · V'+v,'<div class="viewer"><div class="cube"></div></div><div class="muted">模型预览占位。正式模型旋转、缩放与构件显示需接入BIM引擎；本次原型预览已记入查看记录。</div>','<button id="b-cancel">关闭</button>',true)}
+root.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b){const r=rows.find(x=>x.id===+b.dataset.id);if(r)act(b.dataset.action,r,b);return}if(!e.target.closest('#b-op-menu'))closeMenu()});
+window.addEventListener('scroll',closeMenu,true);
+$('#b-tree').addEventListener('click',e=>{const b=e.target.closest('[data-group]');if(!b)return;const name=b.dataset.group;if(e.target.closest('.caret')&&groups.some(g=>g.parent===name)){collapsed.has(name)?collapsed.delete(name):collapsed.add(name)}else{selectedGroup=name}render()});
+$('#b-add-group').onclick=()=>{
+  modal('新建分组','<label class="field"><span>上级分组</span><select id="b-parent"><option value="全部">全部</option>'+groups.map(g=>'<option value="'+esc(g.name)+'" '+(selectedGroup===g.name?'selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label><label class="field"><span>分组名称 *</span><input id="b-group-name" maxlength="40" placeholder="请输入分组名称"></label><div id="b-error" class="error" role="alert"></div>',cancel+save);
+  $('#b-save').onclick=()=>{const name=$('#b-group-name').value.trim();if(!name){$('#b-error').textContent='请输入分组名称';return}if(name==='全部'||groups.some(g=>g.name===name)){$('#b-error').textContent='分组名称已存在';return}groups.push({name,parent:$('#b-parent').value});selectedGroup=name;close();render();toast('分组已创建')}
+};
+$('#b-search').onclick=()=>{filter=$('#b-name').value.trim();render()};
+$('#b-name').onkeydown=e=>{if(e.key==='Enter')$('#b-search').click()};
+$('#b-reset').onclick=()=>{$('#b-name').value='';filter='';render()};
+$('#b-view').onclick=()=>{card=!card;render()};
+$('#b-upload').onclick=()=>upload(null);
+root.addEventListener('keydown',e=>{if(e.key==='Escape')close()});render();
+})();
+</script>
+</div>
+
+</body>
+</html>
