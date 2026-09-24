@@ -244,6 +244,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
+const BUILD = "20260924-7";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -980,6 +981,7 @@ function switchModule(module){
   if(module==="quality") ensureQualityDaily();
   else if(module==="progress") ensureDaily(true);
   if(module!=="bim") ensureLogNumbers();
+(function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
   render();
 }
 
@@ -1261,6 +1263,7 @@ function openStaffConfig(){
     ensureDaily(true);           // 按新配置补齐施工子日志
     ensureQualityDaily();       // 按新配置补齐质量子日志
   ensureLogNumbers();
+(function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
     save(); closeModal(); render();
     toast(`人员配置已保存：每日自动生成 ${state.configured.length} 条个人版子日志`);
   };
@@ -1302,7 +1305,8 @@ function openStaffConfigForm(){
     let person=STAFF.find(p=>p.name===name && p.dept===dept && p.role===role);
     if(!person){ person={id:`custom_${Date.now()}`,name,dept,role}; STAFF.push(person); }
     if(!state.configured.includes(person.id)) state.configured.push(person.id);
-    ensureDaily(true); ensureQualityDaily(); ensureLogNumbers(); save(); closeModal(); render(); toast("人员已新增并同步到每日个人日志");
+    ensureDaily(true); ensureQualityDaily(); ensureLogNumbers();
+(function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})(); save(); closeModal(); render(); toast("人员已新增并同步到每日个人日志");
   };
 }
 
@@ -4115,22 +4119,22 @@ window.addEventListener("message", event=>{
 });
 
 function renderBriefing(){
-  $("#content").innerHTML = `<iframe class="briefing-frame" src="三维交底_嵌入页.html" title="三维交底" sandbox="allow-scripts allow-downloads" referrerpolicy="no-referrer"></iframe>`;
+  $("#content").innerHTML = `<iframe class="briefing-frame" src="三维交底_嵌入页.html?v=${BUILD}" title="三维交底" sandbox="allow-scripts allow-downloads" referrerpolicy="no-referrer"></iframe>`;
 }
 
 function renderProcessBriefing(){
-  $("#content").innerHTML = `<iframe class="briefing-frame" src="施工工艺交底_嵌入页.html" title="施工工艺交底" sandbox="allow-scripts allow-downloads allow-modals" referrerpolicy="no-referrer"></iframe>`;
+  $("#content").innerHTML = `<iframe class="briefing-frame" src="施工工艺交底_嵌入页.html?v=${BUILD}" title="施工工艺交底" sandbox="allow-scripts allow-downloads allow-modals" referrerpolicy="no-referrer"></iframe>`;
 }
 
 function renderMeasurementLedger(){
-  $("#content").innerHTML = `<iframe class="briefing-frame" src="实测实量_测量记录台账_嵌入页.html" title="测量记录台账" sandbox="allow-scripts allow-downloads allow-modals" referrerpolicy="no-referrer"></iframe>`;
+  $("#content").innerHTML = `<iframe class="briefing-frame" src="实测实量_测量记录台账_嵌入页.html?v=${BUILD}" title="测量记录台账" sandbox="allow-scripts allow-downloads allow-modals" referrerpolicy="no-referrer"></iframe>`;
 }
 
 function renderPanoramaLedger(){
-  $("#content").innerHTML='<iframe class="briefing-frame" src="全景区域挂接_原型.html" title="全景照片台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
+  $("#content").innerHTML='<iframe class="briefing-frame" src="全景区域挂接_原型.html?v=${BUILD}" title="全景照片台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
 }
 function renderAnnotationLedger(){
-  $("#content").innerHTML='<iframe class="briefing-frame" src="批注台账_嵌入页.html" title="批注台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
+  $("#content").innerHTML='<iframe class="briefing-frame" src="批注台账_嵌入页.html?v=${BUILD}" title="批注台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
 }
 function renderBimUnified(){
   let query = "";
@@ -4156,7 +4160,7 @@ function renderBimUnified(){
   }
   if(pendingPanorama) query="?"+new URLSearchParams({panorama:pendingPanorama.mode,photo:pendingPanorama.photoId});
   pendingPanorama=null;
-  $("#content").innerHTML = `<iframe class="briefing-frame" allow="fullscreen" src="BIM统一模型_交互原型.html${query}" title="BIM模型统一视图" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>`;
+  $("#content").innerHTML = `<iframe class="briefing-frame" allow="fullscreen" src="BIM统一模型_交互原型.html${query}${query?"&":"?"}v=${BUILD}" title="BIM模型统一视图" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>`;
   pendingBimBinding = null;
 }
 
@@ -4248,6 +4252,7 @@ function render(){
 ensureDaily();
 ensureQualityDaily();
 ensureLogNumbers();
+(function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
 /* 支持用 hash 直达视图，便于演示与分享：#bim / #panoramaLedger / #annotationLedger */
 (function(){
   const h = (location.hash || "").replace("#", "");
