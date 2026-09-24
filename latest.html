@@ -197,8 +197,8 @@
   <div class="topbar">
     <div class="brand">雄安科创园指挥工地</div>
     <div class="topnav" id="topNav">
-      <div class="item">首页</div>
-      <div class="item">个人中心</div>
+      <div class="item" data-home="1">首页</div>
+      <div class="item" data-go="profile">个人中心</div>
       <div class="item">人员管理</div>
       <div class="item">设备管理</div>
       <div class="item">物资管理</div>
@@ -245,7 +245,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20260924-10";
+const BUILD = "20260924-11";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -939,8 +939,15 @@ const findChild = (parent, cid) => (parent.children||[]).find(c=>c.id===cid);
    ========================================================================= */
 function renderNav(){
   document.querySelectorAll("#topNav [data-module]").forEach(el=>{
-    el.classList.toggle("active", el.dataset.module===route.module);
+    el.classList.toggle("active", route.view!=="profile" && el.dataset.module===route.module);
     el.onclick=()=>switchModule(el.dataset.module);
+  });
+  document.querySelectorAll("#topNav [data-go]").forEach(el=>{
+    el.classList.toggle("active", el.dataset.go===route.view);
+    el.onclick=()=>go(el.dataset.go);
+  });
+  document.querySelectorAll("#topNav [data-home]").forEach(el=>{
+    el.onclick=()=>{ route={module:"progress",view:"ledger",target:null,childId:null}; render(); };
   });
   $("#sideMenu").innerHTML = route.module==="bim"
     ? `<div class="menu-group">BIM应用</div><div class="menu-item ${route.view==="bimUnified"?"active":""}" data-go="bimUnified">BIM模型</div><div class="menu-item ${route.view==="panoramaLedger"?"active":""}" data-go="panoramaLedger">全景照片台账</div><div class="menu-item ${route.view==="annotationLedger"?"active":""}" data-go="annotationLedger">批注台账</div>`
