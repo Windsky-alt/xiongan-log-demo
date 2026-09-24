@@ -34,13 +34,23 @@
 .tree-ops button[data-del-region]:hover{background:#fdeeee;color:#e36464}
 .tree-empty{padding:14px 10px;color:#8b98aa;font-size:13px}
 @media (hover:none){.tree-ops{display:flex}}
+/* 区域树：hover / 展开箭头 / 点位子项 */
+.tree-node{margin:1px 0}
+.tree-row{border-radius:4px}
+.tree-row:hover{background:#f2f7ff}
+.tree-row.active{background:#edf4ff}
+.tree .tree-toggle{width:20px;flex:none;border:0;background:none;cursor:pointer;padding:0;margin:0;display:flex;align-items:center;justify-content:center}
+.tree .tree-toggle::before{content:"";width:0;height:0;border-left:5px solid #93a3b6;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}.tree .tree-toggle.open::before{transform:rotate(90deg)}.tree .tree-toggle:hover::before{border-left-color:#347ef8}.tree .tree-toggle.open:hover::before{border-left-color:#347ef8}
+.tree .tree-point{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 10px 7px 46px;margin:0;color:#6b7d94;font-size:12.5px;cursor:pointer;border-radius:4px}
+.tree .tree-point:hover{background:#f2f7ff;color:#347ef8}
+.tree .tree-point.active{background:#edf4ff;color:#347ef8;font-weight:600}
 </style></head><body><div id="root"></div><div id="dialog"></div><div id="toast"></div>
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),clone=x=>JSON.parse(JSON.stringify(x));
 const params=new URLSearchParams(location.search),embedded=parent!==window;
 const seed={regions:[{id:'R1',name:'东侧走廊',floor:'1号楼 · 3层',axes:['A','C','1','4'],low:8.4,high:12.6,rect:{x:180,y:155,w:420,h:190},model:'1号楼_建筑结构综合模型.rvt',version:'V3'},{id:'R2',name:'设备机房',floor:'1号楼 · 地下1层',axes:['B','D','2','5'],low:-4.2,high:0,rect:{x:240,y:220,w:370,h:200},model:'1号楼_机电综合模型.rvt',version:'V2'}],points:[{id:'P01',region:'R1',name:'P01 · 走廊东端',x:385,y:255,height:1.6,yaw:0},{id:'P02',region:'R1',name:'P02 · 走廊西端',x:240,y:285,height:1.6,yaw:180},{id:'P03',region:'R2',name:'P03 · 机房入口',x:400,y:310,height:1.6,yaw:35}],photos:[{id:'F1',name:'东侧走廊吊顶施工',point:'P01',time:'2026-09-23T10:30',author:'张恒毓',bound:true,yaw:0,pitch:0,fov:80,phase:2},{id:'F2',name:'东侧走廊管线安装',point:'P01',time:'2026-09-18T09:15',author:'张恒毓',bound:true,yaw:0,pitch:0,fov:80,phase:1},{id:'F3',name:'西端走廊现场记录',point:'P02',time:'2026-09-23T10:45',author:'赵晓龙',bound:true,yaw:180,pitch:0,fov:80,phase:2},{id:'F4',name:'机房设备安装',point:'P03',time:'2026-09-22T14:20',author:'系统管理员',bound:true,yaw:35,pitch:0,fov:80,phase:1},{id:'F5',name:'东侧走廊复拍',point:'P01',time:'2026-09-23T15:00',author:'系统管理员',bound:false,yaw:0,pitch:0,fov:80,phase:2}]};
-let db=clone(seed),regionFilter='',regionSearch='',search='',stateFilter='',screen='ledger',draft=null,step=0,photoId='F1',calibrating=false,linked=true,listOpen=true,uploadFiles=[],viewers=[],drawMode='region',lastScreen='overview';
+let db=clone(seed),regionFilter='',regionSearch='',pointFilter='',expandedRegions=new Set(),search='',stateFilter='',screen='ledger',draft=null,step=0,photoId='F1',calibrating=false,linked=true,listOpen=true,uploadFiles=[],viewers=[],drawMode='region',lastScreen='overview';
 const structureTree=[
   {id:'14F',name:'14F_地上',children:[
     {id:'14F-S',name:'结构',children:[
@@ -88,30 +98,44 @@ function clearViews(){viewers.forEach(v=>v.destroy());viewers=[]}
 function regionListHtml(){
   const kw=regionSearch.trim().toLowerCase();
   const list=db.regions.filter(r=>!kw||String(r.name||'').toLowerCase().includes(kw)||String(r.floor||'').toLowerCase().includes(kw));
-  let h='<button data-region="" class="'+(!regionFilter?'active':'')+'">▾ 全部区域 <small>'+db.photos.length+'</small></button>';
+  let h='<button data-region="" class="'+((!regionFilter&&!pointFilter)?'active':'')+'">▾ 全部区域 <small>'+db.photos.length+'</small></button>';
   if(!list.length){ return h+'<div class="tree-empty">没有匹配的区域</div>' }
-  return h+list.map(r=>'<div class="tree-row"><button class="tree-item '+(regionFilter===r.id?'active':'')+'" data-region="'+r.id+'">▱ '+esc(r.name)+'<div class="muted">'+esc(r.floor)+'</div></button><span class="tree-ops"><button data-edit-region="'+r.id+'" title="编辑名称">✎</button><button data-del-region="'+r.id+'" title="删除">×</button></span></div>').join('');
+  return h+list.map(r=>{
+    const pts=db.points.filter(p=>p.region===r.id);
+    const open=expandedRegions.has(r.id)||(kw!==''&&pts.length>0);
+    let html='<div class="tree-node"><div class="tree-row'+((regionFilter===r.id&&!pointFilter)?' active':'')+'">'
+      +(pts.length?'<button class="tree-toggle'+(open?' open':'')+'" data-toggle-region="'+r.id+'"></button>':'<span class="tree-toggle"></span>')
+      +'<button class="tree-item" data-region="'+r.id+'">▱ '+esc(r.name)+(r.floor?'<div class="muted">'+esc(r.floor)+'</div>':'')+'</button>'
+      +'<span class="tree-ops"><button data-edit-region="'+r.id+'" title="编辑名称">✎</button><button data-del-region="'+r.id+'" title="删除">×</button></span>'
+      +'</div>';
+    if(open&&pts.length){
+      html+=pts.map(p=>'<button class="tree-point'+(pointFilter===p.id?' active':'')+'" data-point-pick="'+p.id+'">'+esc(p.name)+'</button>').join('');
+    }
+    return html+'</div>';
+  }).join('');
 }
-function bindRegionList(){document.querySelectorAll('[data-region]').forEach(b=>b.onclick=()=>{regionFilter=b.dataset.region;showLedger()});document.querySelectorAll('[data-edit-region]').forEach(b=>b.onclick=e=>{e.stopPropagation();openRegionForm(b.dataset.editRegion)});
+function bindRegionList(){
+  document.querySelectorAll('[data-region]').forEach(b=>b.onclick=()=>{regionFilter=b.dataset.region;pointFilter='';showLedger()});
+  document.querySelectorAll('[data-toggle-region]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.toggleRegion;if(expandedRegions.has(id))expandedRegions.delete(id);else expandedRegions.add(id);const box=$('#regionList');if(box){box.innerHTML=regionListHtml();bindRegionList()}});
+  document.querySelectorAll('[data-point-pick]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.pointPick;pointFilter=(pointFilter===id?'':id);const pt=point(id);regionFilter=pt?pt.region:'';showLedger()});
+  document.querySelectorAll('[data-edit-region]').forEach(b=>b.onclick=e=>{e.stopPropagation();openRegionForm(b.dataset.editRegion)});
   document.querySelectorAll('[data-del-region]').forEach(b=>b.onclick=e=>{e.stopPropagation();confirmDeleteRegion(b.dataset.delRegion)});
 }
 function openRegionForm(id){
   const r=id?region(id):null;
   modal(r?'编辑区域':'新增区域',
     '<div class="field"><label>区域名称 *</label><input id="rgName" maxlength="20" placeholder="例如：东侧走廊" value="'+esc(r?r.name:'')+'"></div>'
-   +'<div class="field"><label>楼栋 / 楼层 *</label><input id="rgFloor" maxlength="30" placeholder="例如：1号楼 · 3层" value="'+esc(r?r.floor:'')+'"></div>'
    +'<div class="error" id="rgError"></div>',
     '<button id="rgCancel">取消</button><button class="primary" id="rgSave">保存</button>');
-  document.querySelector('#dialog .modal').classList.add('dark-modal');
   $('#rgCancel').onclick=closeModal;
   $('#rgSave').onclick=()=>{
-    const name=$('#rgName').value.trim(),floor=$('#rgFloor').value.trim();
-    if(!name||!floor){$('#rgError').textContent='请填写区域名称和楼栋/楼层';return}
-    if(r){ r.name=name; r.floor=floor }
+    const name=$('#rgName').value.trim();
+    if(!name){$('#rgError').textContent='请填写区域名称';return}
+    if(r){ r.name=name }
     else{
       const nid='R'+(db.regions.reduce((m,x)=>Math.max(m,parseInt(String(x.id).replace(/\D/g,''),10)||0),0)+1);
-      db.regions.push({id:nid,name,floor,axes:['A','C','1','4'],low:0,high:4.2,rect:{x:180,y:155,w:420,h:190},model:'1号楼_建筑结构综合模型.rvt',version:'V3'});
-      regionFilter=nid;
+      db.regions.push({id:nid,name,floor:'',axes:['A','C','1','4'],low:0,high:4.2,rect:{x:180,y:155,w:420,h:190},model:'1号楼_建筑结构综合模型.rvt',version:'V3'});
+      regionFilter=nid;pointFilter='';expandedRegions.add(nid);
     }
     persist();closeModal();showLedger();toast(r?'区域已更新':'区域已新增');
   };
@@ -126,13 +150,11 @@ function confirmDeleteRegion(id){
      +'<p style="margin:0 0 8px;color:#e36464">该区域下有 '+pts.length+' 个拍摄点位、'+photos.length+' 张全景照片，无法直接删除。</p>'
      +'<p class="hint">请先移除这些照片，或改为编辑名称。</p>',
       '<button id="rgOk">知道了</button>');
-    document.querySelector('#dialog .modal').classList.add('dark-modal');
     $('#rgOk').onclick=closeModal;
     return;
   }
   modal('删除区域','<p style="margin:0">确定删除「'+esc(r.name)+'」吗？该操作不可撤销。</p>',
     '<button id="rgCancel">取消</button><button class="primary" id="rgDel">确认删除</button>');
-  document.querySelector('#dialog .modal').classList.add('dark-modal');
   $('#rgCancel').onclick=closeModal;
   $('#rgDel').onclick=()=>{
     db.regions=db.regions.filter(x=>x.id!==id);
@@ -140,7 +162,7 @@ function confirmDeleteRegion(id){
     persist();closeModal();showLedger();toast('区域已删除');
   };
 }
-function showLedger(){clearViews();screen='ledger';let rows=db.photos.filter(f=>{const{r}=context(f);return(!regionFilter||r?.id===regionFilter)&&(!search||f.name.includes(search))&&(!stateFilter||(stateFilter==='bound')===f.bound)}).sort((a,b)=>b.time.localeCompare(a.time));$('#root').innerHTML='<div class="ledger"><aside class="tree"><h3>区域 / 拍摄点位</h3><div class="tree-search"><span>⌕</span><input id="regionSearch" placeholder="搜索区域名称" value="'+esc(regionSearch)+'"><button id="clearRegionSearch" '+(regionSearch?'':'hidden')+'>×</button></div><button class="tree-add" id="newRegion">＋ 新增区域</button><div id="regionList">'+regionListHtml()+'</div><p class="hint">同一区域可设置多个拍摄点位，复拍照片保留历史记录。</p></aside><main class="main"><div class="filters"><input id="search" placeholder="搜索全景名称" value="'+esc(search)+'"><select id="filterState"><option value="">全部挂接状态</option><option value="bound">已挂接</option><option value="unbound">未挂接</option></select><button class="primary" id="doSearch">搜索</button><button id="resetSearch">重置</button></div><div class="toolbar"><span>共 <b style="color:#3983ff">'+rows.length+'</b> 条全景照片 <span class="muted"> · 区域 '+db.regions.length+' 个 / 点位 '+db.points.length+' 个</span></span><button class="primary" id="upload">＋ 上传全景照片</button></div><div class="tablewrap"><table><thead><tr><th>缩略图</th><th>全景名称</th><th>区域 / 拍摄点位</th><th>拍摄时间</th><th>上传人</th><th>BIM挂接</th><th>操作</th></tr></thead><tbody>'+rows.map(f=>{const{p,r}=context(f);return'<tr><td><div class="thumb">'+(f.image?'<img src="'+f.image+'" alt="全景缩略图">':'◉ 360°')+'</div></td><td>'+esc(f.name)+'</td><td class="small">'+esc(r?.floor)+' · '+esc(r?.name)+'<br><span class="muted">'+esc(p?.name)+'</span></td><td>'+esc(f.time.replace('T',' '))+'</td><td>'+esc(f.author)+'</td><td><span class="badge '+(!f.bound?'wait':'')+'">'+(f.bound?'已挂接':'未挂接')+'</span></td><td><button class="link" data-preview="'+f.id+'">查看全景</button><button class="link" data-bind="'+f.id+'">BIM模型挂接</button>'+(f.bound?'<button class="link" data-compare="'+f.id+'">分屏对比</button>':'')+'<button class="link danger" data-delete="'+f.id+'">删除</button></td></tr>'}).join('')+'</tbody></table>'+(rows.length?'':'<div class="empty">没有符合条件的全景照片</div>')+'</div><div class="pager">共 '+rows.length+' 条　　10条/页　　‹　 1　 ›</div></main></div>';
+function showLedger(){clearViews();screen='ledger';let rows=db.photos.filter(f=>{const{r}=context(f);return(!regionFilter||r?.id===regionFilter)&&(!pointFilter||f.point===pointFilter)&&(!search||f.name.includes(search))&&(!stateFilter||(stateFilter==='bound')===f.bound)}).sort((a,b)=>b.time.localeCompare(a.time));$('#root').innerHTML='<div class="ledger"><aside class="tree"><h3>区域 / 拍摄点位</h3><div class="tree-search"><span>⌕</span><input id="regionSearch" placeholder="搜索区域名称" value="'+esc(regionSearch)+'"><button id="clearRegionSearch" '+(regionSearch?'':'hidden')+'>×</button></div><button class="tree-add" id="newRegion">＋ 新增区域</button><div id="regionList">'+regionListHtml()+'</div><p class="hint">同一区域可设置多个拍摄点位，复拍照片保留历史记录。</p></aside><main class="main"><div class="filters"><input id="search" placeholder="搜索全景名称" value="'+esc(search)+'"><select id="filterState"><option value="">全部挂接状态</option><option value="bound">已挂接</option><option value="unbound">未挂接</option></select><button class="primary" id="doSearch">搜索</button><button id="resetSearch">重置</button></div><div class="toolbar"><span>共 <b style="color:#3983ff">'+rows.length+'</b> 条全景照片 <span class="muted"> · 区域 '+db.regions.length+' 个 / 点位 '+db.points.length+' 个</span></span><button class="primary" id="upload">＋ 上传全景照片</button></div><div class="tablewrap"><table><thead><tr><th>缩略图</th><th>全景名称</th><th>区域 / 拍摄点位</th><th>拍摄时间</th><th>上传人</th><th>BIM挂接</th><th>操作</th></tr></thead><tbody>'+rows.map(f=>{const{p,r}=context(f);return'<tr><td><div class="thumb">'+(f.image?'<img src="'+f.image+'" alt="全景缩略图">':'◉ 360°')+'</div></td><td>'+esc(f.name)+'</td><td class="small">'+esc(r?.floor)+' · '+esc(r?.name)+'<br><span class="muted">'+esc(p?.name)+'</span></td><td>'+esc(f.time.replace('T',' '))+'</td><td>'+esc(f.author)+'</td><td><span class="badge '+(!f.bound?'wait':'')+'">'+(f.bound?'已挂接':'未挂接')+'</span></td><td><button class="link" data-preview="'+f.id+'">查看全景</button><button class="link" data-bind="'+f.id+'">BIM模型挂接</button>'+(f.bound?'<button class="link" data-compare="'+f.id+'">分屏对比</button>':'')+'<button class="link danger" data-delete="'+f.id+'">删除</button></td></tr>'}).join('')+'</tbody></table>'+(rows.length?'':'<div class="empty">没有符合条件的全景照片</div>')+'</div><div class="pager">共 '+rows.length+' 条　　10条/页　　‹　 1　 ›</div></main></div>';
 $('#filterState').value=stateFilter;$('#doSearch').onclick=()=>{search=$('#search').value.trim();stateFilter=$('#filterState').value;showLedger()};$('#resetSearch').onclick=()=>{search='';stateFilter='';regionFilter='';showLedger()};$('#upload').onclick=openUpload;
 bindRegionList();$('#regionSearch').oninput=e=>{regionSearch=e.target.value;$('#clearRegionSearch').hidden=!regionSearch;$('#regionList').innerHTML=regionListHtml();bindRegionList()};$('#clearRegionSearch').onclick=()=>{regionSearch='';$('#regionSearch').value='';$('#clearRegionSearch').hidden=true;$('#regionList').innerHTML=regionListHtml();bindRegionList()};$('#newRegion').onclick=()=>openRegionForm(null);document.querySelectorAll('[data-bind]').forEach(b=>b.onclick=()=>{if(embedded)send('bind',{photoId:b.dataset.bind,data:db});else startBinding(b.dataset.bind)});document.querySelectorAll('[data-compare]').forEach(b=>b.onclick=()=>{if(embedded)send('compare',{photoId:b.dataset.compare,data:db});else{lastScreen='ledger';openCompare(b.dataset.compare)}});document.querySelectorAll('[data-preview]').forEach(b=>b.onclick=()=>openPreview(b.dataset.preview));document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{modal('删除全景照片','删除后，该照片的BIM挂接关系也会移除；同一点位的其他拍摄记录仍然保留。','<button id="cancelDelete">取消</button><button class="primary" id="confirmDelete">确认删除</button>');$('#cancelDelete').onclick=closeModal;$('#confirmDelete').onclick=()=>{db.photos=db.photos.filter(f=>f.id!==b.dataset.delete);persist();closeModal();showLedger()}})}
 function openUpload(){uploadFiles=[];modal('上传全景照片','<div class="field"><label>所属区域 *</label><select id="uploadRegion">'+db.regions.map(r=>'<option value="'+r.id+'">'+esc(r.floor+' / '+r.name)+'</option>').join('')+'</select>'+(db.regions.length?'':'<div class="hint" style="color:#e36464;margin-top:6px">还没有区域，请先在左侧「＋ 新增区域」创建。</div>')+'</div><div class="field"><label>拍摄点位 *</label><input id="uploadPointName" placeholder="手动输入，例如：P04 · 入口"></div><div class="field"><label>拍摄时间 *</label><input id="uploadTime" type="datetime-local" value="2026-09-23T15:00"></div><div class="upload"><b>选择已拼接的360°全景图片</b><br><input id="files" type="file" accept="image/jpeg,image/png" multiple><div class="hint">JPG / PNG · 完整球形全景，宽高比2:1 · 单张不超过20MB</div></div><div class="file-list" id="fileList"></div><div class="error" id="uploadError"></div>','<button id="uploadCancel">取消</button><button id="uploadSave" class="primary">确认上传</button>');$('#uploadCancel').onclick=closeModal;$('#files').onchange=()=>{uploadFiles=Array.from($('#files').files);$('#fileList').textContent=uploadFiles.map(f=>f.name).join('、')};$('#uploadSave').onclick=async()=>{const error=$('#uploadError');if(!uploadFiles.length||!$('#uploadTime').value){error.textContent='请选择照片并填写拍摄时间';return}const rid=$('#uploadRegion').value,ptName=$('#uploadPointName').value.trim();if(!rid){error.textContent='请先选择所属区域';return}if(!ptName){error.textContent='请填写拍摄点位名称';return}$('#uploadSave').disabled=true;try{const files=await Promise.all(uploadFiles.map(async file=>{if(file.size>20*1024*1024)throw Error(file.name+' 超过20MB');if(!['image/jpeg','image/png'].includes(file.type))throw Error('仅支持JPG或PNG');const data=await new Promise((ok,no)=>{let fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=no;fr.readAsDataURL(file)});const img=await loadImage(data);if(Math.abs(img.width/img.height-2)>.06)throw Error(file.name+' 不是2:1完整全景，请从相机软件导出已拼接全景');const c=document.createElement('canvas');c.width=Math.min(2048,img.width);c.height=c.width/2;c.getContext('2d').drawImage(img,0,0,c.width,c.height);return{name:file.name.replace(/\.[^.]+$/,''),image:c.toDataURL('image/jpeg',.85)}}));let pid;const existPt=db.points.find(x=>x.region===rid&&x.name===ptName);if(existPt){pid=existPt.id}else{const rg=region(rid);pid='P'+Date.now();db.points.push({id:pid,region:rid,name:ptName,x:rg.rect.x+rg.rect.w/2,y:rg.rect.y+rg.rect.h/2,height:1.6,yaw:0})}files.forEach((f,i)=>db.photos.push({id:'F'+Date.now()+i,name:f.name,image:f.image,point:pid,time:$('#uploadTime').value,author:'系统管理员',bound:false,yaw:0,pitch:0,fov:80,phase:2}));persist();closeModal();showLedger();toast('已上传，点击BIM模型挂接设置区域与拍摄视角')}catch(e){error.textContent=e.message||'图片读取失败';$('#uploadSave').disabled=false}}}
