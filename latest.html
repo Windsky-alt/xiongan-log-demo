@@ -209,7 +209,7 @@
     <div class="userbox">
       <span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><span class="device-ico">▱</span>
-      <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
+      <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html?v=20260924-2" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><span class="round-user"></span><span>系统管理员</span>
       <span class="divider"></span><span>退出</span>
     </div>
@@ -515,9 +515,10 @@ function schemaQualityProject(){
     ["试块养护","今日新增入养试块【 自动统计 】组，完成取出【 自动统计 】组；当前在养【 自动统计 】组、到龄待取【 自动统计 】组。"]
   ];
   return [
-    {h:"一  今日质量概况", blocks:[
-      TA("q_today_summary","今日质量概况（系统固定语句，可手动调整）","截至【日期】，今日完成质量检查【 自动统计 】次，发现问题【 自动统计 】项，下发整改单【 自动统计 】张；提交整改【 自动统计 】张，完成复查【 自动统计 】张，其中整张单闭环【 自动统计 】张、继续整改【 自动统计 】张；今日未发起质量处罚。","系统自动生成",3),
-      TB(8,[R("质量检查","发现问题","下发整改单","提交整改","完成复查","整单闭环","继续整改","质量处罚"),R(RO("【自动统计】次"),RO("【自动统计】项"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张 / 【自动统计】元"))])
+    {h:"一  截至目前质量状态", blocks:[
+      TB(8,[R("累计检查","累计问题","实际下发整改单","已闭环","当前未闭环","待复查","已逾期","闭环率"),R(RO("126次"),RO("238项"),RO("84张"),RO("69张"),RO("15张"),RO("4张"),RO("3张"),RO(calcRateText(82, 84)))]),
+      TA("q_current_note","状态说明","累计检查发现问题238项。当前15张未闭环整改单共包含问题41项，其中最早一张已持续12天；未来3日内到期2张。","系统自动生成",3),
+      TB(2,[R("专项","截至目前"),R(KV("质量验收",""),RO("累计申请86项，通过72项，待审批10项")),R(KV("物资送检",""),RO("累计同步已审批报告23份")),R(KV("实测实量",""),RO("累计42条记录、672个测点，合格率94.94%")),R(KV("标养室",""),RO("当前20.1℃、99%，在养23组，到龄待取0组"))])
     ]},
     {h:"二  今日主要记录", blocks:[
       {note:"系统支持11类质量业务，正式日志只列出当日已发生事项，未发生事项不生成记录。"},
@@ -527,16 +528,12 @@ function schemaQualityProject(){
       TA("q_yesterday_summary","昨日闭环概况","昨日共下发整改单【 自动统计 】张，涉及问题【 自动统计 】项。截至目前，已闭环【 自动统计 】张、待整改【 自动统计 】张、待复查【 自动统计 】张、继续整改【 自动统计 】张、已逾期【 自动统计 】张，昨日有效整改单闭环率为【 自动统计 】。","系统自动生成",3),
       TB(5,[R("整改单号","包含问题","整改期限","截至目前状态","闭环说明"),R(RO("ZG-20260908-001"),RO("3项"),RO("2026-09-10"),RO("已闭环"),RO("整张整改单复查通过并闭环")),R(RO("ZG-20260908-002"),RO("2项"),RO("2026-09-10"),RO("继续整改"),RO("整张整改单复查未通过并继续整改"))])
     ]},
-    {h:"四  今日异常数据", blocks:[
-      {note:"今日异常按各自业务单位分别展示，不把整改单、验收事项、测点和试块相加为一个总数。"},
-      TB(3,[R("异常类型","今日异常固定语句","当前处理情况"),R(KV("整改逾期",""),RO("今日新增逾期整改单1张。"),F("q_abn_order","","","手动输入")),R(KV("验收不合格",""),RO("今日验收未通过或退回1项。"),F("q_abn_accept","","","手动输入"))])
+    {h:"四  今日质量概况", blocks:[
+      TA("q_today_summary","今日质量概况（系统固定语句，可手动调整）","今日完成质量检查【 自动统计 】次，发现问题【 自动统计 】项，下发整改单【 自动统计 】张；提交整改【 自动统计 】张，完成复查【 自动统计 】张，其中整张单闭环【 自动统计 】张、继续整改【 自动统计 】张；今日发起质量处罚【 自动统计 】张，金额【 自动统计 】元。","系统自动生成",3),
+      TB(8,[R("今日质量检查","今日发现问题","今日下发整改单","今日提交整改","今日完成复查","今日整单闭环","今日继续整改","今日质量处罚"),R(RO("【自动统计】次"),RO("【自动统计】项"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张"),RO("【自动统计】张 / 【自动统计】元"))]),
+      TB(2,[R("今日专项","今日发生"),R(KV("今日质量验收",""),RO("新增申请4项，完成审批3项")),R(KV("今日物资送检",""),RO("同步已审批报告3份，涉及2类物资")),R(KV("今日实测实量",""),RO("执行2次，采集96个测点，合格率95.83%")),R(KV("今日标养室",""),RO("采集228条数据，入养23组，取出29组"))])
     ]},
-    {h:"五  截至目前质量状态", blocks:[
-      TB(8,[R("累计检查","累计问题","实际下发整改单","已闭环","当前未闭环","待复查","已逾期","闭环率"),R(RO("126次"),RO("238项"),RO("84张"),RO("69张"),RO("15张"),RO("4张"),RO("3张"),RO(calcRateText(82, 84)))]),
-      TA("q_current_note","状态说明","累计检查发现问题238项。当前15张未闭环整改单共包含问题41项，其中最早一张已持续12天；未来3日内到期2张。","系统自动生成",3),
-      TB(4,[R("专项","今日发生","截至目前","当前异常"),R(KV("质量验收",""),RO("新增申请4项，完成审批3项"),RO("累计申请86项，通过72项，待审批10项"),RO("未通过或退回1项")),R(KV("物资送检",""),RO("同步已审批报告3份，涉及2类物资"),RO("累计同步已审批报告23份"),RO("无")),R(KV("实测实量",""),RO("执行2次，采集96个测点，合格率95.83%"),RO("累计42条记录、672个测点，合格率94.94%"),RO("无")),R(KV("标养室",""),RO("采集228条数据，入养23组，取出29组"),RO("当前20.1℃、99%，在养23组，到龄待取0组"),RO("无"))])
-    ]},
-    {h:"六  今日遗留和明日关注", blocks:[
+    {h:"五  今日遗留和明日关注", blocks:[
       TA("q_tomorrow","遗留和明日关注","截至目前尚有未闭环整改单15张，其中待整改8张、待复查4张、继续整改3张、逾期3张；明日到期整改单2张、明日到龄试块4组、待审批质量验收10项。","系统自动生成，可手动补充",4),
       TB(2,[R("现场补充情况","需协调事项"),R(TA("q_site","","","人工可选填写",3),TA("q_coord","","","人工可选填写，系统可生成建议",3))])
     ]}
@@ -638,17 +635,16 @@ function qualityHeaderCells(rec, edit, isChild){
        因此这里不需要再写空占位格，最低温自然落在第 7 列（与最高温同列） */
     rows.push(R(lab("最低温度（℃）"), val("temp_low", TL, 3)));
   }else{
-    /* ===== 项目版：6 列等宽，字段对齐 Word 模板「质量日志-项目版-0918.docx」 =====
-       r0 | 项目名称 | 中煤雄安科创园项目 | 日志编号 | 【系统自动生成】 | 日志日期 | 时间
+    /* ===== 项目版：6 列等宽。项目版不展示日志日期，日期由台账所选日志记录确定 =====
+       r0 | 项目名称 | 中煤雄安科创园项目（跨2列） | 日志编号 | 【系统自动生成】（跨2列）
        r1 | 天气（跨两行） | 值（跨两行） | 风力（跨两行） | 值（跨两行） | 最高温度（℃） | 值
        r2 |  天气/风力 仍占这两列  | 最低温度（℃） | 值
        ——「天气、晴、风力、东北风 2 级」四个格各自 rowspan=2，纵向合并两行 */
     const CELLS = 6;
     const head = [];
     /* 第 1 行 */
-    head.push(R(lab("项目名称"), val("prj_name", PROJECT, 1, true),
-                lab("日志编号"), val("log_no", recLogNo(rec), 1),
-                lab("日志日期"), val("log_date", cnDate(rec.date), 1, true)));
+    head.push(R(lab("项目名称"), val("prj_name", PROJECT, 2, true),
+                lab("日志编号"), val("log_no", recLogNo(rec), 2)));
     /* 第 2 行：天气 / 风力 各占两行，右列放最高温度 */
     head.push(R(M2(lab("天气")), M2(val("weather", W, 1)),
                 M2(lab("风力")), M2(val("wind", WD, 1)),
@@ -4111,6 +4107,7 @@ function renderPanoramaLedger(){
   $("#content").innerHTML='<iframe class="briefing-frame" src="全景区域挂接_原型.html" title="全景照片台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
 }
 function renderBimUnified(){
+  const assetVersion = "20260924-2";
   let query = "";
   if(pendingBimBinding){
     const params = pendingBimBinding.kind==="measure" ? {
@@ -4133,6 +4130,7 @@ function renderBimUnified(){
     query = `?${new URLSearchParams(params).toString()}`;
   }
   if(pendingPanorama) query="?"+new URLSearchParams({panorama:pendingPanorama.mode,photo:pendingPanorama.photoId});
+  query += query ? `&v=${assetVersion}` : `?v=${assetVersion}`;
   pendingPanorama=null;
   $("#content").innerHTML = `<iframe class="briefing-frame" allow="fullscreen" src="BIM统一模型_交互原型.html${query}" title="BIM模型统一视图" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>`;
   pendingBimBinding = null;
