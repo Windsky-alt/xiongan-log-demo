@@ -130,8 +130,6 @@ function openAnnoForm(comp,f){
   const opts=a=>a.map(x=>'<option>'+x+'</option>').join('');
   modal('批注 · '+comp.name,
     '<div class="field"><label>问题描述 *</label><textarea id="annoDesc" rows="3" placeholder="描述实景与模型对照中发现的问题"></textarea></div>'
-   +'<div class="field"><label>问题分类</label><select id="annoCat">'+opts(['机电安装 / 管线综合','主体结构工程 / 模板工程','高处作业 / 临边防护','文明施工 / 成品保护'])+'</select></div>'
-   +'<div class="field"><label>问题级别</label><select id="annoLevel">'+opts(['一般','严重'])+'</select></div>'
    +'<label class="switch-row"><input type="checkbox" id="annoIssue" checked> 下发整改单</label>'
    +'<div id="annoIssueFields">'
    +'<div class="field"><label>整改人 *</label><select id="annoAssignee">'+opts(['李强（机电班组）','徐志成（主体施工班组）','赵明（装饰班组）'])+'</select></div>'
@@ -157,7 +155,7 @@ function openAnnoForm(comp,f){
       id:Date.now()%1000000,type:'annotation',title:desc.slice(0,20),
       componentId:comp.id,compName:comp.name,
       checkTime:annoNow(),checker:'张恒毓',
-      category:$('#annoCat').value,level:$('#annoLevel').value,
+      category:'现场批注',level:'一般',
       description:desc,requirement:'按方案整改并复查',
       deadline:issue?$('#annoDeadline').value:'',
       unit:issue?name($('#annoAssignee').value):'',
