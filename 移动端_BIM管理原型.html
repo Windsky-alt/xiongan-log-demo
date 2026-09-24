@@ -185,14 +185,12 @@ function openAnnoDetail(r){
    +'<div class="detail-row"><label>整改状态</label><span style="font-weight:700;color:'+(over?'#e94655':r.state==='已复查'?'#12a150':'#f08a24')+'">'+escapeHtml(r.state)+'</span></div>'
    +'<div class="detail-row"><label>问题描述</label><span>'+escapeHtml(r.desc||r.title)+'</span></div>'
    +'<div class="detail-row"><label>关联构件</label><span>'+escapeHtml(r.meta)+'</span></div>'
-   +'<div class="detail-row"><label>问题级别</label><span>'+escapeHtml(r.level||'一般')+'</span></div>'
    +'<div class="detail-row"><label>批注人</label><span>'+escapeHtml(r.person)+'</span></div>'
    +'<div class="detail-row"><label>批注时间</label><span>'+escapeHtml(r.time)+'</span></div></div>'
    +'<div class="detail-section"><h3>整改信息</h3>'
    +'<div class="detail-row"><label>整改人</label><span>'+escapeHtml(r.assignee||'未下发整改单')+'</span></div>'
    +'<div class="detail-row"><label>整改期限</label><span>'+escapeHtml(r.deadline||'--')+'</span></div>'
    +'<div class="detail-row"><label>复查人</label><span>'+escapeHtml(r.reviewer||'--')+'</span></div>'
-   +'<div class="detail-row"><label>整改轮次</label><span>第 '+(r.round||1)+' 轮</span></div>'
    +'<div class="fake-photo">全景视角快照（示意）</div></div></section>';
   $('#annoDetailBack').onclick=()=>$('#overlay').innerHTML='';
 }
