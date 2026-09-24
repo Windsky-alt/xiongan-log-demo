@@ -5,139 +5,73 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>批注台账</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --blue:#1688f8;--blue-soft:#edf6ff;--text:#26364d;--muted:#7d8ca2;
-  --line:#e7edf5;--bg:#f5f8fc;--danger:#e94655;--ok:#12a150;--warn:#f08a24;
-  --shadow:0 8px 24px rgba(46,79,122,.10);
-}
-html,body{height:100%}
-body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
-button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select{font-family:inherit;font-size:inherit;color:inherit}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:#cfdae8;border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#b6c6da}
-::-webkit-scrollbar-track{background:transparent}
-
-.wrap{padding:18px 22px 26px;max-width:1560px;margin:0 auto}
-.head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
-.head h1{font-size:19px;font-weight:600;letter-spacing:.2px}
-.head p{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.6}
-.head .sp{flex:1}
-.btn{padding:7px 15px;border-radius:7px;border:1px solid var(--line);background:#fff;color:#435873;
-  font-size:12.5px;transition:.15s;white-space:nowrap}
-.btn:hover{border-color:#bcd3ee;background:#fbfdff;color:var(--blue)}
-.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500}
-.btn.pri:hover{background:#0d78e4;border-color:#0d78e4;color:#fff}
-
-/* 统计卡 */
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.stat .n{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.5px}
-.stat .t{font-size:12.5px;color:var(--muted);margin-top:6px}
-.stat .s{font-size:11.5px;margin-top:4px;color:#9aa8bc}
-.stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line)}
-.stat.a::after{background:var(--danger)}
-.stat.b::after{background:var(--warn)}
-.stat.c::after{background:var(--blue)}
-.stat.d::after{background:var(--ok)}
-.stat.e::after{background:#b4232f}
-.stat.a .n{color:var(--danger)} .stat.b .n{color:var(--warn)}
-.stat.c .n{color:var(--blue)} .stat.d .n{color:var(--ok)}
-.stat.e .n{color:#b4232f}
-
-/* 筛选 */
-.filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);
-  border-radius:10px;padding:11px 14px;margin-bottom:14px;box-shadow:var(--shadow)}
-.filters select,.filters input{padding:7px 11px;border:1px solid var(--line);border-radius:7px;background:#fff;outline:none;font-size:12.5px}
-.filters select:focus,.filters input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
-.filters input{width:220px}
-.filters .sp{flex:1}
-.filters .cnt{font-size:12.5px;color:var(--muted)}
-.filters .cnt b{color:var(--blue)}
-
-/* 表格 */
-.card{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
-table{width:100%;border-collapse:collapse}
-th{background:#f7fafd;text-align:left;color:#5a6d86;font-weight:600;font-size:12.5px;padding:12px 14px;
-  border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:13px 14px;border-bottom:1px solid #f1f5fa;font-size:13px;vertical-align:top}
-tr:last-child td{border-bottom:none}
-tbody tr{cursor:pointer;transition:.13s}
-tbody tr:hover{background:#fafcff}
-tbody tr.open{background:var(--blue-soft)}
-.cell-title{font-weight:600;line-height:1.5}
-.cell-sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
-.comp{font-size:12.5px;line-height:1.6}
-.comp small{color:var(--muted);font-size:11.5px;display:block;margin-top:2px}
-.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;background:#f0f4f9;color:#5a6d86;
-  border:1px solid #e6edf6;margin:0 4px 4px 0;white-space:nowrap}
-.badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:6px;font-weight:600;white-space:nowrap}
-.badge.wait{background:#fff1f2;color:var(--danger);border:1px solid #ffd9dd}
+/* 样式与 实测实量_测量记录台账_嵌入页.html 保持一致 */
+:root{--blue:#3a82ee;--text:#34445a;--muted:#8290a4;--line:#e4eaf2;--head:#f3f4f6}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",Arial,sans-serif;color:var(--text);background:#fff}button,input,select{font:inherit}button{cursor:pointer}
+.page{height:100%;padding:22px;overflow:auto}
+.filters{display:flex;align-items:center;gap:14px;padding-bottom:20px;border-bottom:1px solid #edf1f5;flex-wrap:wrap}
+.filters input,.filters select{height:40px;border:1px solid #dbe3ed;border-radius:4px;padding:0 12px;color:#41546c;background:#fff}
+.filters input{width:240px}
+.btn{height:40px;padding:0 18px;border:1px solid #d8e1ec;border-radius:4px;background:#fff;color:#43556d}
+.btn:hover{border-color:#b9cde8;color:var(--blue)}
+.btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.btn.primary:hover{background:#2f74dc;border-color:#2f74dc;color:#fff}
+.summary{display:flex;justify-content:space-between;align-items:center;margin:19px 0 12px}
+.summary b{color:var(--blue)}
+.summary .sub{color:var(--muted);margin-left:4px}
+.table-wrap{min-width:1080px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{height:56px;padding:0 12px;background:var(--head);color:#33465e;text-align:left;font-weight:700}
+td{height:64px;padding:0 12px;border-bottom:1px solid var(--line);color:#566980;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tbody tr:hover td{background:#fbfdff}
+tbody tr{cursor:pointer}
+.wrap-cell{white-space:normal;line-height:1.55;padding-top:12px;padding-bottom:12px;height:auto}
+.cell-title{font-weight:600;color:#33465e}
+.cell-sub{color:var(--muted);margin-top:4px;font-size:13px}
+.comp small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;background:#f0f4f9;color:#5a6d86;border:1px solid #e6edf6;font-size:12px;margin:5px 5px 0 0}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.badge.wait{background:#fff1f2;color:#d94252;border:1px solid #ffd9dd}
 .badge.cont{background:#fff6ea;color:#c2690a;border:1px solid #ffe2bd}
-.badge.check{background:var(--blue-soft);color:#0d6fd4;border:1px solid #cfe6ff}
-.badge.done{background:#eefaf3;color:var(--ok);border:1px solid #cdeedb}
-.badge.over{background:var(--danger);color:#fff;border:1px solid var(--danger)}
-.over-days{font-size:11px;color:var(--danger);font-weight:600;margin-left:5px}
-.ops{white-space:nowrap;text-align:right}
-.ops .btn{padding:4px 10px;font-size:12px}
-.empty{padding:56px 20px;text-align:center;color:#9aa8bc;font-size:13px;line-height:1.9}
-.empty b{display:block;color:#5a6d86;font-size:14px;margin-bottom:6px}
-.hintbar{display:flex;align-items:center;gap:9px;padding:9px 14px;background:#fbfdff;border-bottom:1px solid var(--line);
-  font-size:12px;color:var(--muted)}
-.hintbar .dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex:0 0 auto}
+.badge.check{background:#eef6ff;color:#2176cf;border:1px solid #cfe6ff}
+.badge.done{background:#eefaf3;color:#148659;border:1px solid #cdeedb}
+.badge.over{background:#e45555;color:#fff;border:1px solid #e45555}
+.over-days{color:#e45555;font-size:12.5px;font-weight:700;margin-left:6px}
+.action{border:0;background:transparent;color:#237bea;padding:4px 6px}
+.action:hover{text-decoration:underline}
+.pagination{display:flex;justify-content:flex-end;gap:14px;align-items:center;padding:22px 0;color:#74849a}
+.page-no{color:#237bea;font-weight:700;border:0;background:transparent;padding:2px 6px}
+.page-no.on{color:#fff;background:var(--blue);border-radius:3px}
+.empty{padding:50px;text-align:center;color:#91a0b2}
+.pick-note{padding:10px 12px;margin-bottom:14px;border:1px solid #d9eafd;border-radius:4px;background:#f2f8ff;color:#52718f}
 
-/* 详情抽屉 */
-.mask{position:fixed;inset:0;background:rgba(28,45,68,.34);display:none;z-index:50}
-.mask.on{display:block}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:92vw;background:#fff;z-index:51;
-  box-shadow:-14px 0 40px rgba(28,45,68,.18);transform:translateX(100%);transition:transform .26s ease;
-  display:flex;flex-direction:column}
-.drawer.on{transform:none}
-.dhd{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
-.dhd h3{font-size:15.5px;font-weight:600;line-height:1.5;flex:1}
-.dhd .x{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:#9aa8bc;font-size:19px;line-height:1;flex:0 0 auto}
-.dhd .x:hover{background:#f2f6fb;color:#5a6d86}
-.dbd{flex:1;overflow:auto;padding:16px 20px 24px}
-.sec{margin-bottom:20px}
-.sec h4{font-size:12px;color:#94a3b8;font-weight:700;letter-spacing:.6px;margin-bottom:10px}
-.kv{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed #f0f4f9;font-size:13px;line-height:1.6}
-.kv:last-child{border-bottom:none}
-.kv .k{width:82px;flex:0 0 auto;color:var(--muted);font-size:12.5px}
+.mask{position:fixed;z-index:10;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:#17283f63}
+.mask.show{display:flex}
+.dialog{width:min(760px,96vw);max-height:88vh;display:flex;flex-direction:column;background:#fff;border-radius:6px;box-shadow:0 18px 45px #17283f42}
+.dialog-head{height:58px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);font-size:17px;font-weight:700}
+.close{margin-left:auto;border:0;background:transparent;color:#7f8da1;font-size:24px}
+.dialog-body{padding:19px 20px;overflow:auto}
+.dialog-foot{height:62px;display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 20px;border-top:1px solid var(--line);background:#fafcff}
+.sec-title{font-weight:700;color:#33465e;margin:18px 0 4px;font-size:13.5px}
+.sec-title:first-child{margin-top:0}
+.kv{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13.5px;line-height:1.6}
+.kv:last-child{border-bottom:0}
+.kv .k{width:88px;flex:none;color:var(--muted)}
 .kv .v{flex:1;min-width:0;word-break:break-word}
-.steps{position:relative;padding-left:20px}
-.steps::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
-.step{position:relative;padding-bottom:16px}
+.steps{position:relative;padding-left:18px}
+.steps::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.step{position:relative;padding-bottom:14px}
 .step:last-child{padding-bottom:0}
-.step::before{content:"";position:absolute;left:-19px;top:4px;width:11px;height:11px;border-radius:50%;
-  background:#fff;border:2.5px solid var(--line)}
+.step::before{content:"";position:absolute;left:-17px;top:5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--line)}
 .step.on::before{border-color:var(--blue)}
-.step.over::before{border-color:var(--danger)}
-.step .st{font-size:13px;font-weight:600}
-.step .sm{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.6}
-.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(10px);opacity:0;background:#1c2d44;
-  color:#fff;padding:10px 18px;border-radius:8px;font-size:12.5px;transition:.24s;pointer-events:none;z-index:99;
-  box-shadow:0 10px 30px rgba(28,45,68,.3);max-width:80vw;text-align:center;line-height:1.6}
-.toast.on{opacity:1;transform:translateX(-50%)}
-@media(max-width:1180px){.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.filters input{width:140px}}
+.step.over::before{border-color:#e45555}
+.step .st{font-weight:700;color:#33465e}
+.step .sm{color:var(--muted);font-size:13px;margin-top:2px}
+@media(max-width:900px){.page{padding:15px}.dialog{width:97vw}.dialog-body{padding:14px}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="head">
-    <div>
-      <h1>批注台账</h1>
-      <p>汇总 BIM 模型与全景对比中发起的全部批注及其整改闭环情况。批注来自现场移动端与 Web 端分屏对比，状态自动同步。</p>
-    </div>
-    <div class="sp"></div>
-    <button class="btn" id="refreshBtn">刷新</button>
-    <button class="btn pri" id="exportBtn">导出未闭环清单</button>
-  </div>
-
-  <div class="stats" id="stats"></div>
-
+<main class="page">
   <div class="filters">
     <select id="fStatus">
       <option value="all">全部状态</option>
@@ -151,41 +85,36 @@ tbody tr.open{background:var(--blue-soft)}
     <select id="fChecker"><option value="">全部批注人</option></select>
     <select id="fComp"><option value="">全部构件</option></select>
     <input id="fSearch" placeholder="搜索批注内容 / 构件 / 责任人"/>
-    <div class="sp"></div>
-    <span class="cnt" id="cnt"></span>
+    <button class="btn" id="resetBtn">重置</button>
+    <button class="btn primary" id="searchBtn">搜索</button>
   </div>
 
-  <div class="card">
-    <div class="hintbar"><span class="dot"></span>「待整改逾期」为派生状态：待整改或继续整改且已过整改期限，无需人工维护。</div>
-    <table>
-      <colgroup>
-        <col style="width:44px"><col><col style="width:178px"><col style="width:172px">
-        <col style="width:120px"><col style="width:150px"><col style="width:104px">
-      </colgroup>
-      <thead><tr>
-        <th>序号</th><th>批注内容</th><th>关联构件</th><th>批注人 / 时间</th>
-        <th>整改状态</th><th>整改人 / 期限</th><th class="ops">操作</th>
-      </tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <div class="summary">
+    <span>共 <b id="count">0</b> 条批注<span class="sub" id="subInfo"></span></span>
+    <span class="sub" id="pageInfo"></span>
   </div>
+
+  <div id="tableMount"></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<div class="mask" id="mask">
+  <section class="dialog">
+    <header class="dialog-head"><span id="dialogTitle">批注详情</span><button class="close" id="closeBtn" aria-label="关闭">×</button></header>
+    <div class="dialog-body" id="dialogBody"></div>
+    <footer class="dialog-foot"><button class="btn" id="dialogFootBtn">关闭</button></footer>
+  </section>
 </div>
-
-<div class="mask" id="mask"></div>
-<aside class="drawer" id="drawer">
-  <div class="dhd"><h3 id="dTitle">批注详情</h3><button class="x" id="dClose">×</button></div>
-  <div class="dbd" id="dBody"></div>
-</aside>
-<div class="toast" id="toast"></div>
 
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toLocaleDateString('sv-SE');
+const PAGE_SIZE=10;
 
 /* ===== 数据 =====
-   同一份批注数据由三处共用：BIM统一模型_交互原型（批注页签）、分屏对比（发起）、移动端。
+   与 BIM统一模型_交互原型（批注页签）、分屏对比、移动端共用同一份批注数据。
    存储 key 统一为 xa-annotations-v1；本页作为嵌入页（sandbox 无 same-origin）时读不到 localStorage，
    自动回落到种子数据，因此任何环境下都能独立演示。 */
 const SEED=[
@@ -209,7 +138,6 @@ const SEED=[
    deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比'}
 ];
 
-/* 读取存储（可能因 sandbox 不可用） */
 function loadStore(){
   let raw=null;
   try{ raw=localStorage.getItem('xa-annotations-v1') }catch(e){ raw=null }
@@ -222,7 +150,7 @@ function loadStore(){
 }
 let DATA=(loadStore()||SEED).map(r=>({...r}));
 
-/* ===== 状态派生（与 BIM统一模型 保持一致） ===== */
+/* ===== 状态派生（与其它端一致） ===== */
 function displayStatus(r){
   const b=r.baseStatus||r.status||'待整改';
   const open=(b==='待整改'||b==='继续整改');
@@ -230,61 +158,25 @@ function displayStatus(r){
 }
 function overdueDays(r){
   if(displayStatus(r)!=='待整改逾期'||!r.deadline) return 0;
-  const d=(new Date(today())-new Date(r.deadline))/86400000;
-  return Math.max(0,Math.round(d));
+  return Math.max(0,Math.round((new Date(today())-new Date(r.deadline))/86400000));
 }
 function badgeCls(s){
   return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':s==='已复查'?'done':'wait';
 }
 const isClosed=s=>s==='已复查';
 
-/* ===== 渲染 ===== */
-function stat(i){
-  const all=DATA.map(r=>({r,s:displayStatus(r)}));
-  return {
-    total:all.length,
-    wait:all.filter(x=>x.s==='待整改').length,
-    cont:all.filter(x=>x.s==='继续整改').length,
-    check:all.filter(x=>x.s==='待复查').length,
-    done:all.filter(x=>x.s==='已复查').length,
-    over:all.filter(x=>x.s==='待整改逾期').length,
-    noIssue:all.filter(x=>x.r.issueRequired===false).length,
-    firstPass:all.filter(x=>x.s==='已复查'&&(x.r.round||1)===1).length
-  };
-}
-function renderStats(){
-  const s=stat();
-  const rate=s.done?Math.round(s.firstPass/s.done*100):0;
-  const cards=[
-    {cls:'a',n:s.wait, t:'待整改',    sub:'已派单，等待整改人处理'},
-    {cls:'b',n:s.cont, t:'继续整改',  sub:'复查未通过，退回重做'},
-    {cls:'c',n:s.check,t:'待复查',    sub:'整改人已提交，等待复查'},
-    {cls:'d',n:s.done, t:'已复查',    sub:'一次通过率 '+rate+'%'},
-    {cls:'e',n:s.over, t:'待整改逾期',sub:'含继续整改超期，需督办'}
-  ];
-  $('#stats').innerHTML=cards.map(c=>
-    '<div class="stat '+c.cls+'"><div class="n">'+c.n+'</div><div class="t">'+c.t+'</div><div class="s">'+c.sub+'</div></div>'
-  ).join('');
-}
-function renderFilters(){
-  const cs=[...new Set(DATA.map(r=>r.checker))].sort();
-  const ps=[...new Set(DATA.map(r=>r.compName).filter(Boolean))].sort();
-  const cur1=$('#fChecker').value, cur2=$('#fComp').value;
-  $('#fChecker').innerHTML='<option value="">全部批注人</option>'+cs.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
-  $('#fComp').innerHTML='<option value="">全部构件</option>'+ps.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
-  $('#fChecker').value=cur1; $('#fComp').value=cur2;
-}
-function rows(){
-  const st=$('#fStatus').value, ck=$('#fChecker').value, cp=$('#fComp').value,
-        kw=$('#fSearch').value.trim().toLowerCase();
-  return DATA.map(r=>({r,s:displayStatus(r)})).filter(({r,s})=>{
-    if(st==='open'){ if(isClosed(s)) return false }
-    else if(st!=='all'&&s!==st) return false;
-    if(ck&&r.checker!==ck) return false;
-    if(cp&&r.compName!==cp) return false;
-    if(kw){
-      const hay=[r.title,r.description,r.compName,r.assignee,r.requirement,r.category].join(' ').toLowerCase();
-      if(hay.indexOf(kw)<0) return false;
+/* ===== 查询 ===== */
+let view={status:'all',checker:'',comp:'',kw:'',page:1};
+function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
+function filtered(){
+  return allRows().filter(({r,s})=>{
+    if(view.status==='open'){ if(isClosed(s)) return false }
+    else if(view.status!=='all'&&s!==view.status) return false;
+    if(view.checker&&r.checker!==view.checker) return false;
+    if(view.comp&&r.compName!==view.comp) return false;
+    if(view.kw){
+      const hay=[r.title,r.description,r.compName,r.assignee,r.checker].join(' ').toLowerCase();
+      if(hay.indexOf(view.kw)<0) return false;
     }
     return true;
   }).sort((a,b)=>{
@@ -292,122 +184,152 @@ function rows(){
     return rank(a.s)-rank(b.s)||String(b.r.checkTime).localeCompare(a.r.checkTime);
   });
 }
-function renderTable(){
-  const list=rows(), body=$('#tbody');
-  const s0=stat();
-  $('#cnt').innerHTML='共 <b>'+list.length+'</b> 条 / 全部 '+DATA.length+' 条 · 未派单 <b>'+s0.noIssue+'</b> 条';
-  if(!list.length){
-    body.innerHTML='<tr><td colspan="7"><div class="empty"><b>没有符合条件的批注</b>调整筛选条件，或到 BIM 模型 / 全景对比中点击构件发起批注。</div></td></tr>';
-    return;
-  }
-  body.innerHTML=list.map(({r,s},i)=>{
-    const od=overdueDays(r);
-    const duty=r.issueRequired===false
-      ? '<span style="color:#9aa8bc">未下发整改单</span>'
-      : esc(r.assignee||'--')+'<div class="cell-sub">期限 '+(r.deadline?esc(r.deadline):'--')+(od?' · 超期 '+od+' 天':'')+'</div>';
-    return '<tr data-id="'+r.id+'">'
-      +'<td>'+(i+1)+'</td>'
-      +'<td><div class="cell-title">'+esc(r.title)+'</div>'
-        +'<div class="cell-sub">'+esc(r.description)+'</div>'
-        +'<div style="margin-top:6px"><span class="tag">第 '+(r.round||1)+' 轮</span>'
-        +(r.source?'<span class="tag">'+esc(r.source)+'</span>':'')+'</div></td>'
-      +'<td class="comp">'+esc(r.compName||r.componentId)+'<small>'+esc(r.componentId)+'</small></td>'
-      +'<td>'+esc(r.checker)+'<div class="cell-sub">'+esc(r.checkTime)+'</div></td>'
-      +'<td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超'+od+'天</span>':'')+'</td>'
-      +'<td>'+duty+'</td>'
-      +'<td class="ops"><button class="btn" data-detail="'+r.id+'">详情</button></td>'
-      +'</tr>';
-  }).join('');
-}
-function renderAll(){ renderStats(); renderFilters(); renderTable(); }
 
-/* ===== 详情抽屉 ===== */
-function stepHtml(r){
-  const s=displayStatus(r);
-  const od=overdueDays(r);
-  const steps=[];
-  steps.push({t:'批注发起',m:r.checker+' · '+r.checkTime+' · 来源：'+(r.source||'—'),
-    c:true});
-  if(r.issueRequired===false){
-    steps.push({t:'未下发整改单',m:'仅留痕批注，未指派整改人与期限',c:false});
+/* ===== 渲染 ===== */
+function renderFilters(){
+  const cs=[...new Set(DATA.map(r=>r.checker))].sort();
+  const ps=[...new Set(DATA.map(r=>r.compName).filter(Boolean))].sort();
+  $('#fChecker').innerHTML='<option value="">全部批注人</option>'+cs.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fComp').innerHTML='<option value="">全部构件</option>'+ps.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fStatus').value=view.status;
+  $('#fChecker').value=view.checker;
+  $('#fComp').value=view.comp;
+  $('#fSearch').value=view.kw;
+}
+function renderTable(){
+  const list=filtered(), total=list.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(view.page>pages) view.page=pages;
+  if(view.page<1) view.page=1;
+  const start=(view.page-1)*PAGE_SIZE, paged=list.slice(start,start+PAGE_SIZE);
+
+  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)).length, overCnt=all.filter(x=>x.s==='待整改逾期').length;
+  $('#count').textContent=total;
+  $('#subInfo').textContent=' · 未闭环 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
+  $('#pageInfo').textContent='第 '+view.page+' / '+pages+' 页';
+
+  const mount=$('#tableMount');
+  if(!list.length){
+    mount.innerHTML='<div class="empty">没有符合条件的批注</div>';
   }else{
-    steps.push({t:'下发整改单',m:'整改人：'+r.assignee+' · 责任单位：'+(r.unit||'--')+' · 期限：'+r.deadline+' · 复查人：'+r.reviewer,c:true});
-    if(s==='待整改'||s==='待整改逾期') steps.push({t:'等待整改',m:r.assignee+' 尚未提交整改结果',c:false,over:s==='待整改逾期'});
-    if(s==='继续整改') steps.push({t:'复查未通过 · 继续整改',m:'第 '+(r.round||1)+' 轮，需重新整改后再次提交',c:true});
-    if(s==='待复查') steps.push({t:'整改已提交 · 待复查',m:'等待 '+r.reviewer+' 复查',c:true});
-    if(s==='已复查') steps.push({t:'复查通过 · 已闭环',m:'复查人：'+r.reviewer,c:true});
-    if(s==='待整改逾期') steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',c:false,over:true});
+    mount.innerHTML='<div class="table-wrap"><table><colgroup>'
+      +'<col style="width:60px"><col><col style="width:190px"><col style="width:170px">'
+      +'<col style="width:130px"><col style="width:160px"><col style="width:90px">'
+      +'</colgroup><thead><tr>'
+      +'<th>序号</th><th>批注内容</th><th>关联构件</th><th>批注人 / 时间</th>'
+      +'<th>整改状态</th><th>整改人 / 期限</th><th>操作</th>'
+      +'</tr></thead><tbody>'
+      +paged.map(({r,s},i)=>{
+        const od=overdueDays(r);
+        const duty=r.issueRequired===false
+          ? '<span style="color:'+'var(--muted)'+'">未下发整改单</span>'
+          : esc(r.assignee||'--')+'<div class="cell-sub">期限 '+(r.deadline?esc(r.deadline):'--')+(od?' · 超期 '+od+' 天':'')+'</div>';
+        return '<tr data-id="'+r.id+'">'
+          +'<td>'+(start+i+1)+'</td>'
+          +'<td class="wrap-cell"><div class="cell-title">'+esc(r.title)+'</div>'
+            +'<div class="cell-sub">'+esc(r.description)+'</div>'
+            +'<div><span class="tag">第 '+(r.round||1)+' 轮</span>'+(r.source?'<span class="tag">'+esc(r.source)+'</span>':'')+'</div></td>'
+          +'<td class="comp">'+esc(r.compName||r.componentId)+'<small>'+esc(r.componentId)+'</small></td>'
+          +'<td>'+esc(r.checker)+'<div class="cell-sub">'+esc(r.checkTime)+'</div></td>'
+          +'<td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<div class="over-days">超 '+od+' 天</div>':'')+'</td>'
+          +'<td>'+duty+'</td>'
+          +'<td><button class="action" data-detail="'+r.id+'">详情</button></td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
   }
-  return '<div class="steps">'+steps.map(x=>
-    '<div class="step '+(x.over?'over':x.c?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>'
-  ).join('')+'</div>';
+
+  const pg=$('#pagination');
+  if(pages<=1){ pg.innerHTML=''; }
+  else{
+    let h='<span>共 '+total+' 条</span>';
+    for(let i=1;i<=pages;i++) h+='<button class="page-no'+(i===view.page?' on':'')+'" data-page="'+i+'">'+i+'</button>';
+    pg.innerHTML=h;
+  }
+}
+function renderAll(){ renderFilters(); renderTable(); }
+
+/* ===== 详情 ===== */
+function stepHtml(r){
+  const s=displayStatus(r), od=overdueDays(r), steps=[];
+  steps.push({t:'批注发起',m:r.checker+' · '+r.checkTime+' · 来源：'+(r.source||'—'),on:true});
+  if(r.issueRequired===false){
+    steps.push({t:'未下发整改单',m:'仅现场留痕，未指派整改人与期限',on:false});
+  }else{
+    steps.push({t:'下发整改单',m:'整改人：'+r.assignee+' · 期限：'+r.deadline+' · 复查人：'+r.reviewer,on:true});
+    if(s==='待整改') steps.push({t:'等待整改',m:r.assignee+' 尚未提交整改结果',on:false});
+    if(s==='继续整改') steps.push({t:'复查未通过 · 继续整改',m:'第 '+(r.round||1)+' 轮，需重新整改后再次提交',on:true});
+    if(s==='待复查') steps.push({t:'整改已提交 · 待复查',m:'等待 '+r.reviewer+' 复查',on:true});
+    if(s==='已复查') steps.push({t:'复查通过 · 已闭环',m:'复查人：'+r.reviewer,on:true});
+    if(s==='待整改逾期') steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',on:false,over:true});
+  }
+  return '<div class="steps">'+steps.map(x=>'<div class="step '+(x.over?'over':x.on?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>').join('')+'</div>';
 }
 function openDetail(id){
   const r=DATA.find(x=>x.id===id); if(!r) return;
-  const s=displayStatus(r);
-  $('#dTitle').textContent=r.title;
-  $('#dBody').innerHTML=
-    '<div class="sec"><h4>整改状态</h4>'
-      +'<div class="kv"><span class="k">当前状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'
-      +(overdueDays(r)?'<span class="over-days">超期 '+overdueDays(r)+' 天</span>':'')+'</span></div>'
-    +'</div>'
-    +'<div class="sec"><h4>批注信息</h4>'
-      +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
-      +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'<br><span style="color:#9aa8bc;font-size:11.5px">'+esc(r.componentId)+'</span></span></div>'
-    +'</div>'
-    +'<div class="sec"><h4>责任分工</h4>'
-      +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+' · '+esc(r.checkTime)+'</span></div>'
-      +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
-      +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
-      +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>'
-    +'</div>'
-    +'<div class="sec"><h4>流转记录</h4>'+stepHtml(r)+'</div>';
-  $('#mask').classList.add('on'); $('#drawer').classList.add('on');
+  const s=displayStatus(r), od=overdueDays(r);
+  $('#dialogTitle').textContent='批注详情';
+  $('#dialogBody').innerHTML=
+     '<div class="sec-title">批注内容</div>'
+    +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
+    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'<br><span style="color:#8290a4;font-size:12.5px">'+esc(r.componentId)+'</span></span></div>'
+    +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'
+    +'<div class="kv"><span class="k">批注时间</span><span class="v">'+esc(r.checkTime)+'</span></div>'
+    +'<div class="sec-title">整改信息</div>'
+    +(r.issueRequired===false
+      ? '<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></span></div>'
+        +'<div class="kv"><span class="k">说明</span><span class="v">未下发整改单，仅作现场留痕。</span></div>'
+      : '<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超 '+od+' 天</span>':'')+'</span></div>'
+        +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
+        +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
+        +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>')
+    +'<div class="sec-title">流转记录</div>'+stepHtml(r);
+  $('#mask').classList.add('show');
 }
-function closeDetail(){ $('#mask').classList.remove('on'); $('#drawer').classList.remove('on'); }
+function closeDetail(){ $('#mask').classList.remove('show'); }
 
 /* ===== 事件 ===== */
-$('#tbody').addEventListener('click',e=>{
+$('#searchBtn').onclick=()=>{
+  view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
+  view.comp=$('#fComp').value; view.kw=$('#fSearch').value.trim().toLowerCase();
+  view.page=1; renderTable();
+};
+$('#resetBtn').onclick=()=>{
+  view={status:'all',checker:'',comp:'',kw:'',page:1}; renderFilters(); renderTable();
+};
+$('#fSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#searchBtn').click() });
+$('#tableMount').addEventListener('click',e=>{
   const b=e.target.closest('[data-detail]');
   if(b){ e.stopPropagation(); openDetail(+b.dataset.detail); return }
   const tr=e.target.closest('tr[data-id]');
   if(tr) openDetail(+tr.dataset.id);
 });
-$('#dClose').onclick=closeDetail;
-$('#mask').onclick=closeDetail;
+$('#pagination').addEventListener('click',e=>{
+  const b=e.target.closest('[data-page]'); if(!b) return;
+  view.page=+b.dataset.page; renderTable();
+});
+$('#closeBtn').onclick=closeDetail;
+$('#dialogFootBtn').onclick=closeDetail;
+$('#mask').onclick=e=>{ if(e.target.id==='mask') closeDetail() };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail() });
-['#fStatus','#fChecker','#fComp'].forEach(s=>$(s).onchange=renderTable);
-$('#fSearch').oninput=renderTable;
-$('#refreshBtn').onclick=()=>{ const d=loadStore(); if(d){DATA=d.map(r=>({...r}))} renderAll(); toast('已刷新，共 '+DATA.length+' 条批注') };
-$('#exportBtn').onclick=()=>{
-  const open=DATA.map(r=>({r,s:displayStatus(r)})).filter(x=>!isClosed(x.s));
-  if(!open.length){ toast('全部批注均已闭环，无需导出'); return }
-  const lines=['批注内容,关联构件,整改状态,整改人,整改期限,超期天数']
-    .concat(open.map(({r,s})=>[r.title,r.compName||r.componentId,s,r.assignee||'--',r.deadline||'--',overdueDays(r)||''].join(',')));
-  toast('已生成未闭环清单：'+open.length+' 条（演示环境不下载文件）');
-  console.log(lines.join('\n'));
-};
-let tt=null;
-function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),2600) }
 
 /* ===== 跨端同步 ===== */
 window.addEventListener('message',e=>{
   const d=e.data; if(!d||d.channel!=='xa-annotation') return;
   if(d.action==='refresh'||d.action==='changed'){
-    /* 宿主（v4）只持有它自己持久化的那些批注，因此这里做合并而不是整体替换，
-       保证种子数据与各端新增的批注都在台账里可见 */
     if(Array.isArray(d.data)&&d.data.length){
       d.data.forEach(x=>{
         const i=DATA.findIndex(y=>y.id===x.id);
         if(i<0) DATA.push({...x}); else DATA[i]={...DATA[i],...x};
       });
-    } else { const s=loadStore(); if(s) DATA=s.map(r=>({...r})); }
-    renderAll(); toast('批注已更新，共 '+DATA.length+' 条');
+    }else{
+      const s=loadStore(); if(s) DATA=s.map(r=>({...r}));
+    }
+    renderAll();
   }
 });
 try{
   const bc=new BroadcastChannel('xa-annotation-sync');
-  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=s.map(r=>({...r})); renderAll(); toast('批注已更新') } };
+  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=s.map(r=>({...r})); renderAll() } };
 }catch(e){}
 try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ const s=loadStore(); if(s){DATA=s.map(r=>({...r})); renderAll()} } }) }catch(e){}
 
