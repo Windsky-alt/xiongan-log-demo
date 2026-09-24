@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>个人中心</title>
+<style>
+/* 样式与 批注台账 / 实测实量_测量记录台账 保持一致 */
+:root{--blue:#3a82ee;--text:#34445a;--muted:#8290a4;--line:#e4eaf2;--head:#f3f4f6}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",Arial,sans-serif;color:var(--text);background:#fff}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.page{height:100%;padding:22px;overflow:auto}
+.page[hidden]{display:none}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tab{padding:12px 20px;border:0;background:none;color:#5a6d86;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--blue)}
+.tab.on{color:var(--blue);font-weight:700;border-bottom-color:var(--blue)}
+.tab .cnt{display:inline-block;margin-left:6px;padding:0 7px;border-radius:9px;background:#eef4fb;color:#3a82ee;font-size:12px;font-weight:700}
+.summary{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;color:var(--muted)}
+.summary b{color:var(--blue)}
+.empty{padding:50px;text-align:center;color:#91a0b2;line-height:1.9}
+.todo-card{border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;background:#fff;transition:.15s}
+.todo-card:hover{border-color:#cfe0f5;box-shadow:0 4px 14px rgba(58,130,238,.08)}
+.todo-card .t-main{flex:1;min-width:0}
+.todo-card .t-title{font-weight:600;color:#33465e}
+.todo-card .t-meta{color:var(--muted);font-size:13px;margin-top:5px;line-height:1.7}
+.todo-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:12.5px;font-weight:700;flex:none}
+.todo-badge.fix{background:#fff1f2;color:#d94252;border:1px solid #ffd9dd}
+.todo-badge.rev{background:#eef6ff;color:#2176cf;border:1px solid #cfe6ff}
+.todo-badge.done{background:#eefaf3;color:#148659;border:1px solid #cdeedb}
+.todo-badge.cont{background:#fff6ea;color:#c2690a;border:1px solid #ffe2bd}
+.btn{height:40px;padding:0 18px;border:1px solid #d8e1ec;border-radius:4px;background:#fff;color:#43556d}
+.btn:hover{border-color:#b9cde8;color:var(--blue)}
+.btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.btn.primary:hover{background:#2f74dc;border-color:#2f74dc;color:#fff}
+.btn.sm{height:32px;padding:0 14px;font-size:13px}
+.msg-card{border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:6px;padding:13px 16px;margin-bottom:10px;background:#fbfdff}
+.msg-card .m-t{font-weight:600;color:#33465e}
+.msg-card .m-d{color:var(--muted);font-size:13px;margin-top:5px}
+.detail-bar{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid #edf1f5;margin-bottom:20px}
+.detail-bar .detail-name{font-weight:700;color:#33465e;font-size:15px}
+.sec-title{font-weight:700;color:#33465e;margin:20px 0 6px;font-size:13.5px}
+.sec-title:first-child{margin-top:0}
+.kv{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13.5px;line-height:1.6}
+.kv:last-child{border-bottom:0}
+.kv .k{width:104px;flex:none;color:var(--muted)}
+.kv .v{flex:1;min-width:0;word-break:break-word}
+.img-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.img-list img{width:96px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.field label{font-weight:600;color:#33465e;font-size:13.5px}
+.field label .req{color:#e45555;margin-left:3px}
+.field input[type=date],.field textarea,.field input[type=file]{border:1px solid #dbe3ed;border-radius:4px;padding:10px 12px;color:#41546c;background:#fff;width:100%;outline:none}
+.field input[type=date]{height:40px;padding:0 12px}
+.field textarea{min-height:82px;resize:vertical;line-height:1.6}
+.field input:focus,.field textarea:focus{border-color:var(--blue)}
+.radio-row{display:flex;gap:22px;align-items:center}
+.radio-row label{display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer}
+.radio-row input{accent-color:var(--blue);width:16px;height:16px}
+.form-foot{display:flex;gap:10px;padding-top:18px;border-top:1px solid var(--line);margin-top:22px}
+.err{color:#e45555;font-size:13px;min-height:20px;margin-top:6px}
+.file-list{color:var(--muted);font-size:13px;margin-top:6px}
+</style>
+</head>
+<body>
+<main class="page" id="listView">
+  <div class="tabs" id="tabs"></div>
+  <div id="tabBody"></div>
+</main>
+
+<main class="page" id="formView" hidden>
+  <div class="detail-bar">
+    <button class="btn" id="backBtn">← 返回</button>
+    <span class="detail-name" id="formTitle"></span>
+  </div>
+  <div id="formBody"></div>
+</main>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toLocaleDateString('sv-SE');
+const nowStr=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())};
+const PH=t=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="72"><rect width="96" height="72" fill="#e8eef5"/><text x="48" y="41" font-size="11" fill="#8290a4" text-anchor="middle">'+t+'</text></svg>');
+
+/* ===== 数据：与批注台账共用 xa-annotations-v1 ===== */
+const SEED=[
+  {id:101,type:'annotation',title:'桥架与风管净距不足',componentId:'C-A1',compName:'1号楼 · 14层 · 柱 KZ-01',checkTime:'2026-10-12 09:26',checker:'张恒毓',description:'电气桥架与排风管交叉处净距不足 50mm，不满足规范要求。',deadline:'2026-10-15',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:102,type:'annotation',title:'模板拼缝处漏浆痕迹',componentId:'C-A3',compName:'1号楼 · 14层 · 柱 KZ-02',checkTime:'2026-10-08 15:40',checker:'刘振',description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true,round:1,source:'全景对比',
+   rectifiedAt:'2026-10-10',rectifyDescription:'已封堵拼缝并清理表面，申请复查。',rectifyImages:[PH('整改照片1'),PH('整改照片2')]},
+  {id:103,type:'annotation',title:'临边防护栏杆缺失',componentId:'C-A2',compName:'1号楼 · 14层 · 楼板 B-01',checkTime:'2026-09-18 10:05',checker:'王会彬',description:'楼板临边防护栏杆未安装到位，存在坠落风险。',deadline:'2026-09-20',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:104,type:'annotation',title:'地面成品保护不到位',componentId:'C-A5',compName:'1号楼 · 14层 · 梁 KL-05',checkTime:'2026-09-22 11:20',checker:'张恒毓',description:'已完工地坪未做覆盖保护，材料堆放造成划痕。',deadline:'',unit:'',assignee:'',reviewer:'',baseStatus:'待整改',issueRequired:false,round:1,source:'移动端'},
+  {id:105,type:'annotation',title:'桥架吊架间距偏大',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-09-16 14:30',checker:'李强',description:'桥架吊架间距超过规范要求，需加密。',deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比',
+   rectifiedAt:'2026-09-18',rectifyDescription:'已按规范加密吊架至 1.5m 间距。',rectifyImages:[PH('整改照片')],
+   reviewAt:'2026-09-19 09:30',reviewResult:'不通过',reviewDescription:'抽检仍有 2 处间距超 1.8m，需继续加密后重新提交。',reviewImages:[PH('复查照片')]},
+  {id:106,type:'annotation',title:'风管保温层局部破损',componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',checkTime:'2026-09-10 16:05',checker:'刘振',description:'风管保温层局部破损，影响保温效果。',deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',
+   rectifiedAt:'2026-09-12',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],
+   reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]}
+];
+const MSGS=[
+  {t:'您有新的批注待整改',d:'桥架与风管净距不足 · 1号楼 · 14层 · 柱 KZ-01',time:'2026-10-12 09:30'},
+  {t:'您有新的批注待复查',d:'模板拼缝处漏浆痕迹 · 1号楼 · 14层 · 柱 KZ-02',time:'2026-10-10 14:25'},
+  {t:'复查未通过，需继续整改',d:'桥架吊架间距偏大 · 2号楼 · 13层 · 梁 L-12',time:'2026-09-19 09:32'},
+  {t:'批注已闭环',d:'风管保温层局部破损 · 复查合格',time:'2026-09-13 09:16'}
+];
+
+function loadAnnos(){
+  try{
+    const raw=localStorage.getItem('xa-annotations-v1');
+    if(raw){ const d=JSON.parse(raw); const list=Array.isArray(d)?d:(d.annotations||[]); if(list.length) return list }
+  }catch(e){}
+  return SEED.slice();
+}
+function saveAnnos(list){
+  try{ localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length})) }catch(e){}
+  try{ const ch=new BroadcastChannel('xa-annotation-sync'); ch.postMessage({type:'changed'}); ch.close(); }catch(e){}
+}
+let DATA=loadAnnos().map(r=>({...r}));
+
+function displayStatus(r){
+  const b=r.baseStatus||r.status||'待整改';
+  const open=(b==='待整改'||b==='继续整改');
+  return (open&&r.deadline&&r.deadline<today())?'待整改逾期':b;
+}
+function badgeCls(s){
+  return s==='待整改逾期'?'fix':s==='待整改'?'fix':s==='继续整改'?'cont':s==='待复查'?'rev':'done';
+}
+function imgList(a){
+  if(!Array.isArray(a)||!a.length) return '<span style="color:#8290a4">--</span>';
+  return '<div class="img-list">'+a.map(src=>'<img src="'+esc(src)+'" alt="附件"/>').join('')+'</div>';
+}
+
+/* ===== 待办 / 已办 / 发起 ===== */
+const isFixTodo=r=>r.issueRequired!==false&&(r.baseStatus==='待整改'||r.baseStatus==='继续整改');
+const isRevTodo=r=>r.issueRequired!==false&&r.baseStatus==='待复查';
+function todoList(){ return DATA.filter(r=>isFixTodo(r)||isRevTodo(r)) }
+function doneList(){ return DATA.filter(r=>r.rectifiedAt||r.reviewAt) }
+function mineList(){ return DATA.filter(r=>r.checker==='张恒毓'||r.checker==='李强') }
+
+/* ===== 列表渲染 ===== */
+let tab='todo';
+function renderTabs(){
+  const n={todo:todoList().length,done:doneList().length,mine:mineList().length,msg:MSGS.length};
+  const defs=[['todo','我的待办',n.todo],['done','我的已办',n.done],['mine','我的发起',n.mine],['msg','我的消息',n.msg]];
+  $('#tabs').innerHTML=defs.map(([k,t,c])=>'<button class="tab'+(tab===k?' on':'')+'" data-tab="'+k+'">'+t+'<span class="cnt">'+c+'</span></button>').join('');
+}
+function renderTabBody(){
+  const box=$('#tabBody');
+  if(tab==='todo'){
+    const list=todoList();
+    if(!list.length){ box.innerHTML='<div class="empty">暂无待办</div>'; return }
+    box.innerHTML='<div class="summary"><span>共 <b>'+list.length+'</b> 项待处理</span><span>整改人 / 复查人均可在此处理</span></div>'
+      +list.map(r=>{
+        const rev=isRevTodo(r);
+        return '<div class="todo-card">'
+          +'<span class="todo-badge '+(rev?'rev':'fix')+'">'+(rev?'待复查':'待整改')+'</span>'
+          +'<div class="t-main"><div class="t-title">'+esc(r.title)+'</div>'
+          +'<div class="t-meta">'+esc(r.compName||r.componentId)+'<br>批注人 '+esc(r.checker)+' · 期限 '+esc(r.deadline||'--')
+          +(r.baseStatus==='继续整改'?' · <span style="color:#c2690a">第 '+(r.round||1)+' 轮继续整改</span>':'')+'</div></div>'
+          +'<button class="btn primary sm" data-open="'+r.id+'" data-mode="'+(rev?'review':'rectify')+'">'+(rev?'去复查':'去整改')+'</button>'
+          +'</div>';
+      }).join('');
+  }else if(tab==='done'){
+    const list=doneList();
+    if(!list.length){ box.innerHTML='<div class="empty">暂无已办</div>'; return }
+    box.innerHTML='<div class="summary"><span>共 <b>'+list.length+'</b> 条</span></div>'
+      +list.map(r=>{
+        const s=displayStatus(r);
+        return '<div class="todo-card"><span class="todo-badge '+badgeCls(s)+'">'+esc(s)+'</span>'
+          +'<div class="t-main"><div class="t-title">'+esc(r.title)+'</div>'
+          +'<div class="t-meta">'+esc(r.compName||r.componentId)+'<br>'
+          +(r.rectifiedAt?'整改：'+esc(r.rectifiedAt)+' '+esc(r.rectifyDescription||''):'')
+          +(r.reviewAt?'<br>复查：'+esc(r.reviewAt)+' '+esc(r.reviewResult||''):'')+'</div></div>'
+          +'<button class="btn sm" data-open="'+r.id+'" data-mode="view">查看</button></div>';
+      }).join('');
+  }else if(tab==='mine'){
+    const list=mineList();
+    if(!list.length){ box.innerHTML='<div class="empty">暂无我发起的批注</div>'; return }
+    box.innerHTML='<div class="summary"><span>共 <b>'+list.length+'</b> 条我发起或参与的批注</span></div>'
+      +list.map(r=>{
+        const s=displayStatus(r);
+        return '<div class="todo-card"><span class="todo-badge '+badgeCls(s)+'">'+esc(s)+'</span>'
+          +'<div class="t-main"><div class="t-title">'+esc(r.title)+'</div>'
+          +'<div class="t-meta">'+esc(r.compName||r.componentId)+'<br>发起人 '+esc(r.checker)+' · '+esc(r.checkTime)+'</div></div>'
+          +'<button class="btn sm" data-open="'+r.id+'" data-mode="view">查看</button></div>';
+      }).join('');
+  }else{
+    box.innerHTML='<div class="summary"><span>共 <b>'+MSGS.length+'</b> 条消息</span></div>'
+      +MSGS.map(m=>'<div class="msg-card"><div class="m-t">'+esc(m.t)+'</div><div class="m-d">'+esc(m.d)+' · '+esc(m.time)+'</div></div>').join('');
+  }
+}
+function renderList(){ renderTabs(); renderTabBody() }
+
+/* ===== 表单 / 详情 ===== */
+let curId=null, curMode='view';
+const findRec=id=>DATA.find(x=>x.id===id);
+
+function baseBlock(r){
+  return '<div class="sec-title">基本信息</div>'
+    +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
+    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'</span></div>'
+    +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'
+    +'<div class="kv"><span class="k">批注时间</span><span class="v">'+esc(r.checkTime)+'</span></div>'
+    +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>';
+}
+function rectifiedBlock(r){
+  if(!r.rectifiedAt) return '<div class="kv"><span class="k">整改情况</span><span class="v" style="color:#8290a4">尚未提交整改</span></div>';
+  return '<div class="kv"><span class="k">实际整改日期</span><span class="v">'+esc(r.rectifiedAt)+'</span></div>'
+    +'<div class="kv"><span class="k">整改描述</span><span class="v">'+esc(r.rectifyDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">整改图片</span><span class="v">'+imgList(r.rectifyImages)+'</span></div>';
+}
+function reviewedBlock(r){
+  if(!r.reviewAt) return '<div class="kv"><span class="k">复查情况</span><span class="v" style="color:#8290a4">等待复查</span></div>';
+  return '<div class="kv"><span class="k">复查结果</span><span class="v" style="font-weight:700;color:'+(r.reviewResult==='通过'?'#148659':'#e45555')+'">'+esc(r.reviewResult||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">复查说明</span><span class="v">'+esc(r.reviewDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(r.reviewAt)+'</span></div>'
+    +'<div class="kv"><span class="k">复查照片</span><span class="v">'+imgList(r.reviewImages)+'</span></div>';
+}
+function openForm(id,mode){
+  curId=id; curMode=mode;
+  const r=findRec(id); if(!r) return;
+  $('#listView').hidden=true; $('#formView').hidden=false; $('#formView').scrollTop=0;
+  const titles={rectify:'整改 · ',review:'复查 · ',view:'详情 · '};
+  $('#formTitle').textContent=(titles[mode]||'')+r.title;
+  const box=$('#formBody');
+
+  if(mode==='view'){
+    let h=baseBlock(r)+'<div class="sec-title">整改信息</div>'+rectifiedBlock(r)
+      +'<div class="sec-title">复查信息</div>'+reviewedBlock(r);
+    box.innerHTML=h;
+    return;
+  }
+
+  if(mode==='rectify'){
+    box.innerHTML=baseBlock(r)
+      +'<div class="sec-title">整改信息</div>'
+      +'<div class="field"><label>实际整改日期<span class="req">*</span></label><input type="date" id="fDate" value="'+today()+'"></div>'
+      +'<div class="field"><label>整改描述<span class="req">*</span></label><textarea id="fDesc" placeholder="描述整改做法与结果"></textarea></div>'
+      +'<div class="field"><label>整改图片<span class="req">*</span></label><input type="file" id="fImg" accept="image/*" multiple><div class="file-list" id="fFileList"></div></div>'
+      +'<div class="err" id="fErr"></div>'
+      +'<div class="form-foot"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fSubmit">提交整改</button></div>';
+    $('#fImg').onchange=()=>{ $('#fFileList').textContent=Array.from($('#fImg').files).map(f=>f.name).join('、')||'未选择文件' };
+    $('#fCancel').onclick=backToList;
+    $('#fSubmit').onclick=submitRectify;
+    return;
+  }
+
+  if(mode==='review'){
+    box.innerHTML=baseBlock(r)
+      +'<div class="sec-title">整改信息（只读）</div>'+rectifiedBlock(r)
+      +'<div class="sec-title">复查信息</div>'
+      +'<div class="field"><label>复查结果<span class="req">*</span></label><div class="radio-row">'
+        +'<label><input type="radio" name="fResult" value="通过">通过</label>'
+        +'<label><input type="radio" name="fResult" value="不通过">不通过</label>'
+      +'</div></div>'
+      +'<div class="field"><label>复查说明<span class="req" id="fDescReq" style="display:none">*</span></label><textarea id="fDesc" placeholder="不通过时必填，说明未通过原因"></textarea></div>'
+      +'<div class="field"><label>复查照片<span class="req">*</span></label><input type="file" id="fImg" accept="image/*" multiple><div class="file-list" id="fFileList"></div></div>'
+      +'<div class="err" id="fErr"></div>'
+      +'<div class="form-foot"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fSubmit">提交复查</button></div>';
+    document.querySelectorAll('input[name=fResult]').forEach(x=>x.onchange=()=>{
+      $('#fDescReq').style.display=(document.querySelector('input[name=fResult]:checked')||{}).value==='不通过'?'inline':'none';
+    });
+    $('#fImg').onchange=()=>{ $('#fFileList').textContent=Array.from($('#fImg').files).map(f=>f.name).join('、')||'未选择文件' };
+    $('#fCancel').onclick=backToList;
+    $('#fSubmit').onclick=submitReview;
+  }
+}
+function backToList(){
+  $('#formView').hidden=true; $('#listView').hidden=false;
+  curId=null; renderList();
+}
+function readFiles(input){
+  return Promise.all(Array.from(input.files).map(f=>new Promise((ok,no)=>{
+    const fr=new FileReader(); fr.onload=()=>ok(fr.result); fr.onerror=no; fr.readAsDataURL(f);
+  })));
+}
+async function submitRectify(){
+  const err=$('#fErr'); err.textContent='';
+  const date=$('#fDate').value, desc=$('#fDesc').value.trim(), files=$('#fImg').files;
+  if(!date){ err.textContent='请选择实际整改日期'; return }
+  if(!desc){ err.textContent='请填写整改描述'; return }
+  if(!files.length){ err.textContent='请上传整改图片'; return }
+  try{
+    const imgs=await readFiles($('#fImg'));
+    const i=DATA.findIndex(x=>x.id===curId);
+    DATA[i]={...DATA[i],rectifiedAt:date,rectifyDescription:desc,rectifyImages:imgs,
+      baseStatus:'待复查',reviewAt:'',reviewResult:'',reviewDescription:'',reviewImages:[]};
+    saveAnnos(DATA);
+    alert('整改已提交，状态变为「待复查」');
+    backToList();
+  }catch(e){ err.textContent='图片读取失败，请重试' }
+}
+async function submitReview(){
+  const err=$('#fErr'); err.textContent='';
+  const picked=document.querySelector('input[name=fResult]:checked');
+  const desc=$('#fDesc').value.trim(), files=$('#fImg').files;
+  if(!picked){ err.textContent='请选择复查结果'; return }
+  if(picked.value==='不通过'&&!desc){ err.textContent='复查不通过时必须填写复查说明'; return }
+  if(!files.length){ err.textContent='请上传复查照片'; return }
+  try{
+    const imgs=await readFiles($('#fImg'));
+    const i=DATA.findIndex(x=>x.id===curId);
+    const pass=picked.value==='通过';
+    DATA[i]={...DATA[i],
+      reviewAt:nowStr(),reviewResult:picked.value,reviewDescription:desc,reviewImages:imgs,
+      baseStatus:pass?'已复查':'继续整改',
+      round:pass?(DATA[i].round||1):(DATA[i].round||1)+1};
+    if(!pass){ DATA[i].rectifiedAt=''; DATA[i].rectifyDescription=''; DATA[i].rectifyImages=[] }
+    saveAnnos(DATA);
+    alert(pass?'复查通过，批注已闭环':'复查不通过，已退回继续整改');
+    backToList();
+  }catch(e){ err.textContent='图片读取失败，请重试' }
+}
+
+/* ===== 事件 ===== */
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-tab]'); if(!b) return;
+  tab=b.dataset.tab; renderList();
+});
+$('#tabBody').addEventListener('click',e=>{
+  const b=e.target.closest('[data-open]'); if(!b) return;
+  openForm(+b.dataset.open,b.dataset.mode);
+});
+$('#backBtn').onclick=backToList;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') backToList() });
+
+/* 跨端同步：批注台账那边改了数据，这里刷新 */
+try{
+  const bc=new BroadcastChannel('xa-annotation-sync');
+  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ DATA=loadAnnos().map(r=>({...r})); renderList() } };
+}catch(e){}
+try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ DATA=loadAnnos().map(r=>({...r})); renderList() } }) }catch(e){}
+
+renderList();
+})();
+</script>
+</body>
+</html>

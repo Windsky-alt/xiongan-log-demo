@@ -68,14 +68,19 @@ tbody tr{cursor:pointer}
 .step .st{font-weight:700;color:#33465e}
 .step .sm{color:var(--muted);font-size:13px;margin-top:2px}
 @media(max-width:900px){.page{padding:15px}.dialog{width:97vw}.dialog-body{padding:14px}}
+.detail-bar{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid #edf1f5;margin-bottom:20px}
+.detail-bar .detail-name{font-weight:700;color:#33465e;font-size:15px}
+.page[hidden]{display:none}
+.img-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.img-list img{width:96px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
-<main class="page">
+<main class="page" id="listView">
   <div class="filters">
     <select id="fStatus">
       <option value="all">全部状态</option>
-      <option value="open">未闭环</option>
+      <option value="noIssue">无需整改</option>
       <option value="待整改">待整改</option>
       <option value="继续整改">继续整改</option>
       <option value="待复查">待复查</option>
@@ -98,13 +103,14 @@ tbody tr{cursor:pointer}
   <div class="pagination" id="pagination"></div>
 </main>
 
-<div class="mask" id="mask">
-  <section class="dialog">
-    <header class="dialog-head"><span id="dialogTitle">批注详情</span><button class="close" id="closeBtn" aria-label="关闭">×</button></header>
-    <div class="dialog-body" id="dialogBody"></div>
-    <footer class="dialog-foot"><button class="btn" id="dialogFootBtn">关闭</button></footer>
-  </section>
-</div>
+<main class="page" id="detailView" hidden>
+  <div class="detail-bar">
+    <button class="btn" id="backBtn">← 返回台账</button>
+    <span class="detail-name" id="detailName"></span>
+    <span class="badge" id="detailState"></span>
+  </div>
+  <div id="detailBody"></div>
+</main>
 
 <script>
 (()=>{'use strict';
@@ -112,6 +118,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toLocaleDateString('sv-SE');
 const PAGE_SIZE=10;
+const PH=t=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="72"><rect width="96" height="72" fill="#e8eef5"/><text x="48" y="41" font-size="11" fill="#8290a4" text-anchor="middle">'+t+'</text></svg>');
 
 /* ===== 数据 =====
    与 BIM统一模型_交互原型（批注页签）、分屏对比、移动端共用同一份批注数据。
@@ -123,7 +130,7 @@ const SEED=[
    deadline:'2026-10-15',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
   {id:102,type:'annotation',title:'模板拼缝处漏浆痕迹',componentId:'C-A3',compName:'1号楼 · 14层 · 柱 KZ-02',checkTime:'2026-10-08 15:40',checker:'刘振',category:'主体结构工程 / 模板工程',level:'一般',
    description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',requirement:'封堵拼缝，后续浇筑前复查。',
-   deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true,round:1,source:'全景对比'},
+   deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-10-10 14:20',rectifyDescription:'已封堵拼缝并清理表面，申请复查。',rectifyImages:[PH('整改照片1'),PH('整改照片2')]},
   {id:103,type:'annotation',title:'临边防护栏杆缺失',componentId:'C-A2',compName:'1号楼 · 14层 · 楼板 B-01',checkTime:'2026-09-18 10:05',checker:'王会彬',category:'高处作业 / 临边防护',level:'严重',
    description:'楼板临边防护栏杆未安装到位，存在坠落风险。',requirement:'立即补齐防护栏并设置警示标识。',
    deadline:'2026-09-20',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
@@ -132,10 +139,10 @@ const SEED=[
    deadline:'',unit:'',assignee:'',reviewer:'',baseStatus:'待整改',issueRequired:false,round:1,source:'移动端'},
   {id:105,type:'annotation',title:'桥架吊架间距偏大',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-09-16 14:30',checker:'李强',category:'机电安装 / 支吊架',level:'一般',
    description:'桥架吊架间距超过规范要求，需加密。',requirement:'按规范加密吊架。',
-   deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比'},
+   deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比',rectifiedAt:'2026-09-18 11:00',rectifyDescription:'已按规范加密吊架至 1.5m 间距。',rectifyImages:[PH('整改照片')],reviewAt:'2026-09-19 09:30',reviewResult:'不通过',reviewDescription:'抽检仍有 2 处间距超 1.8m，需继续加密后重新提交。',reviewImages:[PH('复查照片')]},
   {id:106,type:'annotation',title:'风管保温层局部破损',componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',checkTime:'2026-09-10 16:05',checker:'刘振',category:'机电安装 / 暖通',level:'一般',
    description:'风管保温层局部破损，影响保温效果。',requirement:'修补保温层并复查。',
-   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比'}
+   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-09-12 10:30',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]}
 ];
 
 function loadStore(){
@@ -170,7 +177,7 @@ let view={status:'all',checker:'',comp:'',kw:'',page:1};
 function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
 function filtered(){
   return allRows().filter(({r,s})=>{
-    if(view.status==='open'){ if(isClosed(s)) return false }
+    if(view.status==='noIssue'){ if(r.issueRequired!==false) return false }
     else if(view.status!=='all'&&s!==view.status) return false;
     if(view.checker&&r.checker!==view.checker) return false;
     if(view.comp&&r.compName!==view.comp) return false;
@@ -264,29 +271,70 @@ function stepHtml(r){
   }
   return '<div class="steps">'+steps.map(x=>'<div class="step '+(x.over?'over':x.on?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>').join('')+'</div>';
 }
-function openDetail(id){
-  const r=DATA.find(x=>x.id===id); if(!r) return;
+let curDetail=null;
+function imgList(a){
+  if(!Array.isArray(a)||!a.length) return '<span style="color:#8290a4">--</span>';
+  return '<div class="img-list">'+a.map(src=>'<img src="'+src+'" alt="附件"/>').join('')+'</div>';
+}
+function renderDetail(){
+  const r=DATA.find(x=>x.id===curDetail);
+  if(!r){ backToList(); return }
   const s=displayStatus(r), od=overdueDays(r);
-  $('#dialogTitle').textContent='批注详情';
-  $('#dialogBody').innerHTML=
-     '<div class="sec-title">批注内容</div>'
+  $('#detailName').textContent=r.title;
+  const st=$('#detailState');
+  st.textContent=s+(od?' 超 '+od+' 天':'');
+  st.className='badge '+badgeCls(s);
+
+  let h='<div class="sec-title">基本信息</div>'
     +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
-    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'<br><span style="color:#8290a4;font-size:12.5px">'+esc(r.componentId)+'</span></span></div>'
+    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'</span></div>'
     +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'
     +'<div class="kv"><span class="k">批注时间</span><span class="v">'+esc(r.checkTime)+'</span></div>'
-    +'<div class="sec-title">整改信息</div>'
-    +(r.issueRequired===false
-      ? '<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></span></div>'
-        +'<div class="kv"><span class="k">说明</span><span class="v">未下发整改单，仅作现场留痕。</span></div>'
-      : '<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超 '+od+' 天</span>':'')+'</span></div>'
-        +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
-        +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
-        +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>')
-    +'<div class="sec-title">流转记录</div>'+stepHtml(r);
-  $('#mask').classList.add('show');
-}
-function closeDetail(){ $('#mask').classList.remove('show'); }
+    +'<div class="kv"><span class="k">来源</span><span class="v">'+esc(r.source||'--')+'</span></div>';
 
+  h+='<div class="sec-title">整改信息</div>';
+  if(r.issueRequired===false){
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></span></div>'
+      +'<div class="kv"><span class="k">说明</span><span class="v" style="color:#8290a4">未下发整改单，无需整改。</span></div>';
+  }else{
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超 '+od+' 天</span>':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
+      +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>';
+    if(r.rectifiedAt){
+      h+='<div class="kv"><span class="k">实际整改日期</span><span class="v">'+esc(r.rectifiedAt)+'</span></div>'
+        +'<div class="kv"><span class="k">整改描述</span><span class="v">'+esc(r.rectifyDescription||'--')+'</span></div>'
+        +'<div class="kv"><span class="k">整改图片</span><span class="v">'+imgList(r.rectifyImages)+'</span></div>';
+    }else{
+      h+='<div class="kv"><span class="k">整改情况</span><span class="v" style="color:#8290a4">尚未提交整改</span></div>';
+    }
+  }
+
+  h+='<div class="sec-title">复查信息</div>';
+  if(r.reviewAt){
+    h+='<div class="kv"><span class="k">复查结果</span><span class="v" style="font-weight:700;color:'+(r.reviewResult==='通过'?'#148659':'#e45555')+'">'+esc(r.reviewResult||'--')+'</span></div>'
+      +'<div class="kv"><span class="k">复查说明</span><span class="v">'+esc(r.reviewDescription||'--')+'</span></div>'
+      +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(r.reviewAt)+'</span></div>'
+      +'<div class="kv"><span class="k">复查照片</span><span class="v">'+imgList(r.reviewImages)+'</span></div>';
+  }else{
+    h+='<div class="kv"><span class="k">复查情况</span><span class="v" style="color:#8290a4">'+(r.issueRequired===false?'无需复查':'待复查，暂无复查记录')+'</span></div>';
+  }
+
+  h+='<div class="sec-title">流转记录</div>'+stepHtml(r);
+  $('#detailBody').innerHTML=h;
+}
+function openDetail(id){
+  curDetail=id;
+  $('#listView').hidden=true;
+  $('#detailView').hidden=false;
+  $('#detailView').scrollTop=0;
+  renderDetail();
+}
+function backToList(){
+  curDetail=null;
+  $('#detailView').hidden=true;
+  $('#listView').hidden=false;
+}
 /* ===== 事件 ===== */
 $('#searchBtn').onclick=()=>{
   view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
@@ -307,10 +355,8 @@ $('#pagination').addEventListener('click',e=>{
   const b=e.target.closest('[data-page]'); if(!b) return;
   view.page=+b.dataset.page; renderTable();
 });
-$('#closeBtn').onclick=closeDetail;
-$('#dialogFootBtn').onclick=closeDetail;
-$('#mask').onclick=e=>{ if(e.target.id==='mask') closeDetail() };
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail() });
+$('#backBtn').onclick=backToList;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') backToList() });
 
 /* ===== 跨端同步 ===== */
 window.addEventListener('message',e=>{

@@ -189,6 +189,7 @@
     .fld,.fld.ro{border:0;background:transparent;box-shadow:none;color:#111;padding:0;min-height:20px}
     .fld-unit{color:#111}
   }
+.user-entry{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;cursor:pointer;border-radius:6px;padding:4px 8px;transition:.15s}.user-entry:hover{background:#eef4fb;color:#1688f8}
 </style>
 </head>
 <body>
@@ -210,7 +211,7 @@
       <span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><span class="device-ico">▱</span>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
-      <span class="divider"></span><span class="round-user"></span><span>系统管理员</span>
+      <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
       <span class="divider"></span><span>退出</span>
     </div>
   </div>
@@ -244,7 +245,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20260924-8";
+const BUILD = "20260924-9";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -956,6 +957,8 @@ function renderNav(){
     c.innerHTML = `<span>BIM应用</span><span>/</span><span class="cur">BIM模型</span>`;
   }else if(route.view==="annotationLedger"){
     c.innerHTML = `<span>BIM应用</span><span>/</span><span class="cur">批注台账</span>`;
+  }else if(route.view==="profile"){
+    c.innerHTML = `<span>个人中心</span>`;
   }else if(route.view==="measurementLedger"){
     c.innerHTML = `<span>质量管理</span><span>/</span><span>实测实量</span><span>/</span><span class="cur">测量记录台账</span>`;
   }else if(route.view==="processBriefing"){
@@ -981,6 +984,7 @@ function switchModule(module){
   if(module==="quality") ensureQualityDaily();
   else if(module==="progress") ensureDaily(true);
   if(module!=="bim") ensureLogNumbers();
+(function(){var u=document.getElementById("userEntry");if(u)u.onclick=function(){route={module:route.module,view:"profile",target:null,childId:null};render()}})();
 (function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
   render();
 }
@@ -1263,6 +1267,7 @@ function openStaffConfig(){
     ensureDaily(true);           // 按新配置补齐施工子日志
     ensureQualityDaily();       // 按新配置补齐质量子日志
   ensureLogNumbers();
+(function(){var u=document.getElementById("userEntry");if(u)u.onclick=function(){route={module:route.module,view:"profile",target:null,childId:null};render()}})();
 (function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
     save(); closeModal(); render();
     toast(`人员配置已保存：每日自动生成 ${state.configured.length} 条个人版子日志`);
@@ -1306,6 +1311,7 @@ function openStaffConfigForm(){
     if(!person){ person={id:`custom_${Date.now()}`,name,dept,role}; STAFF.push(person); }
     if(!state.configured.includes(person.id)) state.configured.push(person.id);
     ensureDaily(true); ensureQualityDaily(); ensureLogNumbers();
+(function(){var u=document.getElementById("userEntry");if(u)u.onclick=function(){route={module:route.module,view:"profile",target:null,childId:null};render()}})();
 (function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})(); save(); closeModal(); render(); toast("人员已新增并同步到每日个人日志");
   };
 }
@@ -4133,6 +4139,9 @@ function renderMeasurementLedger(){
 function renderPanoramaLedger(){
   $("#content").innerHTML='<iframe class="briefing-frame" src="全景区域挂接_原型.html?v=${BUILD}" title="全景照片台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
 }
+function renderProfile(){
+  $("#content").innerHTML = `<iframe class="briefing-frame" src="个人中心_嵌入页.html?v=${BUILD}" title="个人中心" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>`;
+}
 function renderAnnotationLedger(){
   $("#content").innerHTML='<iframe class="briefing-frame" src="批注台账_嵌入页.html?v=${BUILD}" title="批注台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
 }
@@ -4236,13 +4245,14 @@ window.addEventListener('message',event=>{
 });
 function render(){
   renderNav();
-  $("#content").classList.toggle("briefing-content", route.view==="panoramaLedger" || route.view==="annotationLedger" || route.view==="briefing" || route.view==="processBriefing" || route.view==="measurementLedger" || route.view==="bimUnified");
+  $("#content").classList.toggle("briefing-content", route.view==="panoramaLedger" || route.view==="annotationLedger" || route.view==="profile" || route.view==="briefing" || route.view==="processBriefing" || route.view==="measurementLedger" || route.view==="bimUnified");
   if(route.view==="briefing") renderBriefing();
   else if(route.view==="processBriefing") renderProcessBriefing();
   else if(route.view==="measurementLedger") renderMeasurementLedger();
   else if(route.view==="bimUnified") renderBimUnified();
   else if(route.view==="panoramaLedger") renderPanoramaLedger();
   else if(route.view==="annotationLedger") renderAnnotationLedger();
+  else if(route.view==="profile") renderProfile();
   else if(route.view==="ledger") renderLedger();
   else if(route.view==="edit") renderEdit();
   else renderPreview();
@@ -4252,6 +4262,7 @@ function render(){
 ensureDaily();
 ensureQualityDaily();
 ensureLogNumbers();
+(function(){var u=document.getElementById("userEntry");if(u)u.onclick=function(){route={module:route.module,view:"profile",target:null,childId:null};render()}})();
 (function(){var a=document.querySelector("a.mobile-entry");if(a){var h=a.getAttribute("href")||"";if(h.indexOf("?")<0)a.setAttribute("href",h+"?v="+BUILD)}})();
 /* 支持用 hash 直达视图，便于演示与分享：#bim / #panoramaLedger / #annotationLedger */
 (function(){

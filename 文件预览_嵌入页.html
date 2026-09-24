@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>文件预览</title>
+<style>
+/* 样式与 批注台账 / 测量记录台账 保持一致 */
+:root{--blue:#3a82ee;--text:#34445a;--muted:#8290a4;--line:#e4eaf2;--head:#f3f4f6}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",Arial,sans-serif;color:var(--text);background:#fff}button{font:inherit;cursor:pointer}
+.page{height:100%;padding:22px;overflow:auto;display:flex;flex-direction:column}
+.pv-head{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid #edf1f5;flex:0 0 auto}
+.pv-icon{width:44px;height:44px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;background:linear-gradient(140deg,#3a82ee,#2f6bd0);flex:none}
+.pv-icon.dwg{background:linear-gradient(140deg,#f0a020,#df7a10)}
+.pv-icon.doc{background:linear-gradient(140deg,#4aa3a3,#2f7f7f)}
+.pv-name{font-weight:700;color:#33465e;font-size:15px}
+.pv-meta{color:var(--muted);font-size:13px;margin-top:3px}
+.sp{flex:1}
+.btn{height:40px;padding:0 18px;border:1px solid #d8e1ec;border-radius:4px;background:#fff;color:#43556d}
+.btn:hover{border-color:#b9cde8;color:var(--blue)}
+.pv-body{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:22px 0;min-height:0}
+.pv-paper{width:min(720px,100%);background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 28px rgba(46,79,122,.10);padding:38px 44px}
+.pv-title{font-size:19px;font-weight:800;color:#26364d;text-align:center;letter-spacing:1px}
+.pv-sub{text-align:center;color:var(--muted);font-size:13px;margin:10px 0 26px}
+.pv-line{height:9px;border-radius:4px;background:#eef2f7;margin-bottom:13px}
+.pv-h{height:12px;border-radius:4px;background:#dfe7f1;margin:22px 0 14px}
+.pv-note{margin-top:26px;padding:12px 14px;border:1px dashed #cfe0f5;border-radius:6px;background:#f7fbff;color:#52718f;font-size:13px;line-height:1.8;text-align:center}
+.pv-unsupported{padding:70px 24px;text-align:center;color:#91a0b2;line-height:2}
+.pv-unsupported b{display:block;color:#5a6d86;font-size:15px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="pv-head">
+    <span class="pv-icon" id="pvIcon">PDF</span>
+    <div>
+      <div class="pv-name" id="pvName">文件名</div>
+      <div class="pv-meta" id="pvMeta"></div>
+    </div>
+    <div class="sp"></div>
+    <button class="btn" id="dlBtn">下载文件</button>
+  </div>
+  <div class="pv-body" id="pvBody"></div>
+</main>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const q=new URLSearchParams(location.search);
+const name=q.get('name')||'未命名文件';
+const cat=q.get('cat')||'';
+const uploader=q.get('by')||'';
+const time=q.get('time')||'';
+const size=q.get('size')||'';
+const ext=(name.split('.').pop()||'').toLowerCase();
+
+const isDwg=['dwg','dxf'].includes(ext);
+const isDoc=['doc','docx'].includes(ext);
+const iconTxt=isDwg?'DWG':(isDoc?'DOC':(ext==='pdf'?'PDF':(ext||'FILE').toUpperCase().slice(0,4)));
+
+$('#pvIcon').textContent=iconTxt;
+$('#pvIcon').className='pv-icon'+(isDwg?' dwg':(isDoc?' doc':''));
+$('#pvName').textContent=name;
+$('#pvMeta').textContent=[cat,uploader,time,size].filter(Boolean).join(' · ');
+
+if(isDwg){
+  $('#pvBody').innerHTML='<div class="pv-unsupported"><b>该格式（'+esc(ext.toUpperCase())+'）暂不支持在线预览</b>请点击右上角「下载文件」，用 CAD 等专业软件打开<br><span style="font-size:12.5px">生产环境接入图纸引擎后可直接在线看图</span></div>';
+}else{
+  const rows=[92,88,95,70,0,84,90,64,0,96,86,78,58].map(w=>w?('<div class="pv-line" style="width:'+w+'%"></div>'):'<div class="pv-h" style="width:38%"></div>').join('');
+  $('#pvBody').innerHTML='<div class="pv-paper">'
+    +'<div class="pv-title">'+esc(name.replace(/\.[^.]+$/,''))+'</div>'
+    +'<div class="pv-sub">'+esc(cat||'方案文件')+' · 雄安科创园项目部</div>'
+    +rows
+    +'<div class="pv-note">演示环境：此处为文件预览占位。<br>生产接入后，PDF 直接内嵌渲染，图纸走图纸引擎在线看图。</div>'
+    +'</div>';
+}
+$('#dlBtn').onclick=()=>{ alert('演示环境不提供真实下载：'+name) };
+})();
+</script>
+</body>
+</html>
