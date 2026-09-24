@@ -75,7 +75,8 @@ $WebAssetNames = @(
     '施工工艺交底_嵌入页.html',
     '实测实量_测量记录台账_嵌入页.html',
     '全景区域挂接_原型.html',
-    'BIM统一模型_交互原型.html'
+    'BIM统一模型_交互原型.html',
+    '批注台账_嵌入页.html'
 )
 # 文件用途提示
 $FileHints = @{
