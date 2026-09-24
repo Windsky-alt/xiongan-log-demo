@@ -23,6 +23,87 @@
 .list-search{display:grid;grid-template-columns:18px minmax(0,1fr) 20px auto;align-items:center;gap:3px;flex:none;margin:7px 7px 6px;padding:5px 7px;border:1px solid #61758b;border-radius:4px;background:#f7f9fc;color:#68798b}.list-search:focus-within{border-color:#3b98ff;box-shadow:0 0 0 2px #3b98ff26}.list-search input{min-width:0;border:0;outline:0;background:transparent;color:#15263a;font-size:11px}.list-search input::placeholder{color:#8997a7}.list-search button{width:20px;height:20px;border:0;border-radius:3px;background:transparent;color:#718195;font-size:15px;line-height:1}.list-search button:hover{background:#e4ebf3}.list-search small{padding-left:4px;border-left:1px solid #d5dee8;color:#67788a;font-size:10px;white-space:nowrap}
 .brief-content{padding:14px 16px;border:1px solid var(--line,#e4eaf2);border-radius:6px;background:#fafcff;line-height:2;color:#33465e;white-space:pre-wrap}
 .file-preview{width:100%;height:520px;border:1px solid var(--line,#e4eaf2);border-radius:6px;background:#f7f9fc}
+/* ================= 模型挂接看板（未选中页签时） ================= */
+#boardMount{position:absolute;inset:0;z-index:8;pointer-events:none}
+.boards{position:absolute;inset:0;pointer-events:none;transition:opacity .2s ease}
+.boards.is-hidden{opacity:0;visibility:hidden}
+
+/* 边缘把手：收起贴边，展开跟随看板内沿 */
+.board-handle{position:absolute;top:50%;transform:translateY(-50%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 5px;background:#152536e8;color:#eaf3ff;border:1px solid #a5b7c27d;cursor:pointer;font-family:inherit;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 14px #00121f66;transition:left .26s cubic-bezier(.2,.75,.25,1),right .26s cubic-bezier(.2,.75,.25,1),background .15s}
+.board-handle:hover{background:#1e3450}
+.board-handle:focus-visible{outline:2px solid #ffd36b;outline-offset:2px}
+.board-handle.handle-left{left:0;border-left:0;border-radius:0 7px 7px 0}
+.board-handle.handle-right{right:0;border-right:0;border-radius:7px 0 0 7px}
+.board-handle.open.handle-left{left:300px}
+.board-handle.open.handle-right{right:320px}
+.bh-chev{font-size:17px;line-height:1;transition:transform .26s cubic-bezier(.2,.75,.25,1)}
+.board-handle.open .bh-chev{transform:rotate(180deg)}
+.bh-text{writing-mode:vertical-rl;letter-spacing:3px;font-size:12px}
+.bh-badge{font-size:10px;line-height:1;background:var(--blue);color:#fff;border-radius:9px;padding:3px 5px;font-weight:700}
+
+/* 看板面板 */
+.board{position:absolute;top:104px;bottom:52px;display:flex;flex-direction:column;pointer-events:auto;color:var(--text);background:var(--glass);border:1px solid #d9e9f04d;box-shadow:0 10px 28px #07131f8f;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:transform .26s cubic-bezier(.2,.75,.25,1)}
+.board-left{left:0;width:300px;transform:translateX(-100%)}
+.board-right{right:0;width:320px;transform:translateX(100%)}
+.board.open{transform:none}
+.board-head{flex:none;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #dfefff88;font-weight:700;letter-spacing:.5px}
+.board-head small{font-weight:400;font-size:11px;color:#9fb6cc}
+.board-body{flex:1;overflow:auto;padding:12px;scrollbar-width:thin}
+.board-foot{flex:none;padding:8px 12px;border-top:1px solid var(--line);font-size:11px;color:#9fb6cc}
+
+/* 左看板 */
+.board-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.board-kpi{background:#182a3d;border:1px solid #ffffff14;border-radius:5px;padding:9px 10px}
+.board-kpi b{display:block;font-size:21px;line-height:1.15;letter-spacing:.5px}
+.board-kpi b em{font-size:12px;font-style:normal;color:#9fb6cc;font-weight:400}
+.board-kpi span{font-size:11px;color:#9fb6cc}
+.board-sec{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;font-size:12px;font-weight:400;color:#9fb6cc;letter-spacing:1px;position:relative;padding-left:9px}
+.board-sec:first-child{margin-top:0}
+.board-sec::before{content:'';position:absolute;left:0;top:1px;bottom:1px;width:3px;border-radius:2px;background:var(--blue)}
+.board-sec small{font-size:10px;color:#7f95ab}
+.board-bars{display:flex;flex-direction:column;gap:7px}
+.board-bar{display:grid;grid-template-columns:9px 62px 22px 1fr;align-items:center;gap:7px;font-size:12px}
+.board-bar i{width:9px;height:9px;border-radius:50%}
+.board-bar .bn{color:#dbe8f5}
+.board-bar .bv{text-align:right;font-weight:700;color:#fff}
+.board-bar .bt{height:6px;border-radius:3px;background:#ffffff14;overflow:hidden}
+.board-bar .bt span{display:block;height:100%;border-radius:3px;transition:width .5s cubic-bezier(.2,.75,.25,1)}
+.board-stack{display:flex;height:10px;border-radius:5px;overflow:hidden;background:#ffffff10}
+.board-stack span{height:100%}
+.board-legend{list-style:none;margin:9px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;font-size:11px}
+.board-legend li{display:flex;align-items:center;gap:6px;color:#cfdcea}
+.board-legend i{width:8px;height:8px;border-radius:2px;flex:none}
+.board-legend b{margin-left:auto;color:#fff}
+.board-chips{display:flex;flex-wrap:wrap;gap:6px}
+.board-chips>span{font-size:11px;padding:3px 8px;border-radius:11px;background:#ffffff12;border:1px dashed #ffffff2e;color:#b9cbdc}
+.board-chips.small>span{border-style:solid;border-radius:3px;font-weight:700;letter-spacing:.5px;background:color-mix(in srgb,var(--c) 26%,transparent);border-color:color-mix(in srgb,var(--c) 55%,transparent);color:#fff;padding:2px 7px}
+.board-empty{padding:14px 2px;font-size:12px;color:#7f95ab;text-align:center}
+
+/* 右看板 */
+.board-tools{flex:none;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.board-search{height:30px;display:flex;align-items:center;gap:6px;padding:0 9px;background:#0e1c2b;border:1px solid #ffffff22;border-radius:4px;color:#7f95ab;font-size:12px}
+.board-search input{flex:1;min-width:0;border:0;background:transparent;color:#eaf3ff;font:inherit;outline:none}
+.board-search input::-webkit-search-cancel-button{display:none}
+.board-search button{width:20px;height:20px;flex:none;border:0;background:transparent;color:#8fa6bb;font-size:15px;line-height:1;cursor:pointer}
+.board-search button:hover{color:#fff}
+.board-seg{display:flex;background:#0e1c2b;border:1px solid #ffffff1f;border-radius:4px;overflow:hidden}
+.board-seg button{flex:1;border:0;background:transparent;color:#a9bdd0;padding:6px 0;font-size:12px;font-family:inherit;cursor:pointer;transition:.15s}
+.board-seg button.on{background:var(--blue);color:#fff}
+.board-comp{background:#182a3d;border:1px solid #ffffff14;border-left:3px solid #2f4a68;border-radius:4px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:.15s}
+.board-comp:hover{background:#1e3450;border-left-color:var(--blue)}
+.board-comp-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.board-comp-top b{font-size:13px}
+.board-locate{flex:none;border:1px solid #ffffff30;background:transparent;color:#bcd2e6;border-radius:3px;padding:2px 8px;font-size:11px;font-family:inherit;cursor:pointer}
+.board-locate:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.board-comp .board-chips{margin-top:7px}
+.board-comp-meta{margin-top:7px;font-size:11px;color:#9fb6cc;display:flex;justify-content:space-between}
+.board-date{margin:10px 0 6px;font-size:11px;color:#8fa6bb;letter-spacing:1px}
+.board-date:first-child{margin-top:0}
+.board-trow{display:flex;gap:9px;align-items:flex-start;background:#182a3d;border:1px solid #ffffff14;border-radius:4px;padding:8px 10px;margin-bottom:7px;cursor:pointer;transition:.15s}
+.board-trow:hover{background:#1e3450}
+.board-dot{flex:none;width:20px;height:20px;border-radius:4px;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.board-trow b{display:block;font-size:12px;font-weight:700}
+.board-trow small{display:block;font-size:11px;color:#9fb6cc;margin-top:2px}
 </style>
 </head>
 <body>
@@ -30,7 +111,7 @@
   <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="markers"></div><div id="focus"></div></div></div>
   <div class="tabs" id="tabs" role="group" aria-label="BIM业务标签"></div>
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
-  <div class="info-note">模型画面为项目截图示意；构件定位为原型模拟</div>
+  <div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟</div>
 </div>
 <script>
 (()=>{'use strict';
@@ -85,7 +166,158 @@ records.push(
  {id:304,type:'plan',category:'图纸',title:'3F 结构平面图.dwg',fileName:'3F 结构平面图.dwg',uploader:'刘振',uploadTime:'2026-09-12 11:10',checkTime:'2026-09-12 11:10',size:'6.8 MB',componentId:'C-B1',x:59,y:46},
  {id:305,type:'plan',category:'技术规范',title:'GB50204 混凝土结构工程施工质量验收规范.pdf',fileName:'GB50204-2015.pdf',uploader:'系统管理员',uploadTime:'2026-09-01 08:30',checkTime:'2026-09-01 08:30',size:'12.4 MB',componentId:'C-A6',x:49,y:44}
 );
-function annotationDisplayStatus(r){const b=r.baseStatus||r.status;const open=b==='待整改'||b==='继续整改';return(open&&r.deadline&&r.deadline<today())?'待整改逾期':b}
+function annotationDisplayStatus(r){const b=r.baseStatus||r.status;const open=b==='待整改'||b==='继续整改';return(open&&r.deadline&&r.deadline<today())?'待整改逾期':b}let boardLeftOpen=false,boardRightOpen=false,boardGroup='comp',boardQuery='',boardsBuilt=false;
+const BOARD_TYPES=[['quality','质量','质','#2084ed'],['safety','安全','安','#e88330'],['briefing','交底','交','#8a61d3'],['measure','实测实量','测','#20a486'],['panorama','全景','景','#249db8'],['annotation','批注','注','#e2503f'],['plan','方案','案','#8b5cf6']];
+const BOARD_STATE_ORDER=['待整改','待整改逾期','待复查','继续整改','已复查','无需整改'];
+const BOARD_STATE_COLOR={'待整改':'#e2503f','待整改逾期':'#b02418','待复查':'#e8a33d','继续整改':'#8a61d3','已复查':'#20a486','无需整改':'#7f95ab'};
+function boardIsPano(r){return String(r.componentId||'').startsWith('PANO-')}
+function boardTime(r){return r.checkTime||r.uploadTime||''}
+function boardTypeColor(t){return(BOARD_TYPES.find(x=>x[0]===t)||[0,0,0,'#7f95ab'])[3]}
+function boardStats(){
+  const comps=boardBindingRows();
+  const byType=BOARD_TYPES.map(t=>[t[0],t[1],t[2],t[3],records.filter(r=>r.type===t[0]).length]);
+  const problems=records.filter(isIssue);
+  const counts={};
+  problems.forEach(r=>{const st=r.type==='annotation'?annotationDisplayStatus(r):(r.status||'待整改');counts[st]=(counts[st]||0)+1});
+  const buckets=BOARD_STATE_ORDER.filter(s=>counts[s]).map(s=>[s,BOARD_STATE_COLOR[s]||'#7f95ab',counts[s]]);
+  Object.keys(counts).forEach(s=>{if(BOARD_STATE_ORDER.indexOf(s)<0)buckets.push([s,'#7f95ab',counts[s]])});
+  const boundIds=new Set(comps.map(c=>c.id));
+  const unbound=componentOptions.filter(c=>!boundIds.has(c[0]));
+  const last=records.map(boardTime).filter(Boolean).sort().pop()||'--';
+  const pano=records.filter(boardIsPano).length;
+  return{total:records.length,comps:comps,all:componentOptions.length,byType:byType,problems:problems,buckets:buckets,unbound:unbound,last:last,pano:pano};
+}
+function boardBindingRows(){
+  const map=new Map();
+  records.forEach(r=>{
+    if(boardIsPano(r))return;
+    if(!map.has(r.componentId))map.set(r.componentId,{id:r.componentId,name:component(r.componentId)[1],items:[],last:''});
+    const g=map.get(r.componentId);
+    g.items.push(r);
+    const t=boardTime(r);
+    if(t>g.last)g.last=t;
+  });
+  return [...map.values()].sort((a,b)=>b.items.length-a.items.length||String(b.last).localeCompare(String(a.last)));
+}
+function boardStatsHtml(s){
+  const cov=s.all?Math.round(s.comps.length/s.all*100):0;
+  const maxN=Math.max(1,...s.byType.map(t=>t[4]));
+  const used=s.byType.filter(t=>t[4]>0).length;
+  return '<div class="board-kpis">'
+    +'<div class="board-kpi"><b>'+s.total+'</b><span>挂接记录</span></div>'
+    +'<div class="board-kpi"><b>'+s.comps.length+'<em> / '+s.all+'</em></b><span>已挂接构件</span></div>'
+    +'<div class="board-kpi"><b>'+cov+'%</b><span>构件覆盖率</span></div>'
+    +'<div class="board-kpi"><b>'+used+'</b><span>业务类型</span></div>'
+    +'</div>'
+    +'<h4 class="board-sec">业务类型分布 <small>共 '+s.total+' 条</small></h4>'
+    +'<div class="board-bars">'+s.byType.slice().sort((a,b)=>b[4]-a[4]).map(t=>
+      '<div class="board-bar"><i style="background:'+t[3]+'"></i><span class="bn">'+esc(t[1])+'</span><span class="bv">'+t[4]+'</span>'
+      +'<span class="bt"><span style="width:'+Math.round(t[4]/maxN*100)+'%;background:linear-gradient(90deg,'+t[3]+'99,'+t[3]+')"></span></span></div>').join('')+'</div>'
+    +'<h4 class="board-sec">问题状态分布 <small>问题类 '+s.problems.length+' 条</small></h4>'
+    +(s.problems.length
+      ?'<div class="board-stack">'+s.buckets.map(b=>'<span style="width:'+(b[2]/s.problems.length*100)+'%;background:'+b[1]+'" title="'+esc(b[0])+' '+b[2]+'"></span>').join('')+'</div>'
+        +'<ul class="board-legend">'+s.buckets.map(b=>'<li><i style="background:'+b[1]+'"></i>'+esc(b[0])+'<b>'+b[2]+'</b></li>').join('')+'</ul>'
+      :'<div class="board-empty">暂无问题类数据</div>')
+    +'<h4 class="board-sec">未挂接构件 <small>'+s.unbound.length+' 个</small></h4>'
+    +(s.unbound.length
+      ?'<div class="board-chips">'+s.unbound.map(c=>'<span>'+esc(c[0])+' · '+esc(String(c[1]).split(' · ').pop())+'</span>').join('')+'</div>'
+      :'<div class="board-empty">全部构件均已挂接</div>');
+}
+function boardDetailHtml(s){
+  const qy=boardQuery.trim().toLowerCase();
+  if(boardGroup==='time'){
+    const rows=records.filter(r=>!boardIsPano(r)).slice().sort((a,b)=>String(boardTime(b)).localeCompare(String(boardTime(a)))||b.id-a.id);
+    const hits=qy?rows.filter(r=>((r.title||'')+' '+(r.fileName||'')+' '+briefLocation(r)+' '+typeName(r.type)).toLowerCase().indexOf(qy)>=0):rows;
+    if(!hits.length)return '<div class="board-empty">未找到匹配记录</div>';
+    let html='',lastDate=null;
+    hits.forEach(r=>{
+      const t=boardTime(r),d=t.slice(0,10);
+      if(d!==lastDate){html+='<div class="board-date">'+esc(d||'未标注时间')+'</div>';lastDate=d}
+      html+='<article class="board-trow" data-locate="'+esc(r.componentId)+'"><span class="board-dot" style="background:'+boardTypeColor(r.type)+'">'+esc((BOARD_TYPES.find(x=>x[0]===r.type)||[0,0,'•'])[2])+'</span>'
+        +'<div><b>'+esc(r.title||r.fileName||typeName(r.type))+'</b><small>'+esc(briefLocation(r))+' · '+esc(t||'--')+'</small></div></article>';
+    });
+    return html;
+  }
+  const comps=qy?s.comps.filter(c=>(c.name+' '+c.id).toLowerCase().indexOf(qy)>=0):s.comps;
+  if(!comps.length)return '<div class="board-empty">未找到匹配构件</div>';
+  return comps.map(c=>{
+    const cnt={};
+    c.items.forEach(r=>{cnt[r.type]=(cnt[r.type]||0)+1});
+    const chips=BOARD_TYPES.filter(t=>cnt[t[0]]).map(t=>'<span style="--c:'+t[3]+'">'+esc(t[2])+' '+cnt[t[0]]+'</span>').join('');
+    return '<article class="board-comp" data-locate="'+esc(c.id)+'">'
+      +'<div class="board-comp-top"><b>'+esc(c.name)+'</b><button type="button" class="board-locate" data-locate="'+esc(c.id)+'">定位</button></div>'
+      +'<div class="board-chips small">'+chips+'</div>'
+      +'<div class="board-comp-meta"><span>最近挂接 '+esc(c.last||'--')+'</span><span>共 '+c.items.length+' 条</span></div></article>';
+  }).join('');
+}
+function boardShellHtml(){
+  return '<div class="boards is-hidden">'
+    +'<button type="button" class="board-handle handle-left" data-board-toggle="left" aria-expanded="false" aria-controls="boardLeft"><span class="bh-chev">›</span><span class="bh-text">挂接总览</span><span class="bh-badge" id="boardLeftBadge">0</span></button>'
+    +'<aside class="board board-left" id="boardLeft" aria-label="模型挂接总览"><div class="board-head"><span>模型挂接总览</span><small>BIM 模型 · 全专业</small></div><div class="board-body" id="boardLeftBody"></div><div class="board-foot" id="boardLeftFoot"></div></aside>'
+    +'<button type="button" class="board-handle handle-right" data-board-toggle="right" aria-expanded="false" aria-controls="boardRight"><span class="bh-chev">‹</span><span class="bh-text">挂接明细</span><span class="bh-badge" id="boardRightBadge">0</span></button>'
+    +'<aside class="board board-right" id="boardRight" aria-label="构件挂接明细"><div class="board-head"><span>构件挂接明细</span><small id="boardRightCount">0 个构件</small></div>'
+    +'<div class="board-tools"><div class="board-search"><span>⌕</span><input id="boardSearch" type="search" placeholder="搜索构件名称或编号" autocomplete="off" aria-label="搜索构件"><button type="button" data-board-clear aria-label="清空搜索">×</button></div>'
+    +'<div class="board-seg" role="tablist"><button type="button" role="tab" data-board-group="comp">按构件</button><button type="button" role="tab" data-board-group="time">按时间</button></div></div>'
+    +'<div class="board-body" id="boardRightBody"></div><div class="board-foot" id="boardRightFoot"></div></aside>'
+    +'</div>';
+}
+function renderBoardRight(){
+  const s=boardStats(),el=q('#boardRightBody'),ce=q('#boardRightCount');
+  if(el)el.innerHTML=boardDetailHtml(s);
+  if(ce)ce.textContent=s.comps.length+' 个构件';
+}
+function renderBoards(){
+  const mount=q('#boardMount');
+  if(!mount)return;
+  if(!boardsBuilt){mount.innerHTML=boardShellHtml();boardsBuilt=true}
+  const wrap=mount.querySelector('.boards');
+  if(!wrap)return;
+  const hidden=active.size>0||!!placing;
+  const lo=boardLeftOpen&&!hidden,ro=boardRightOpen&&!hidden;
+  wrap.classList.toggle('is-hidden',hidden);
+  const hl=mount.querySelector('.handle-left'),hr=mount.querySelector('.handle-right');
+  hl.classList.toggle('open',lo);hr.classList.toggle('open',ro);
+  hl.setAttribute('aria-expanded',lo);hr.setAttribute('aria-expanded',ro);
+  hl.querySelector('.bh-chev').textContent=lo?'‹':'›';
+  hr.querySelector('.bh-chev').textContent=ro?'›':'‹';
+  mount.querySelector('#boardLeft').classList.toggle('open',lo);
+  mount.querySelector('#boardRight').classList.toggle('open',ro);
+  const s=boardStats();
+  mount.querySelector('#boardLeftBadge').textContent=s.total;
+  mount.querySelector('#boardRightBadge').textContent=s.comps.length;
+  mount.querySelector('#boardRightCount').textContent=s.comps.length+' 个构件';
+  mount.querySelector('#boardLeftBody').innerHTML=boardStatsHtml(s);
+  mount.querySelector('#boardLeftFoot').textContent='最近挂接 '+(s.last||'--');
+  mount.querySelector('#boardRightFoot').textContent='全景拍摄点位 '+s.pano+' 处按点位归集，不计入构件覆盖率';
+  renderBoardRight();
+  mount.querySelectorAll('[data-board-group]').forEach(b=>{
+    const on=b.dataset.boardGroup===boardGroup;
+    b.classList.toggle('on',on);b.setAttribute('aria-selected',on);
+  });
+}
+function bindBoardEvents(){
+  const mount=q('#boardMount');
+  if(!mount)return;
+  mount.addEventListener('click',e=>{
+    const tg=e.target.closest('[data-board-toggle]');
+    if(tg){
+      if(tg.dataset.boardToggle==='left')boardLeftOpen=!boardLeftOpen;else boardRightOpen=!boardRightOpen;
+      renderBoards();
+      return;
+    }
+    const gp=e.target.closest('[data-board-group]');
+    if(gp){boardGroup=gp.dataset.boardGroup;renderBoards();return}
+    if(e.target.closest('[data-board-clear]')){boardQuery='';const si=q('#boardSearch');if(si)si.value='';renderBoardRight();if(si)si.focus();return}
+    const loc=e.target.closest('[data-locate]');
+    if(loc){const id=loc.dataset.locate;if(!id)return;focusOn(id);toast('已定位到 '+component(id)[1]);return}
+  });
+  mount.addEventListener('input',e=>{
+    if(e.target.id!=='boardSearch')return;
+    boardQuery=e.target.value;
+    renderBoardRight();
+  });
+}
+
 function refreshAnnotationStatus(){records.forEach(r=>{if(r.type!=='annotation')return;if(!r.baseStatus)r.baseStatus=r.status;r.status=annotationDisplayStatus(r)})}
 function typeName(t){return types.find(x=>x[0]===t)?.[1]||t}function glyph(t){return types.find(x=>x[0]===t)?.[2]||'•'}function isIssue(r){return r.type==='quality'||r.type==='safety'||r.type==='annotation'}function hasBriefMedia(r){return r.subtype==='三维交底'||r.subtype==='施工工艺交底'}function briefMark(g){const v=g.variant;if(v==='三维交底')return['三维','3d'];if(v==='安全交底')return['安','safety'];if(v==='技术交底')return['技','tech'];return['工艺','craft']}function component(id){if(String(id).startsWith('PANO-')){const r=records.find(r=>r.componentId===id);if(r)return[id,r.title,r.x,r.y]}return componentOptions.find(x=>x[0]===id)||[id,id,50,50]}function briefLocation(r){return component(r.componentId)[1]}function fmtTime(s){return s?esc(s):'--'}function today(){return new Date().toLocaleDateString('sv-SE')}function toast(s){clearTimeout(toastTimer);q('#toastMount').innerHTML='<div class="toast">'+esc(s)+'</div>';toastTimer=setTimeout(()=>q('#toastMount').innerHTML='',3000)}
 function measurePointSummary(r,limit=3){const points=Array.isArray(r.points)?r.points:[];if(!points.length)return'暂无测点值';return points.slice(0,limit).map(p=>(p.no||'测点')+' '+p.value+(p.unit?' '+p.unit:'')).join('，')+(points.length>limit?'，+'+(points.length-limit)+'个':'')}
@@ -106,7 +338,7 @@ if(listType==='briefing'){const briefingRows=listed();html+='<div class="briefin
 if(listType==='measure'){const measureRows=listed();html+='<div class="briefing-list">'+(measureRows.length?measureRows.map(r=>'<button class="briefing-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><span class="kind" style="background:#1f9e81">实测实量</span><span class="name">'+esc(r.measurementItem||r.title)+'</span><span class="field-name">测量部位：'+esc(r.measurementPosition||briefLocation(r))+'</span><span class="location">'+(r.points?.length||0)+'个测点：'+esc(measurePointSummary(r,2))+'</span></button>').join(''):'<div class="list-empty">'+(listQuery?'未找到匹配的测量项':'暂无已挂接实测实量记录')+'</div>')+'</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;return}
 if(filterOpen){const statuses=[...new Set(visible().map(r=>r.status))];html+='<div class="list-filter"><select id="statusFilter" aria-label="状态筛选"><option value="all">全部状态</option><option value="open">未完成</option>'+statuses.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join('')+'</select></div>'}
 const rows=filtered(),dates=[...new Set(rows.map(r=>r.checkTime.slice(0,10)))];html+='<div class="list-scroll">';if(!rows.length)html+='<div class="list-empty">当前筛选下暂无挂接记录</div>';dates.forEach((date,index)=>{const day=rows.filter(r=>r.checkTime.startsWith(date));const [summary,cls]=dateSummary(day),isCollapsed=collapsedDates.has(date);html+='<section class="date-group"><button class="date-head" data-date="'+date+'" aria-expanded="'+!isCollapsed+'"><span class="date-label">'+date+' <small>'+day.length+'条</small></span><span class="date-status '+cls+'">'+summary+'</span><span class="date-chevron">'+(isCollapsed?'›':'⌄')+'</span></button>';if(!isCollapsed)day.forEach(r=>{const overdue=isIssue(r)&&r.deadline<today()&&r.status!=='已复查';html+='<button class="issue-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><div class="card-top"><span class="card-title">'+esc(r.title)+'</span><span class="status-chip '+statusClass(r.status)+'">'+esc(r.status)+'</span></div><div class="card-desc">'+esc(r.description)+'</div><div class="card-meta">'+esc(briefLocation(r))+'</div><div class="card-meta">'+esc(r.checkType||r.subtype||r.owner||'现场记录')+(r.deadline?' · 截止 '+esc(r.deadline.slice(5)):'')+(overdue?' <strong class="overdue">已逾期</strong>':'')+'</div></button>'});html+='</section>'});html+='</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;if(q('#statusFilter'))q('#statusFilter').value=statusFilter}
-function focusOn(id){focusComponent=id;const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.42,available=w-(listOpen&&active.size?280:0),targetX=available*.53,targetY=h*.37,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';q('#focus').innerHTML='<div class="focus-ring" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>';renderMarkers()}
+function focusOn(id){focusComponent=id;const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.42,bl=boardLeftOpen&&!active.size?300:0,br=boardRightOpen&&!active.size?320:0,available=w-(listOpen&&active.size?280:0)-bl-br,targetX=bl+available*.53,targetY=h*.37,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';q('#focus').innerHTML='<div class="focus-ring" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>';renderMarkers()}
 function resetFocus(){focusComponent=null;q('#stage').style.transform='';q('#focus').innerHTML='';renderMarkers()}
 function tableRows(){if(listType==='panorama'||!focusComponent)return[];const selected=records.find(r=>r.id===selectedId);return visible().filter(r=>r.componentId===focusComponent&&(!selected||(isIssue(selected)?isIssue(r):r.type===selected.type))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')))}
 function renderTable(){const mount=q('#tableMount'),rows=tableRows();if(!focusComponent||!rows.length){mount.innerHTML='';return}const issue=rows.every(isIssue),measure=rows.every(r=>r.type==='measure'),briefOnly=rows.every(r=>r.type==='briefing'),planOnly=rows.every(r=>r.type==='plan'),start=(tablePage-1)*5,paged=rows.slice(start,start+5),pages=Math.max(1,Math.ceil(rows.length/5)),full=!listOpen;let head,body,title;
@@ -123,7 +355,7 @@ function componentSearchRows(){const keyword=componentQuery.trim().toLowerCase()
 function locateBindingComponent(id){const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.48,available=w-380,targetX=available*.58,targetY=h*.4,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;focusComponent=id;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';renderBindingHighlights()}
 function renderBindingHighlights(){if(!(pendingWork()&&placing&&selectedModel)){q('#focus').innerHTML='';return}q('#focus').innerHTML=selectedComponentRows().map(c=>'<div class="component-pick" data-label="'+esc(c[1])+'" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>').join('')}
 function renderPlacement(){const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),sourceText=work.type==='briefing'?(pending.resourceName||pending.fileName):(pending.measurementItem+' · '+pending.measurementPosition+' · '+(pending.points?.length||0)+'个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="checkbox" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div><div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all"><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
-function render(){refreshAnnotationStatus();renderTabs();renderMarkers();renderList();renderTable();renderPlacement();renderDetailPage()}
+function render(){refreshAnnotationStatus();renderTabs();renderMarkers();renderList();renderTable();renderPlacement();renderDetailPage();renderBoards()}
 function choose(r){listType=r.type;selectedId=r.id;tablePage=1;statusFilter='all';listOpen=true;collapsedDates.delete(r.checkTime.slice(0,10));focusOn(r.componentId);renderList();renderTable()}
 function showModal(title,body,onSave){modalMode=onSave;q('#modalMount').innerHTML='<div class="shade"><section class="modal" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="modal-head"><span>'+esc(title)+'</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button data-action="close-modal">取消</button><button class="primary" data-action="save-modal">确定</button></div></section></div>'}
 function closeModal(){q('#modalMount').innerHTML='';modalMode=null}
@@ -151,7 +383,7 @@ q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[da
 q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
 q('#placeMount').addEventListener('input',e=>{if(e.target.id!=='componentSearch')return;componentQuery=e.target.value;renderPlacement();const input=q('#componentSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
 q('#modalMount').addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(a==='cancel-model-select'){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}else renderPlacement();return}if(a==='close-modal'||(e.target.classList.contains('shade')&&!e.target.querySelector('.model-select-modal')))closeModal();if(a==='save-modal'&&modalMode)modalMode()});
-q('#pageMount').addEventListener('click',e=>{if(e.target.closest('[data-action="back-bim"]')){detailId=null;renderDetailPage();renderList();renderTable()}});
+q('#pageMount').addEventListener('click',e=>{if(e.target.closest('[data-action="back-bim"]')){detailId=null;renderDetailPage();renderList();renderTable()}});bindBoardEvents();
 window.addEventListener('resize',()=>{if(pendingWork()&&placing)renderBindingHighlights();else if(focusComponent)focusOn(focusComponent)});window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(detailId){detailId=null;renderDetailPage()}else if(q('#modalMount').querySelector('.model-select-modal')){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}}else if(q('#modalMount').innerHTML)closeModal();else if(placing){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render()}else if(focusComponent){resetFocus();renderTable()}}});
 
 let panoramaData={"regions":[{"id":"R1","name":"东侧走廊","floor":"1号楼 · 3层","axes":["A","C","1","4"],"low":8.4,"high":12.6,"rect":{"x":180,"y":155,"w":420,"h":190},"model":"1号楼_建筑结构综合模型.rvt","version":"V3"},{"id":"R2","name":"设备机房","floor":"1号楼 · 地下1层","axes":["B","D","2","5"],"low":-4.2,"high":0,"rect":{"x":240,"y":220,"w":370,"h":200},"model":"1号楼_机电综合模型.rvt","version":"V2"}],"points":[{"id":"P01","region":"R1","name":"P01 · 走廊东端","x":385,"y":255,"height":1.6,"yaw":0},{"id":"P02","region":"R1","name":"P02 · 走廊西端","x":240,"y":285,"height":1.6,"yaw":180},{"id":"P03","region":"R2","name":"P03 · 机房入口","x":400,"y":310,"height":1.6,"yaw":35}],"photos":[{"id":"F1","name":"东侧走廊吊顶施工","point":"P01","time":"2026-09-23T10:30","author":"张恒毓","bound":true,"yaw":0,"pitch":0,"fov":80,"phase":2},{"id":"F2","name":"东侧走廊管线安装","point":"P01","time":"2026-09-18T09:15","author":"张恒毓","bound":true,"yaw":0,"pitch":0,"fov":80,"phase":1},{"id":"F3","name":"西端走廊现场记录","point":"P02","time":"2026-09-23T10:45","author":"赵晓龙","bound":true,"yaw":180,"pitch":0,"fov":80,"phase":2},{"id":"F4","name":"机房设备安装","point":"P03","time":"2026-09-22T14:20","author":"系统管理员","bound":true,"yaw":35,"pitch":0,"fov":80,"phase":1},{"id":"F5","name":"东侧走廊复拍","point":"P01","time":"2026-09-23T15:00","author":"系统管理员","bound":false,"yaw":0,"pitch":0,"fov":80,"phase":2}]};
