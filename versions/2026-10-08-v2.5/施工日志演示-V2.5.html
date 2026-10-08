@@ -245,7 +245,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261008-panorama-ledger-2";
+const BUILD = "20261008-plan-file-popup-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4164,7 +4164,7 @@ function renderProfile(){
   const frame=$("#content iframe");frame.addEventListener("load",()=>refreshAnnotationFrames(loadAnnotationData()));
 }
 function renderAnnotationLedger(){
-  $("#content").innerHTML='<iframe class="briefing-frame" src="批注台账_嵌入页.html?v=${BUILD}" title="批注台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>';
+  $("#content").innerHTML=`<iframe class="briefing-frame" src="批注台账_嵌入页.html?v=${BUILD}" title="批注台账" sandbox="allow-scripts allow-downloads" allow="fullscreen" referrerpolicy="no-referrer"></iframe>`;
   const frame=$("#content iframe");frame.addEventListener("load",()=>refreshAnnotationFrames(loadAnnotationData()));
 }
 function renderBimUnified(){
