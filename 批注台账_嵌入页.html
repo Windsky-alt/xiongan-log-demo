@@ -76,6 +76,7 @@ tbody tr{cursor:pointer}
 .round-card{margin:10px 0 14px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden}
 .round-head{padding:9px 12px;background:#f6f9fc;font-weight:700;color:#425a76}
 .round-body{padding:2px 12px 9px}
+.annotation-table{min-width:1400px;table-layout:fixed}.annotation-description{font-weight:400;color:#41546c;line-height:1.65}.annotation-table td{vertical-align:middle}
 </style>
 </head>
 <body>
@@ -88,8 +89,9 @@ tbody tr{cursor:pointer}
       <option value="继续整改">继续整改</option>
       <option value="待复查">待复查</option>
       <option value="已复查">已复查</option>
-      <option value="待整改逾期">待整改逾期</option>
+      
     </select>
+    <select id="fOverdue" aria-label="是否逾期"><option value="">是否逾期：全部</option><option value="yes">是</option><option value="no">否</option></select>
     <select id="fChecker"><option value="">全部批注人</option></select>
     <select id="fComp"><option value="">全部构件</option></select>
     <input id="fSearch" placeholder="搜索批注内容 / 构件 / 责任人"/>
@@ -162,14 +164,17 @@ let DATA=(loadStore()||SEED).map(r=>({...r}));
 
 /* ===== 状态派生（与其它端一致） ===== */
 function displayStatus(r){
-  if(r.issueRequired===false) return '无需整改';
+  if(r.issueRequired===false)return '无需整改';
   const b=r.baseStatus||r.status||'待整改';
-  const open=(b==='待整改'||b==='继续整改');
-  return (open&&r.deadline&&r.deadline<today())?'待整改逾期':b;
+  return b==='待整改逾期'?'待整改':b;
 }
 function overdueDays(r){
-  if(displayStatus(r)!=='待整改逾期'||!r.deadline) return 0;
-  return Math.max(0,Math.round((new Date(today())-new Date(r.deadline))/86400000));
+  const status=displayStatus(r);
+  if(status==='无需整改'||!r.deadline)return 0;
+  const end=status==='待整改'||status==='继续整改'?today():(r.rectifiedAt||r.reviewAt||'').slice(0,10);
+  if(!end)return 0;
+  const days=Math.round((Date.parse(end)-Date.parse(r.deadline.slice(0,10)))/86400000);
+  return Number.isFinite(days)?Math.max(0,days):0;
 }
 function badgeCls(s){
   return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':(s==='已复查'||s==='无需整改')?'done':'wait';
@@ -177,16 +182,17 @@ function badgeCls(s){
 const isClosed=s=>s==='已复查'||s==='无需整改';
 
 /* ===== 查询 ===== */
-let view={status:'all',checker:'',comp:'',kw:'',page:1};
+let view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1};
 function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
 function filtered(){
   return allRows().filter(({r,s})=>{
-    if(view.status==='noIssue'){ if(r.issueRequired!==false) return false }
+    if(view.status==='noIssue'){ if(s!=='无需整改') return false }
     else if(view.status!=='all'&&s!==view.status) return false;
+    if(view.overdue&&(overdueDays(r)>0)!==(view.overdue==='yes'))return false;
     if(view.checker&&r.checker!==view.checker) return false;
     if(view.comp&&r.compName!==view.comp) return false;
     if(view.kw){
-      const hay=[r.title,r.description,r.compName,r.assignee,r.checker].join(' ').toLowerCase();
+      const hay=[r.description||r.title,r.compName,r.assignee,r.checker].join(' ').toLowerCase();
       if(hay.indexOf(view.kw)<0) return false;
     }
     return true;
@@ -202,7 +208,7 @@ function renderFilters(){
   const ps=[...new Set(DATA.map(r=>r.compName).filter(Boolean))].sort();
   $('#fChecker').innerHTML='<option value="">全部批注人</option>'+cs.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
   $('#fComp').innerHTML='<option value="">全部构件</option>'+ps.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
-  $('#fStatus').value=view.status;
+  $('#fStatus').value=view.status;$('#fOverdue').value=view.overdue;
   $('#fChecker').value=view.checker;
   $('#fComp').value=view.comp;
   $('#fSearch').value=view.kw;
@@ -213,40 +219,16 @@ function renderTable(){
   if(view.page<1) view.page=1;
   const start=(view.page-1)*PAGE_SIZE, paged=list.slice(start,start+PAGE_SIZE);
 
-  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)).length, overCnt=all.filter(x=>x.s==='待整改逾期').length;
+  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)).length, overCnt=all.filter(x=>overdueDays(x.r)>0).length;
   $('#count').textContent=total;
-  $('#subInfo').textContent=' · 未闭环 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
+  $('#subInfo').textContent=' · 未复查 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
   $('#pageInfo').textContent='第 '+view.page+' / '+pages+' 页';
 
   const mount=$('#tableMount');
   if(!list.length){
     mount.innerHTML='<div class="empty">没有符合条件的批注</div>';
   }else{
-    mount.innerHTML='<div class="table-wrap"><table><colgroup>'
-      +'<col style="width:60px"><col><col style="width:190px"><col style="width:170px">'
-      +'<col style="width:130px"><col style="width:160px"><col style="width:90px">'
-      +'</colgroup><thead><tr>'
-      +'<th>序号</th><th>批注内容</th><th>关联构件</th><th>批注人 / 时间</th>'
-      +'<th>整改状态</th><th>整改人 / 期限</th><th>操作</th>'
-      +'</tr></thead><tbody>'
-      +paged.map(({r,s},i)=>{
-        const od=overdueDays(r);
-        const duty=r.issueRequired===false
-          ? '<span style="color:'+'var(--muted)'+'">未下发整改单</span>'
-          : esc(r.assignee||'--')+'<div class="cell-sub">期限 '+(r.deadline?esc(r.deadline):'--')+(od?' · 超期 '+od+' 天':'')+'</div>';
-        return '<tr data-id="'+r.id+'">'
-          +'<td>'+(start+i+1)+'</td>'
-          +'<td class="wrap-cell"><div class="cell-title">'+esc(r.title)+'</div>'
-            +'<div class="cell-sub">'+esc(r.description)+'</div>'
-            +'<div><span class="tag">第 '+(r.round||1)+' 轮</span>'+(r.source?'<span class="tag">'+esc(r.source)+'</span>':'')+'</div></td>'
-          +'<td class="comp">'+esc(r.compName||r.componentId)+'<small>'+esc(r.componentId)+'</small></td>'
-          +'<td>'+esc(r.checker)+'<div class="cell-sub">'+esc(r.checkTime)+'</div></td>'
-          +'<td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<div class="over-days">超 '+od+' 天</div>':'')+'</td>'
-          +'<td>'+duty+'</td>'
-          +'<td><button class="action" data-detail="'+r.id+'">详情</button></td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>';
+    mount.innerHTML='<div class="table-wrap"><table class="annotation-table"><colgroup><col style="width:50px"><col style="width:280px"><col style="width:180px"><col style="width:90px"><col style="width:155px"><col style="width:100px"><col style="width:90px"><col style="width:115px"><col style="width:85px"><col style="width:85px"><col style="width:65px"></colgroup><thead><tr>'+['序号','批注内容','关联构件','批注人','批注时间','整改状态','整改人','整改期限','是否逾期','逾期天数','操作'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+paged.map(({r,s},i)=>{const days=overdueDays(r),required=s!=='无需整改';return '<tr data-id="'+r.id+'"><td>'+(start+i+1)+'</td><td class="wrap-cell annotation-description">'+esc(r.description||r.title||'--')+'</td><td class="wrap-cell">'+esc(r.compName||r.componentId||'--')+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></td><td>'+esc(required?r.assignee||'--':'--')+'</td><td>'+esc(required?r.deadline||'--':'--')+'</td><td class="'+(days?'over-days':'')+'">'+(days?'是':'否')+'</td><td class="'+(days?'over-days':'')+'">'+days+'</td><td><button class="action" data-detail="'+r.id+'">详情</button></td></tr>'}).join('')+'</tbody></table></div>';
   }
 
   const pg=$('#pagination');
@@ -275,7 +257,7 @@ function stepHtml(r){
     if(s==='继续整改') steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交',on:false});
     if(s==='待复查') steps.push({t:'待复查',m:'等待 '+r.reviewer+' 提交复查结果',on:false});
     if(s==='已复查') steps.push({t:'问题闭环',m:'最终复查通过',on:true});
-    if(s==='待整改逾期') steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',on:false,over:true});
+    if(od>0) steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',on:false,over:true});
   }
   return '<div class="steps">'+steps.map(x=>'<div class="step '+(x.over?'over':x.on?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>').join('')+'</div>';
 }
@@ -306,7 +288,7 @@ function renderDetail(){
   const r=DATA.find(x=>x.id===curDetail);
   if(!r){ backToList(); return }
   const s=displayStatus(r), od=overdueDays(r);
-  $('#detailName').textContent=r.title;
+  $('#detailName').textContent='批注详情';
   const st=$('#detailState');
   st.textContent=s+(od?' 超 '+od+' 天':'');
   st.className='badge '+badgeCls(s);
@@ -348,12 +330,12 @@ function backToList(){
 }
 /* ===== 事件 ===== */
 $('#searchBtn').onclick=()=>{
-  view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
+  view.overdue=$('#fOverdue').value;view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
   view.comp=$('#fComp').value; view.kw=$('#fSearch').value.trim().toLowerCase();
   view.page=1; renderTable();
 };
 $('#resetBtn').onclick=()=>{
-  view={status:'all',checker:'',comp:'',kw:'',page:1}; renderFilters(); renderTable();
+  view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1}; renderFilters(); renderTable();
 };
 $('#fSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#searchBtn').click() });
 $('#tableMount').addEventListener('click',e=>{
