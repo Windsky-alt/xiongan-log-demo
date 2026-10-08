@@ -104,7 +104,9 @@
 .board-dot{flex:none;width:20px;height:20px;border-radius:4px;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .board-trow b{display:block;font-size:12px;font-weight:700}
 .board-trow small{display:block;font-size:11px;color:#9fb6cc;margin-top:2px}
-</style>
+
+.board-left,.board-right{width:280px}.board-handle.open.handle-left{left:280px}.board-handle.open.handle-right{right:280px}.board-body{min-height:0;overflow:hidden;display:grid;grid-template-rows:1fr 1fr 1.15fr;gap:8px;padding:10px}.board-head{height:35px}.board-foot{font-size:10px;padding:6px 10px}.dash-module{min-height:0;padding:10px;background:#14283ee8;border:1px solid #ffffff14;border-radius:6px;display:flex;flex-direction:column;justify-content:space-between;gap:5px;overflow:hidden}.dash-module h3{font-size:13px;margin:0;color:#eaf4ff;display:flex;justify-content:space-between}.dash-module h3 small{font-size:10px;font-weight:400;color:#8ca7bf}.dash-main{border:0;background:none;color:#9db5cb;display:flex;align-items:baseline;gap:9px;text-align:left;padding:0}.dash-main strong{font-size:30px;color:#61b9ff}.dash-main span{font-size:11px}.dash-three,.dash-four{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.dash-four{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;flex:1;min-height:0}.dash-four .dash-stat{min-height:0;padding:2px;font-size:10px}.dash-four .dash-stat b{font-size:18px}.dash-two{grid-template-columns:1fr 1fr}.dash-stat{border:0;background:#ffffff07;color:#a7bdd0;padding:5px 2px;border-radius:4px;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;font-size:10px}.dash-stat b{font-size:20px;color:#f1f7ff}.dash-main:hover,.dash-stat:hover,.dash-focus button:hover,.dash-recent:hover{background:#318cec25}.dash-focus{display:grid;gap:4px;min-height:0}.dash-focus button,.dash-recent{border:0;background:#ffffff06;border-radius:4px;padding:6px;text-align:left;color:#dceaf6;display:flex;flex-direction:column;gap:3px;min-width:0;font-size:11px}.dash-focus button span,.dash-recent span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.dash-focus small{color:#ffba88}.dash-recent small,.dash-empty{color:#9cb2c7;font-size:10px}.dash-reset{background:#244660;color:#d7ebff;border:0;padding:6px;font-size:11px}.board{top:104px;bottom:52px}@media(max-height:750px){.dash-focus button:nth-child(3){display:none}.dash-module{padding:7px}.dash-main strong{font-size:25px}.dash-stat b{font-size:17px}.board-body{gap:6px;padding:7px}.board-foot{display:none}}
+@media(max-height:680px){.board{top:100px;bottom:48px}.board-body{grid-template-rows:1fr 1fr 1fr;padding:5px;gap:4px}.dash-module{padding:5px;gap:2px}.dash-main{line-height:1.1}.dash-main strong{font-size:21px}.dash-stat{padding:2px;gap:0}.dash-stat b{font-size:16px}.dash-module h3{font-size:12px}.dash-focus button{padding:3px}.dash-recent{padding:3px}} </style>
 </head>
 <body>
 <div id="app">
@@ -173,152 +175,23 @@ const BOARD_STATE_COLOR={'待整改':'#e2503f','待整改逾期':'#b02418','待�
 function boardIsPano(r){return String(r.componentId||'').startsWith('PANO-')}
 function boardTime(r){return r.checkTime||r.uploadTime||''}
 function boardTypeColor(t){return(BOARD_TYPES.find(x=>x[0]===t)||[0,0,0,'#7f95ab'])[3]}
-function boardStats(){
-  const comps=boardBindingRows();
-  const byType=BOARD_TYPES.map(t=>[t[0],t[1],t[2],t[3],records.filter(r=>r.type===t[0]).length]);
-  const problems=records.filter(isIssue);
-  const counts={};
-  problems.forEach(r=>{const st=r.type==='annotation'?annotationDisplayStatus(r):(r.status||'待整改');counts[st]=(counts[st]||0)+1});
-  const buckets=BOARD_STATE_ORDER.filter(s=>counts[s]).map(s=>[s,BOARD_STATE_COLOR[s]||'#7f95ab',counts[s]]);
-  Object.keys(counts).forEach(s=>{if(BOARD_STATE_ORDER.indexOf(s)<0)buckets.push([s,'#7f95ab',counts[s]])});
-  const boundIds=new Set(comps.map(c=>c.id));
-  const unbound=componentOptions.filter(c=>!boundIds.has(c[0]));
-  const last=records.map(boardTime).filter(Boolean).sort().pop()||'--';
-  const pano=records.filter(boardIsPano).length;
-  return{total:records.length,comps:comps,all:componentOptions.length,byType:byType,problems:problems,buckets:buckets,unbound:unbound,last:last,pano:pano};
-}
-function boardBindingRows(){
-  const map=new Map();
-  records.forEach(r=>{
-    if(boardIsPano(r))return;
-    if(!map.has(r.componentId))map.set(r.componentId,{id:r.componentId,name:component(r.componentId)[1],items:[],last:''});
-    const g=map.get(r.componentId);
-    g.items.push(r);
-    const t=boardTime(r);
-    if(t>g.last)g.last=t;
-  });
-  return [...map.values()].sort((a,b)=>b.items.length-a.items.length||String(b.last).localeCompare(String(a.last)));
-}
-function boardStatsHtml(s){
-  const cov=s.all?Math.round(s.comps.length/s.all*100):0;
-  const maxN=Math.max(1,...s.byType.map(t=>t[4]));
-  const used=s.byType.filter(t=>t[4]>0).length;
-  return '<div class="board-kpis">'
-    +'<div class="board-kpi"><b>'+s.total+'</b><span>挂接记录</span></div>'
-    +'<div class="board-kpi"><b>'+s.comps.length+'<em> / '+s.all+'</em></b><span>已挂接构件</span></div>'
-    +'<div class="board-kpi"><b>'+cov+'%</b><span>构件覆盖率</span></div>'
-    +'<div class="board-kpi"><b>'+used+'</b><span>业务类型</span></div>'
-    +'</div>'
-    +'<h4 class="board-sec">业务类型分布 <small>共 '+s.total+' 条</small></h4>'
-    +'<div class="board-bars">'+s.byType.slice().sort((a,b)=>b[4]-a[4]).map(t=>
-      '<div class="board-bar"><i style="background:'+t[3]+'"></i><span class="bn">'+esc(t[1])+'</span><span class="bv">'+t[4]+'</span>'
-      +'<span class="bt"><span style="width:'+Math.round(t[4]/maxN*100)+'%;background:linear-gradient(90deg,'+t[3]+'99,'+t[3]+')"></span></span></div>').join('')+'</div>'
-    +'<h4 class="board-sec">问题状态分布 <small>问题类 '+s.problems.length+' 条</small></h4>'
-    +(s.problems.length
-      ?'<div class="board-stack">'+s.buckets.map(b=>'<span style="width:'+(b[2]/s.problems.length*100)+'%;background:'+b[1]+'" title="'+esc(b[0])+' '+b[2]+'"></span>').join('')+'</div>'
-        +'<ul class="board-legend">'+s.buckets.map(b=>'<li><i style="background:'+b[1]+'"></i>'+esc(b[0])+'<b>'+b[2]+'</b></li>').join('')+'</ul>'
-      :'<div class="board-empty">暂无问题类数据</div>')
-    +'<h4 class="board-sec">未挂接构件 <small>'+s.unbound.length+' 个</small></h4>'
-    +(s.unbound.length
-      ?'<div class="board-chips">'+s.unbound.map(c=>'<span>'+esc(c[0])+' · '+esc(String(c[1]).split(' · ').pop())+'</span>').join('')+'</div>'
-      :'<div class="board-empty">全部构件均已挂接</div>');
-}
-function boardDetailHtml(s){
-  const qy=boardQuery.trim().toLowerCase();
-  if(boardGroup==='time'){
-    const rows=records.filter(r=>!boardIsPano(r)).slice().sort((a,b)=>String(boardTime(b)).localeCompare(String(boardTime(a)))||b.id-a.id);
-    const hits=qy?rows.filter(r=>((r.title||'')+' '+(r.fileName||'')+' '+briefLocation(r)+' '+typeName(r.type)).toLowerCase().indexOf(qy)>=0):rows;
-    if(!hits.length)return '<div class="board-empty">未找到匹配记录</div>';
-    let html='',lastDate=null;
-    hits.forEach(r=>{
-      const t=boardTime(r),d=t.slice(0,10);
-      if(d!==lastDate){html+='<div class="board-date">'+esc(d||'未标注时间')+'</div>';lastDate=d}
-      html+='<article class="board-trow" data-locate="'+esc(r.componentId)+'"><span class="board-dot" style="background:'+boardTypeColor(r.type)+'">'+esc((BOARD_TYPES.find(x=>x[0]===r.type)||[0,0,'•'])[2])+'</span>'
-        +'<div><b>'+esc(r.title||r.fileName||typeName(r.type))+'</b><small>'+esc(briefLocation(r))+' · '+esc(t||'--')+'</small></div></article>';
-    });
-    return html;
-  }
-  const comps=qy?s.comps.filter(c=>(c.name+' '+c.id).toLowerCase().indexOf(qy)>=0):s.comps;
-  if(!comps.length)return '<div class="board-empty">未找到匹配构件</div>';
-  return comps.map(c=>{
-    const cnt={};
-    c.items.forEach(r=>{cnt[r.type]=(cnt[r.type]||0)+1});
-    const chips=BOARD_TYPES.filter(t=>cnt[t[0]]).map(t=>'<span style="--c:'+t[3]+'">'+esc(t[2])+' '+cnt[t[0]]+'</span>').join('');
-    return '<article class="board-comp" data-locate="'+esc(c.id)+'">'
-      +'<div class="board-comp-top"><b>'+esc(c.name)+'</b><button type="button" class="board-locate" data-locate="'+esc(c.id)+'">定位</button></div>'
-      +'<div class="board-chips small">'+chips+'</div>'
-      +'<div class="board-comp-meta"><span>最近挂接 '+esc(c.last||'--')+'</span><span>共 '+c.items.length+' 条</span></div></article>';
-  }).join('');
-}
-function boardShellHtml(){
-  return '<div class="boards is-hidden">'
-    +'<button type="button" class="board-handle handle-left" data-board-toggle="left" aria-expanded="false" aria-controls="boardLeft"><span class="bh-chev">›</span><span class="bh-text">挂接总览</span><span class="bh-badge" id="boardLeftBadge">0</span></button>'
-    +'<aside class="board board-left" id="boardLeft" aria-label="模型挂接总览"><div class="board-head"><span>模型挂接总览</span><small>BIM 模型 · 全专业</small></div><div class="board-body" id="boardLeftBody"></div><div class="board-foot" id="boardLeftFoot"></div></aside>'
-    +'<button type="button" class="board-handle handle-right" data-board-toggle="right" aria-expanded="false" aria-controls="boardRight"><span class="bh-chev">‹</span><span class="bh-text">挂接明细</span><span class="bh-badge" id="boardRightBadge">0</span></button>'
-    +'<aside class="board board-right" id="boardRight" aria-label="构件挂接明细"><div class="board-head"><span>构件挂接明细</span><small id="boardRightCount">0 个构件</small></div>'
-    +'<div class="board-tools"><div class="board-search"><span>⌕</span><input id="boardSearch" type="search" placeholder="搜索构件名称或编号" autocomplete="off" aria-label="搜索构件"><button type="button" data-board-clear aria-label="清空搜索">×</button></div>'
-    +'<div class="board-seg" role="tablist"><button type="button" role="tab" data-board-group="comp">按构件</button><button type="button" role="tab" data-board-group="time">按时间</button></div></div>'
-    +'<div class="board-body" id="boardRightBody"></div><div class="board-foot" id="boardRightFoot"></div></aside>'
-    +'</div>';
-}
-function renderBoardRight(){
-  const s=boardStats(),el=q('#boardRightBody'),ce=q('#boardRightCount');
-  if(el)el.innerHTML=boardDetailHtml(s);
-  if(ce)ce.textContent=s.comps.length+' 个构件';
-}
-function renderBoards(){
-  const mount=q('#boardMount');
-  if(!mount)return;
-  if(!boardsBuilt){mount.innerHTML=boardShellHtml();boardsBuilt=true}
-  const wrap=mount.querySelector('.boards');
-  if(!wrap)return;
-  const hidden=active.size>0||!!placing;
-  const lo=boardLeftOpen&&!hidden,ro=boardRightOpen&&!hidden;
-  wrap.classList.toggle('is-hidden',hidden);
-  const hl=mount.querySelector('.handle-left'),hr=mount.querySelector('.handle-right');
-  hl.classList.toggle('open',lo);hr.classList.toggle('open',ro);
-  hl.setAttribute('aria-expanded',lo);hr.setAttribute('aria-expanded',ro);
-  hl.querySelector('.bh-chev').textContent=lo?'‹':'›';
-  hr.querySelector('.bh-chev').textContent=ro?'›':'‹';
-  mount.querySelector('#boardLeft').classList.toggle('open',lo);
-  mount.querySelector('#boardRight').classList.toggle('open',ro);
-  const s=boardStats();
-  mount.querySelector('#boardLeftBadge').textContent=s.total;
-  mount.querySelector('#boardRightBadge').textContent=s.comps.length;
-  mount.querySelector('#boardRightCount').textContent=s.comps.length+' 个构件';
-  mount.querySelector('#boardLeftBody').innerHTML=boardStatsHtml(s);
-  mount.querySelector('#boardLeftFoot').textContent='最近挂接 '+(s.last||'--');
-  mount.querySelector('#boardRightFoot').textContent='全景拍摄点位 '+s.pano+' 处按点位归集，不计入构件覆盖率';
-  renderBoardRight();
-  mount.querySelectorAll('[data-board-group]').forEach(b=>{
-    const on=b.dataset.boardGroup===boardGroup;
-    b.classList.toggle('on',on);b.setAttribute('aria-selected',on);
-  });
-}
-function bindBoardEvents(){
-  const mount=q('#boardMount');
-  if(!mount)return;
-  mount.addEventListener('click',e=>{
-    const tg=e.target.closest('[data-board-toggle]');
-    if(tg){
-      if(tg.dataset.boardToggle==='left')boardLeftOpen=!boardLeftOpen;else boardRightOpen=!boardRightOpen;
-      renderBoards();
-      return;
-    }
-    const gp=e.target.closest('[data-board-group]');
-    if(gp){boardGroup=gp.dataset.boardGroup;renderBoards();return}
-    if(e.target.closest('[data-board-clear]')){boardQuery='';const si=q('#boardSearch');if(si)si.value='';renderBoardRight();if(si)si.focus();return}
-    const loc=e.target.closest('[data-locate]');
-    if(loc){const id=loc.dataset.locate;if(!id)return;focusOn(id);toast('已定位到 '+component(id)[1]);return}
-  });
-  mount.addEventListener('input',e=>{
-    if(e.target.id!=='boardSearch')return;
-    boardQuery=e.target.value;
-    renderBoardRight();
-  });
-}
 
 function refreshAnnotationStatus(){records.forEach(r=>{if(r.type!=='annotation')return;if(!r.baseStatus)r.baseStatus=r.status;r.status=annotationDisplayStatus(r)})}
+let boardFilter=null;
+const briefingKinds=['安全交底','质量交底','施工工艺交底','技术质量交底'];
+function briefingKind(r){return r.subtype==='技术交底'?'技术质量交底':r.subtype}
+function uniqueBoard(rows){return [...new Map(rows.map(r=>[r.type+'|'+(r.sourceId||r.code||r.id),r])).values()]}
+function boardOpen(r){return !['已复查','无需整改','合格'].includes(r.status)}
+function boardLate(r){return boardOpen(r)&&r.deadline&&r.deadline<today()}
+function boardAction(type,filter,label,value){return '<button class="dash-stat" data-dash-type="'+type+'" data-dash-filter="'+filter+'"><b>'+value+'</b><span>'+label+'</span></button>'}
+function issueBoard(type){const rows=uniqueBoard(records.filter(r=>r.type===type));return '<section class="dash-module"><h3>'+typeName(type)+'问题</h3><button class="dash-main" data-dash-type="'+type+'" data-dash-filter="open"><strong>'+rows.filter(boardOpen).length+'</strong><span>项未复查问题 ›</span></button><div class="dash-three">'+boardAction(type,'todo','待整改',rows.filter(r=>boardOpen(r)&&r.status!=='待复查').length)+boardAction(type,'review','待复查',rows.filter(r=>r.status==='待复查').length)+boardAction(type,'late','逾期',rows.filter(boardLate).length)+'</div></section>'}
+function boardStats(){return {total:records.length}}
+function boardStatsHtml(){const groups=new Map();records.filter(r=>['quality','safety'].includes(r.type)&&boardLate(r)).forEach(r=>{if(!groups.has(r.componentId))groups.set(r.componentId,[]);groups.get(r.componentId).push(r)});const ranked=[...groups].sort((a,b)=>b[1].length-a[1].length).slice(0,3);return issueBoard('quality')+issueBoard('safety')+'<section class="dash-module"><h3>重点关注部位 <small>逾期问题最多</small></h3><div class="dash-focus">'+(ranked.length?ranked.map(([id,rows])=>'<button data-dash-item="'+rows[0].id+'"><span>'+esc(component(id)[1])+'</span><small>'+[...new Set(rows.map(r=>typeName(r.type)))].join(' / ')+' · 逾期 '+uniqueBoard(rows).length+'项 ›</small></button>').join(''):'<div class="dash-empty">暂无逾期问题部位</div>')+'</div></section>'}
+function boardDetailHtml(){const br=uniqueBoard(records.filter(r=>r.type==='briefing')),mr=uniqueBoard(records.filter(r=>r.type==='measure')),points=mr.flatMap(r=>r.points||[]),valid=points.filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格'),rate=valid.length?((valid.length-bad.length)/valid.length*100).toFixed(1)+'%':'--';const pano=records.filter(r=>r.type==='panorama'),photos=panoramaData.photos.filter(p=>p.bound),latest=photos.slice().sort((a,b)=>b.time.localeCompare(a.time))[0],point=latest&&panoramaData.points.find(p=>p.id===latest.point);return '<section class="dash-module"><h3>交底资料 <small>已挂接 · 去重统计</small></h3><div class="dash-four">'+briefingKinds.map(k=>boardAction('briefing',k,k,br.filter(r=>briefingKind(r)===k).length)).join('')+'</div></section><section class="dash-module"><h3>实测实量</h3><button class="dash-main" data-dash-type="measure" data-dash-filter="all"><strong>'+rate+'</strong><span>合格测点率 ›</span></button><div class="dash-three">'+boardAction('measure','all','总测点',points.length)+boardAction('measure','bad','不合格',bad.length)+boardAction('measure','all','涉及部位',new Set(mr.map(r=>r.measurementPosition||r.componentId)).size)+'</div></section><section class="dash-module"><h3>全景记录</h3><div class="dash-three dash-two">'+boardAction('panorama','all','拍摄点位',new Set(pano.map(r=>r.pointId||r.componentId)).size)+boardAction('panorama','all','全景照片',photos.length)+'</div><button class="dash-recent" data-dash-photo="'+esc(latest?.id||'')+'"><span>最近拍摄 · '+esc(point?.name||'暂无拍摄')+'</span><small>'+esc(latest?.time.replace('T',' ')||'--')+' ›</small></button></section>'}
+function boardShellHtml(){return '<div class="boards is-hidden">'+['left','right'].map((side,i)=>'<button class="board-handle handle-'+side+'" data-board-toggle="'+side+'" aria-expanded="false"><span class="bh-chev">'+(i?'‹':'›')+'</span><span class="bh-text">'+(i?'现场资料':'问题整改')+'</span></button><aside class="board board-'+side+'" id="board'+(i?'Right':'Left')+'"><div class="board-head">'+(i?'交底与现场记录':'问题与整改')+'</div><div class="board-body" id="board'+(i?'Right':'Left')+'Body"></div><div class="board-foot">'+(i?'当前模型已关联资料':'当前模型关联问题 · 点击指标查看')+'</div></aside>').join('')+'</div>'}
+function renderBoards(){const mount=q('#boardMount');if(!mount)return;if(!boardsBuilt){mount.innerHTML=boardShellHtml();boardsBuilt=true}const hidden=active.size>0||!!placing;mount.querySelector('.boards').classList.toggle('is-hidden',hidden);['left','right'].forEach((side,i)=>{const open=(i?boardRightOpen:boardLeftOpen)&&!hidden,handle=mount.querySelector('.handle-'+side);handle.classList.toggle('open',open);handle.setAttribute('aria-expanded',open);mount.querySelector('#board'+(i?'Right':'Left')).classList.toggle('open',open)});q('#boardLeftBody').innerHTML=boardStatsHtml();q('#boardRightBody').innerHTML=boardDetailHtml()}
+function bindBoardEvents(){q('#boardMount').addEventListener('click',e=>{const toggle=e.target.closest('[data-board-toggle]');if(toggle){if(toggle.dataset.boardToggle==='left')boardLeftOpen=!boardLeftOpen;else boardRightOpen=!boardRightOpen;renderBoards();return}const item=e.target.closest('[data-dash-item]');if(item){const r=records.find(r=>r.id===+item.dataset.dashItem);boardFilter=null;active=new Set([r.type]);choose(r);render();return}const photo=e.target.closest('[data-dash-photo]');if(photo){if(photo.dataset.dashPhoto)openPanorama('compare',photo.dataset.dashPhoto);return}const button=e.target.closest('[data-dash-type]');if(!button)return;listType=button.dataset.dashType;boardFilter={type:listType,mode:button.dataset.dashFilter};active=new Set([listType]);listQuery='';statusFilter='all';filterOpen=false;listOpen=true;collapsedDates.clear();selectedId=null;resetFocus();render()})}
+function matchesBoardFilter(r){if(!boardFilter||r.type!==boardFilter.type||boardFilter.mode==='all')return true;const m=boardFilter.mode;if(r.type==='briefing')return briefingKind(r)===m;if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');if(m==='open')return boardOpen(r);if(m==='todo')return boardOpen(r)&&r.status!=='待复查';if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true}
 function typeName(t){return types.find(x=>x[0]===t)?.[1]||t}function glyph(t){return types.find(x=>x[0]===t)?.[2]||'•'}function isIssue(r){return r.type==='quality'||r.type==='safety'||r.type==='annotation'}function hasBriefMedia(r){return r.subtype==='三维交底'||r.subtype==='施工工艺交底'}function briefMark(g){const v=g.variant;if(v==='三维交底')return['三维','3d'];if(v==='安全交底')return['安','safety'];if(v==='技术交底')return['技','tech'];return['工艺','craft']}function component(id){if(String(id).startsWith('PANO-')){const r=records.find(r=>r.componentId===id);if(r)return[id,r.title,r.x,r.y]}return componentOptions.find(x=>x[0]===id)||[id,id,50,50]}function briefLocation(r){return component(r.componentId)[1]}function fmtTime(s){return s?esc(s):'--'}function today(){return new Date().toLocaleDateString('sv-SE')}function toast(s){clearTimeout(toastTimer);q('#toastMount').innerHTML='<div class="toast">'+esc(s)+'</div>';toastTimer=setTimeout(()=>q('#toastMount').innerHTML='',3000)}
 function measurePointSummary(r,limit=3){const points=Array.isArray(r.points)?r.points:[];if(!points.length)return'暂无测点值';return points.slice(0,limit).map(p=>(p.no||'测点')+' '+p.value+(p.unit?' '+p.unit:'')).join('，')+(points.length>limit?'，+'+(points.length-limit)+'个':'')}
 function allSelected(){return records.filter(r=>active.has(r.type)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id)}
@@ -326,8 +199,8 @@ function currentListType(){if(!active.has(listType))listType=types.find(v=>activ
 function visible(){const t=currentListType();return t?records.filter(r=>r.type===t).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id):[]}
 function listSearchPlaceholder(t=listType){return t==='briefing'?'搜索交底名称':t==='measure'?'搜索测量项名称':t==='panorama'?'搜索区域或照片名称':'搜索问题名称'}
 function listSearchText(r){return[r.title,r.description,r.checkType,r.checkContent,r.category,r.subtype,r.resourceName,r.modelName,r.fileName,r.measurementItem,r.measurementPosition,r.reportName,r.regionName,r.owner,r.checker,briefLocation(r)].filter(Boolean).join(' ').toLowerCase()}
-function listed(){const keyword=listQuery.trim().toLowerCase(),rows=visible();return keyword?rows.filter(r=>listSearchText(r).includes(keyword)):rows}
-function listSearchHtml(){return'<div class="list-search"><span>⌕</span><input id="listSearch" value="'+esc(listQuery)+'" placeholder="'+esc(listSearchPlaceholder())+'" autocomplete="off" aria-label="'+esc(listSearchPlaceholder())+'"><button data-action="clear-list-search" aria-label="清空搜索" '+(listQuery?'':'hidden')+'>×</button><small>'+listed().length+'条</small></div>'}
+function listed(){const keyword=listQuery.trim().toLowerCase(),rows=visible().filter(matchesBoardFilter);return keyword?rows.filter(r=>listSearchText(r).includes(keyword)):rows}
+function listSearchHtml(){return (boardFilter&&boardFilter.mode!=='all'?'<button class="dash-reset" data-reset-board>当前：'+esc(({open:'未复查',todo:'待整改',review:'待复查',late:'逾期',bad:'不合格测点'})[boardFilter.mode]||boardFilter.mode)+'　× 清除筛选</button>':'')+'<div class="list-search"><span>⌕</span><input id="listSearch" value="'+esc(listQuery)+'" placeholder="'+esc(listSearchPlaceholder())+'" autocomplete="off" aria-label="'+esc(listSearchPlaceholder())+'"><button data-action="clear-list-search" aria-label="清空搜索" '+(listQuery?'':'hidden')+'>×</button><small>'+listed().length+'条</small></div>'}
 function filtered(){return listed().filter(r=>statusFilter==='all'||(statusFilter==='open'?!['已复查','合格','已解决'].includes(r.status):r.status===statusFilter))}
 function statusClass(s){if(['已复查','合格','已解决'].includes(s))return'good';if(['待整改','未解决','超差','继续整改','待复查'].includes(s)||String(s).includes('逾期'))return'bad';return''}function dateSummary(rows){const open=rows.filter(r=>!['已复查','合格','已解决'].includes(r.status)).length;return open===0?['已全部复查','good']:open===rows.length?['全部未复查','bad']:['存在未复查项','warn']}
 function renderTabs(){q('#tabs').innerHTML=types.map(([t,n])=>'<button type="button" data-tab="'+t+'" aria-pressed="'+active.has(t)+'" class="'+(active.has(t)?'active':'')+'">'+(active.has(t)?'✓ ':'')+n+'</button>').join('')}
@@ -372,11 +245,11 @@ function briefViewerHtml(r){const isModel=r.subtype==='三维交底';return isMo
 function briefingDetailHtml(r){return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(r.subtype||'交底')+'记录</strong><span class="page-state">'+esc(r.status||'已交底')+'</span></div>'+(hasBriefMedia(r)?'<section class="page-section"><h2>交底预览</h2>'+briefViewerHtml(r)+'</section>':'')+'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('工程名称',r.project||'雄安科创园项目部')+kv('交底编号',r.code)+kv('地块',r.plot)+kv('交底部位',r.part||briefLocation(r))+kv('交底日期',r.checkTime)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>交底内容</h2><div class="brief-content">'+esc(r.content||r.description||'--').replace(/\n/g,'<br>')+'</div></section><hr class="page-divider"><section class="page-section"><h2>签字栏</h2><div class="page-grid">'+kv('专业技术负责人',r.checker)+kv('交底人',r.checker)+kv('接交人',r.receiver)+'</div></section></main>'}
 function annotationDetailHtml(r){const issued=r.issueRequired!==false;let h='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>批注详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>批注内容</h2><div class="page-grid">'+kv('问题描述',r.description)+kv('关联构件',briefLocation(r))+kv('批注人',r.checker)+kv('批注时间',r.checkTime)+'</div></section>'+(issued?'<hr class="page-divider"><section class="page-section"><h2>整改信息</h2><div class="page-grid">'+kv('整改状态',r.status)+kv('整改人',r.assignee)+kv('整改期限',r.deadline)+kv('复查人',r.reviewer)+'</div></section>':'<hr class="page-divider"><section class="page-section"><h2>整改信息</h2><p class="page-muted">未下发整改单，仅作现场留痕。</p></section>');return h+'</main>'}
 function renderDetailPage(){const mount=q('#pageMount'),r=records.find(x=>x.id===detailId);if(!r||(!isIssue(r)&&r.type!=='briefing'&&r.type!=='plan')){mount.innerHTML='';return}if(r.type==='annotation'){mount.innerHTML=annotationDetailHtml(r);return}if(r.type==='briefing'){mount.innerHTML=briefingDetailHtml(r);return}if(r.type==='plan'){mount.innerHTML=planDetailHtml(r);return}mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+typeName(r.type)+'检查/整改 · 问题详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题编号',(r.type==='quality'?'Q-':'S-')+String(r.id).padStart(4,'0'))+kv('检查类型',r.checkType)+kv('检查人',r.checker)+kv('检查时间',r.checkTime)+kv('检查内容',r.checkContent||r.checkType)+kv('区域',r.area)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr>'+(r.type==='annotation'?'':'<th>问题分类</th>')+'<th>问题描述</th>'+(r.type==='annotation'?'':'<th>问题级别</th>')+'<th>整改要求</th><th>整改期限</th></tr></thead><tbody><tr>'+(r.type==='annotation'?'':'<td>'+esc(r.category)+'</td>')+'<td>'+esc(r.description)+'</td>'+(r.type==='annotation'?'':'<td>'+esc(r.level)+'</td>')+'<td>'+esc(r.requirement)+'</td><td>'+esc(r.deadline)+'</td></tr></tbody></table><div class="page-grid" style="margin-top:16px">'+kv('检查结果',r.result)+kv('整改责任单位',r.unit)+kv('整改责任人',r.assignee)+'</div><p class="small-copy">现场附件</p><div class="attachment">现场照片（示意）</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2>'+(r.rectifiedAt?'<div class="page-grid">'+kv('实际整改时间',r.rectifiedAt)+kv('整改人',r.rectifier)+kv('整改描述',r.rectifyDescription)+'</div><p class="small-copy">整改附件</p><div class="attachment">整改照片（示意）</div>':'<p class="page-muted">待整改，暂无整改记录</p>')+'</section><hr class="page-divider"><section class="page-section"><h2>复查信息</h2>'+(r.reviewAt?'<div class="page-grid">'+kv('复查意见',r.reviewResult)+kv('复查时间',r.reviewAt)+kv('复查人',r.reviewer)+kv('复查描述',r.reviewDescription)+'</div><p class="small-copy">复查附件</p><div class="attachment">复查照片（示意）</div>':'<p class="page-muted">待复查，暂无复查记录</p>')+'</section></main>'}
-q('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;const t=b.dataset.tab,removing=active.has(t);listQuery='';if(removing){active.delete(t);const work=pendingWork();if(work&&t===work.type){clearPending();placing=null}}else{active.add(t);listType=t}selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;if(active.size){currentListType();listOpen=true;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus()}else{listType=null;listOpen=false;resetFocus()}render()});
-q('#listMount').addEventListener('click',e=>{const action=e.target.closest('[data-action]')?.dataset.action;if(action==='collapse'){listOpen=false;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='expand'){listOpen=true;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='clear-list-search'){listQuery='';renderList();q('#listSearch')?.focus();return}if(action==='filter'){filterOpen=!filterOpen;renderList();return}const tab=e.target.closest('[data-list-tab]')?.dataset.listTab;if(tab){listType=tab;listQuery='';selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus();renderList();renderTable();return}const date=e.target.closest('[data-date]')?.dataset.date;if(date){if(collapsedDates.has(date))collapsedDates.delete(date);else collapsedDates.add(date);renderList();return}const id=Number(e.target.closest('[data-item]')?.dataset.item),r=records.find(v=>v.id===id);if(r){if(r.type==='briefing'&&hasBriefMedia(r)){listType='briefing';selectedId=r.id;listOpen=true;focusOn(r.componentId);renderList();q('#tableMount').innerHTML='';openBriefingPreview(r)}else if(r.type==='measure'){listType='measure';selectedId=r.id;listOpen=true;focusOn(r.componentId);renderList();q('#tableMount').innerHTML='';openMeasurementTable(r.componentId)}else choose(r)}});
+q('#tabs').addEventListener('click',e=>{boardFilter=null;const b=e.target.closest('[data-tab]');if(!b)return;const t=b.dataset.tab,removing=active.has(t);listQuery='';if(removing){active.delete(t);const work=pendingWork();if(work&&t===work.type){clearPending();placing=null}}else{active.add(t);listType=t}selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;if(active.size){currentListType();listOpen=true;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus()}else{listType=null;listOpen=false;resetFocus()}render()});
+q('#listMount').addEventListener('click',e=>{if(e.target.closest('[data-reset-board]')){boardFilter=null;renderList();return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='collapse'){listOpen=false;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='expand'){listOpen=true;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='clear-list-search'){listQuery='';renderList();q('#listSearch')?.focus();return}if(action==='filter'){filterOpen=!filterOpen;renderList();return}const tab=e.target.closest('[data-list-tab]')?.dataset.listTab;if(tab){boardFilter=null;listType=tab;listQuery='';selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus();renderList();renderTable();return}const date=e.target.closest('[data-date]')?.dataset.date;if(date){if(collapsedDates.has(date))collapsedDates.delete(date);else collapsedDates.add(date);renderList();return}const id=Number(e.target.closest('[data-item]')?.dataset.item),r=records.find(v=>v.id===id);if(r){if(r.type==='briefing'&&hasBriefMedia(r)){listType='briefing';selectedId=r.id;listOpen=true;focusOn(r.componentId);renderList();q('#tableMount').innerHTML='';openBriefingPreview(r)}else if(r.type==='measure'){listType='measure';selectedId=r.id;listOpen=true;focusOn(r.componentId);renderList();q('#tableMount').innerHTML='';openMeasurementTable(r.componentId)}else choose(r)}});
 q('#listMount').addEventListener('change',e=>{if(e.target.id==='statusFilter'){statusFilter=e.target.value;selectedId=null;renderList()}});
 q('#listMount').addEventListener('input',e=>{if(e.target.id!=='listSearch')return;listQuery=e.target.value;renderList();const input=q('#listSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
-q('#markers').addEventListener('click',e=>{const marker=e.target.closest('[data-marker]');if(!marker)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;listType=type;listQuery='';statusFilter='all';filterOpen=false;const rows=records.filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;listOpen=true;focusOn(id);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;listOpen=true;focusOn(id);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
+q('#markers').addEventListener('click',e=>{boardFilter=null;const marker=e.target.closest('[data-marker]');if(!marker)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;listType=type;listQuery='';statusFilter='all';filterOpen=false;const rows=records.filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;listOpen=true;focusOn(id);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;listOpen=true;focusOn(id);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
 q('#stage').addEventListener('click',e=>{const work=pendingWork();if(!(work&&placing===work.type&&selectedModel))return;const rect=q('#stage').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100;toggleBindingComponent(nearestComponent(Math.max(4,Math.min(96,x)),Math.max(8,Math.min(90,y))))});
 q('#tableMount').addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(a==='close-table'){selectedId=null;expandedMeasureRows.clear();resetFocus();renderTable();renderList();return}const measureId=Number(e.target.closest('[data-measure-expand]')?.dataset.measureExpand);if(measureId){if(expandedMeasureRows.has(measureId))expandedMeasureRows.delete(measureId);else expandedMeasureRows.add(measureId);renderTable();return}const id=Number(e.target.closest('[data-detail]')?.dataset.detail);if(id){const r=records.find(x=>x.id===id);if(!r)return;selectedId=id;if(isIssue(r)){detailId=id;renderDetailPage()}else openGeneric(r);return}const page=e.target.closest('[data-page]')?.dataset.page;if(page){const max=Math.ceil(tableRows().length/5);tablePage=Math.max(1,Math.min(max,tablePage+(page==='next'?1:-1)));renderTable()}});
 q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-component]')?.dataset.removeComponent;if(remove){selectedComponents.delete(remove);renderPlacement();return}const locate=e.target.closest('[data-locate-component]')?.dataset.locateComponent;if(locate){locateBindingComponent(locate);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='clear-component-search'){componentQuery='';renderPlacement();q('#componentSearch')?.focus();return}if(action==='choose-model'){showModelSelection();return}if(action==='confirm-binding'){saveBusinessBinding();return}if(action==='cancel-place'){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render();toast('已取消本次挂接')}});
