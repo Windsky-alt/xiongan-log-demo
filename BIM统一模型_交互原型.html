@@ -167,7 +167,7 @@ records.push(
  {id:302,type:'plan',category:'技术文件',title:'水下混凝土浇筑专项方案.pdf',fileName:'水下混凝土浇筑专项方案.pdf',uploader:'路阳',uploadTime:'2026-09-19 09:05',checkTime:'2026-09-19 09:05',size:'3.1 MB',componentId:'C-A2',x:42,y:53},
  {id:303,type:'plan',category:'设计变更',title:'设计变更单 BG-014.pdf',fileName:'设计变更单 BG-014.pdf',uploader:'刘振',uploadTime:'2026-09-15 16:40',checkTime:'2026-09-15 16:40',size:'860 KB',componentId:'C-A5',x:46,y:48},
  {id:304,type:'plan',category:'图纸',title:'3F 结构平面图.dwg',fileName:'3F 结构平面图.dwg',uploader:'刘振',uploadTime:'2026-09-12 11:10',checkTime:'2026-09-12 11:10',size:'6.8 MB',componentId:'C-B1',x:59,y:46},
-  {id:305,type:'plan',category:'技术规范',title:'GB50204 混凝土结构工程施工质量验收规范.pdf',fileName:'GB50204 混凝土结构工程施工质量验收规范.pdf',uploader:'系统管理员',uploadTime:'2026-09-01 08:30',checkTime:'2026-09-01 08:30',size:'12.4 MB',componentId:'C-A6',x:49,y:44}
+  {id:305,type:'plan',category:'技术规范',title:'GB50204-2015 混凝土结构工程施工质量验收规范.pdf',fileName:'GB50204-2015 混凝土结构工程施工质量验收规范.pdf',uploader:'系统管理员',uploadTime:'2026-09-01 08:30',checkTime:'2026-09-01 08:30',size:'12.4 MB',componentId:'C-A6',x:49,y:44}
 );
 function annotationDisplayStatus(r){const b=r.baseStatus||r.status;const open=b==='待整改'||b==='继续整改';return(open&&r.deadline&&r.deadline<today())?'待整改逾期':b}let boardLeftOpen=false,boardRightOpen=false,boardGroup='comp',boardQuery='',boardsBuilt=false;
 const BOARD_TYPES=[['quality','质量','质','#2084ed'],['safety','安全','安','#e88330'],['briefing','交底','交','#8a61d3'],['measure','实测实量','测','#20a486'],['panorama','全景','景','#249db8'],['annotation','批注','注','#e2503f'],['plan','方案','案','#8b5cf6']];
