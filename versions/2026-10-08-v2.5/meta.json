@@ -1,7 +1,7 @@
 {
   "version": "2.5",
   "date": "2026-10-08",
-  "note": "BIM方案文件字段与预览弹窗优化（WEB/移动端）",
+  "note": "BIM方案列表独立展示方案类型列（WEB/移动端）",
   "source": "雄安科创园_施工日志演示_v4.html",
   "htmlFile": "施工日志演示-V2.5.html",
   "assets": 10,
