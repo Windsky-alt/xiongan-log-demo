@@ -153,11 +153,17 @@
 .annotation-create-modal .annotation-radio label{display:flex;align-items:center;gap:6px;color:#40526a}
 .annotation-create-modal .annotation-radio input{width:auto}
 .annotation-create-modal .field[hidden]{display:none}
+.stage{container-type:size}
+/* 底图内的工具条保留常用模型操作，隐藏现场不使用的三个入口。 */
+.toolbar-icon-mask{position:absolute;z-index:2;pointer-events:none;top:calc(50% + max(20.965cqw,44.488cqh));width:max(2.350cqw,4.987cqh);height:max(1.794cqw,3.806cqh);border-radius:2px;transform:translateX(-50%)}
+.toolbar-icon-mask.mask-helmet{left:calc(50% + max(3.061cqw,6.496cqh));background:linear-gradient(90deg,#0a111b,#0b121c)}
+.toolbar-icon-mask.mask-tools{left:calc(50% + max(6.154cqw,13.058cqh));background:linear-gradient(90deg,#0b121c,#0c131d)}
+.toolbar-icon-mask.mask-cloud{left:calc(50% + max(12.338cqw,26.181cqh));background:linear-gradient(90deg,#0d141e,#0f151f)}
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="markers"></div><div id="focus"></div></div></div>
+  <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="markers"></div><div id="focus"></div><span class="toolbar-icon-mask mask-helmet" aria-hidden="true"></span><span class="toolbar-icon-mask mask-tools" aria-hidden="true"></span><span class="toolbar-icon-mask mask-cloud" aria-hidden="true"></span></div></div>
   <div class="tabs" id="tabs" role="group" aria-label="BIM业务标签"></div>
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
   <div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟</div>
