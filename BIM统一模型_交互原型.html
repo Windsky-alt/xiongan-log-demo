@@ -107,6 +107,39 @@
 
 .board-left,.board-right{width:280px}.board-handle.open.handle-left{left:280px}.board-handle.open.handle-right{right:280px}.board-body{min-height:0;overflow:hidden;display:grid;grid-template-rows:1fr 1fr 1.15fr;gap:8px;padding:10px}.board-head{height:35px}.board-foot{font-size:10px;padding:6px 10px}.dash-module{min-height:0;padding:10px;background:#14283ee8;border:1px solid #ffffff14;border-radius:6px;display:flex;flex-direction:column;justify-content:space-between;gap:5px;overflow:hidden}.dash-module h3{font-size:13px;margin:0;color:#eaf4ff;display:flex;justify-content:space-between}.dash-module h3 small{font-size:10px;font-weight:400;color:#8ca7bf}.dash-main{border:0;background:none;color:#9db5cb;display:flex;align-items:baseline;gap:9px;text-align:left;padding:0}.dash-main strong{font-size:30px;color:#61b9ff}.dash-main span{font-size:11px}.dash-three,.dash-four{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.dash-four{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;flex:1;min-height:0}.dash-four .dash-stat{min-height:0;padding:2px;font-size:10px}.dash-four .dash-stat b{font-size:18px}.dash-two{grid-template-columns:1fr 1fr}.dash-stat{border:0;background:#ffffff07;color:#a7bdd0;padding:5px 2px;border-radius:4px;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;font-size:10px}.dash-stat b{font-size:20px;color:#f1f7ff}.dash-main:hover,.dash-stat:hover,.dash-focus button:hover,.dash-recent:hover{background:#318cec25}.dash-focus{display:grid;gap:4px;min-height:0}.dash-focus button,.dash-recent{border:0;background:#ffffff06;border-radius:4px;padding:6px;text-align:left;color:#dceaf6;display:flex;flex-direction:column;gap:3px;min-width:0;font-size:11px}.dash-focus button span,.dash-recent span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.dash-focus small{color:#ffba88}.dash-recent small,.dash-empty{color:#9cb2c7;font-size:10px}.dash-reset{background:#244660;color:#d7ebff;border:0;padding:6px;font-size:11px}.board{top:104px;bottom:52px}@media(max-height:750px){.dash-focus button:nth-child(3){display:none}.dash-module{padding:7px}.dash-main strong{font-size:25px}.dash-stat b{font-size:17px}.board-body{gap:6px;padding:7px}.board-foot{display:none}}
 @media(max-height:680px){.board{top:100px;bottom:48px}.board-body{grid-template-rows:1fr 1fr 1fr;padding:5px;gap:4px}.dash-module{padding:5px;gap:2px}.dash-main{line-height:1.1}.dash-main strong{font-size:21px}.dash-stat{padding:2px;gap:0}.dash-stat b{font-size:16px}.dash-module h3{font-size:12px}.dash-focus button{padding:3px}.dash-recent{padding:3px}} </style>
+<style>
+.board-body{grid-template-rows:repeat(4,minmax(0,1fr))}
+.date-status.plan{background:#2d5573;color:#d9efff;border-color:#4d7fa0}
+.dash-plan .dash-plan-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dash-plan .dash-plan-head button{border:0;border-radius:3px;padding:3px 7px;background:#2379c9;color:#fff;font-size:10px}
+.dash-plan .dash-plan-summary{display:flex;align-items:baseline;gap:8px;color:#9fb6cc;font-size:11px}
+.dash-plan .dash-plan-summary strong{font-size:27px;color:#61b9ff}
+.dash-plan .dash-plan-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.dash-plan .dash-plan-kpis span{padding:5px 2px;background:#ffffff07;border-radius:4px;text-align:center;color:#9fb6cc;font-size:10px}
+.dash-plan .dash-plan-kpis b{display:block;color:#fff;font-size:16px}
+.dash-annotation .dash-main strong{color:#c78cff}
+.dash-status-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;min-height:0}
+.dash-status-grid .dash-stat{padding:3px 1px;min-width:0}
+.dash-status-grid .dash-stat b{font-size:16px}
+.dash-status-grid .dash-stat span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:9px}
+.plan-modal{width:min(1280px,calc(100vw - 34px));max-height:88%;background:#263748;color:#eef6ff;border:1px solid #9cb4c933;border-radius:3px}
+.plan-modal .modal-head{background:#263748;color:#fff;border-color:#a9bfd322}
+.plan-modal .modal-head button{color:#d8e5f2}
+.plan-modal .modal-body{padding:0;background:#33495d}
+.plan-toolbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #d8e8f122;font-size:11px}
+.plan-toolbar select{height:28px;min-width:150px;border:1px solid #8399ad;border-radius:3px;background:#f8fbfe;color:#283e54;padding:0 8px}
+.plan-toolbar button{border:1px solid #7e99b1;border-radius:3px;background:#eef4f9;color:#27445d;padding:5px 10px;font-size:11px}
+.plan-table-wrap{max-height:calc(88vh - 130px);overflow:auto}
+.plan-table{width:100%;min-width:1740px;border-collapse:collapse;table-layout:fixed;font-size:11px}
+.plan-table th,.plan-table td{height:31px;padding:6px 8px;border-right:1px solid #d5e0e922;border-bottom:1px solid #d5e0e922;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-table th{background:#40586d;color:#f1f6fb;font-weight:700;position:sticky;top:0;z-index:1}
+.plan-table td{background:#2d4052;color:#e2ebf3}
+.plan-table tr:hover td,.plan-table tr.plan-highlight td{background:#425d70}
+.plan-table .plan-warn{color:#ffd36d}
+.plan-table .plan-status{color:#9bd2ff}
+.plan-table .plan-complete{color:#77e0b5}
+@media(max-height:680px){.board-body{grid-template-rows:repeat(4,minmax(0,1fr));gap:4px}.dash-module{padding:5px}.dash-plan .dash-plan-summary strong{font-size:21px}.dash-plan .dash-plan-kpis b{font-size:14px}.dash-status-grid .dash-stat b{font-size:14px}}
+</style>
 </head>
 <body>
 <div id="app">
@@ -309,6 +342,23 @@ if(parent!==window){parent.postMessage({channel:'xa-panorama',action:'ready'},'*
 
 if(pendingWork()){const type=pendingWork().type;active=new Set([type]);listType=type;listOpen=true}
 collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].slice(1));render();if(pendingWork())showModelSelection();
+
+/* ===== 左看板：进度计划与全景批注状态 ===== */
+var progressPlanRows=[
+ {node:'1',name:'中煤雄安科创园项目施工进度计划',level:'一级',owner:'项目部',role:'项目经理',planStart:'2026-05-27',planEnd:'2028-05-31',planDays:'736',actualStart:'2026-05-27',actualEnd:'--',actualDays:'--',variance:'0',warning:'正常',state:'进行中',completion:'18%'},
+ {node:'1.1',name:'地下结构',level:'二级',owner:'项目部',role:'生产经理',planStart:'2026-05-27',planEnd:'2027-03-04',planDays:'282',actualStart:'2026-05-27',actualEnd:'--',actualDays:'--',variance:'0',warning:'正常',state:'进行中',completion:'26%'},
+ {node:'1.1.1.1.3',name:'01地块第一步第一层土方开挖（挖至-7.3m）',level:'六级',owner:'孙晓明',role:'土方工长',planStart:'2026-06-03',planEnd:'2026-06-12',planDays:'10',actualStart:'2026-06-05',actualEnd:'2026-06-17',actualDays:'13',variance:'5',warning:'延期',state:'已完成',completion:'100%',highlight:true},
+ {node:'1.1.1.1.4',name:'01地块挂网喷面',level:'六级',owner:'孙晓明',role:'土方工长',planStart:'2026-06-15',planEnd:'2026-06-20',planDays:'6',actualStart:'2026-06-15',actualEnd:'--',actualDays:'--',variance:'0',warning:'正常',state:'未开始',completion:'0%'}
+];
+function planBoardHtml(){const rows=progressPlanRows||[],total=rows.length,inProgress=rows.filter(r=>r.state==='进行中').length,warn=rows.filter(r=>r.warning!=='正常').length,done=rows.filter(r=>r.state==='已完成').length;return '<section class="dash-module dash-plan"><div class="dash-plan-head"><h3>进度计划</h3><button data-plan-open>查看计划</button></div><div class="dash-plan-summary"><strong>'+total+'</strong><span>计划任务</span></div><div class="dash-plan-kpis"><span><b>'+inProgress+'</b>进行中</span><span><b>'+done+'</b>已完成</span><span><b>'+warn+'</b>预警</span></div></section>'}
+function annotationStatusBoardHtml(){const rows=records.filter(r=>r.type==='annotation'),states=['无需整改','待整改','待复查','继续整改','已复查'],labels=states.map(s=>boardAction('annotation',s,s,rows.filter(r=>(r.status||'待整改')===s).length)).join('');return '<section class="dash-module dash-annotation"><h3>全景批注问题状态 <small>'+rows.length+'条</small></h3><button class="dash-main" data-dash-type="annotation" data-dash-filter="all"><strong>'+rows.length+'</strong><span>全景批注问题 ›</span></button><div class="dash-status-grid">'+labels+'</div></section>'}
+function boardStatsHtml(){return planBoardHtml()+issueBoard('quality')+issueBoard('safety')+annotationStatusBoardHtml()}
+function matchesBoardFilter(r){if(!boardFilter||r.type!==boardFilter.type||boardFilter.mode==='all')return true;const m=boardFilter.mode;if(r.type==='annotation')return(r.status||'待整改')===m;if(r.type==='briefing')return briefingKind(r)===m;if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');if(m==='open')return boardOpen(r);if(m==='todo')return boardOpen(r)&&r.status!=='待复查';if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true}
+function progressPlanHtml(){const heads=['节点号','工序名称','工序级别','责任人','责任岗位','计划开始日期','计划完成日期','计划工期','实际开始日期','实际结束日期','实际工期','偏差天数','预警','执行状态','完成率(%)'],keys=['node','name','level','owner','role','planStart','planEnd','planDays','actualStart','actualEnd','actualDays','variance','warning','state','completion'];return '<div class="shade"><section class="modal plan-modal" role="dialog" aria-modal="true" aria-label="进度计划"><div class="modal-head"><span>进度计划</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body"><div class="plan-toolbar"><span>选择计划：</span><select aria-label="选择计划"><option>总计划</option><option>地下结构施工计划</option><option>主体结构施工计划</option></select><button data-plan-refresh>刷新计划</button></div><div class="plan-table-wrap"><table class="plan-table"><colgroup>'+heads.map((h,i)=>'<col style="width:'+(i===1?300:i===0?90:i===12||i===13?90:118)+'px">').join('')+'</colgroup><thead><tr>'+heads.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+progressPlanRows.map(r=>'<tr class="'+(r.highlight?'plan-highlight':'')+'">'+keys.map(k=>{const v=r[k]||'--',cls=k==='warning'&&v!=='正常'?'plan-warn':k==='state'?'plan-status':k==='completion'?'plan-complete':'';return '<td class="'+cls+'" title="'+esc(v)+'">'+esc(v)+'</td>'}).join('')+'</tr>').join('')+'</tbody></table></div></div></section></div>'}
+function openProgressPlan(){q('#modalMount').innerHTML=progressPlanHtml()}
+q('#boardMount').addEventListener('click',e=>{if(e.target.closest('[data-plan-open]')){openProgressPlan();return}});
+q('#modalMount').addEventListener('click',e=>{if(e.target.closest('[data-plan-refresh]'))toast('进度计划已刷新')});
+renderBoards();
 })();
 </script>
 </body>
