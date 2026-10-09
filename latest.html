@@ -245,7 +245,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261009-project-name-1";
+const BUILD = "20261009-measure-multibind-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4170,16 +4170,18 @@ function renderAnnotationLedger(){
 function renderBimUnified(){
   let query = "";
   if(pendingBimBinding){
+    const firstMeasurement=(pendingBimBinding.measurements||[])[0]||pendingBimBinding;
     const params = pendingBimBinding.kind==="measure" ? {
       bind:"measure",
       reportName:pendingBimBinding.reportName,
       measurementTime:pendingBimBinding.measurementTime,
-      measurementItem:pendingBimBinding.measurementItem,
-      measurementPosition:pendingBimBinding.measurementPosition,
-      points:JSON.stringify(pendingBimBinding.points||[]),
-      result:pendingBimBinding.result,
-      passRate:pendingBimBinding.passRate,
-      sourceId:pendingBimBinding.sourceId
+      measurementItem:firstMeasurement.measurementItem,
+      measurementPosition:firstMeasurement.measurementPosition,
+      points:JSON.stringify(firstMeasurement.points||[]),
+      result:firstMeasurement.result,
+      passRate:firstMeasurement.passRate,
+      sourceId:firstMeasurement.sourceId,
+      measurements:JSON.stringify(pendingBimBinding.measurements||[])
     } : {
       bind:"briefing",
       briefingType:pendingBimBinding.briefingType,
@@ -4210,23 +4212,38 @@ window.addEventListener("message", event=>{
       sourceId:String(data.sourceId||"").slice(0,60)
     };
   }else if(data.channel==="xa-bim-measure"){
-    const points = Array.isArray(data.points) ? data.points.slice(0,40).map((p,i)=>({
-      no:String(p.no||`测点${i+1}`).slice(0,30),
-      value:String(p.value||"").slice(0,40),
-      unit:String(p.unit||"").slice(0,20),
-      result:String(p.result||"").slice(0,20),
-      standard:String(p.standard||"").slice(0,60)
-    })) : [];
+    const normalizeMeasurement=(entry,index)=>{
+      const points=Array.isArray(entry?.points)?entry.points.slice(0,40).map((p,i)=>({
+        no:String(p.no||`测点${i+1}`).slice(0,30),
+        value:String(p.value||"").slice(0,40),
+        unit:String(p.unit||"").slice(0,20),
+        result:String(p.result||"").slice(0,20),
+        standard:String(p.standard||"").slice(0,60)
+      })):[];
+      return {
+        measurementItem:String(entry?.measurementItem||data.measurementItem||"").slice(0,100),
+        measurementPosition:String(entry?.measurementPosition||data.measurementPosition||"").slice(0,160),
+        points,
+        result:String(entry?.result||data.result||"").slice(0,20),
+        passRate:String(entry?.passRate||data.passRate||"").slice(0,20),
+        sourceId:String(entry?.sourceId||data.sourceId||`measure-${index+1}`).slice(0,80)
+      };
+    };
+    const rawMeasurements=Array.isArray(data.measurements)&&data.measurements.length?data.measurements:[data];
+    const measurements=rawMeasurements.slice(0,60).map(normalizeMeasurement).filter(row=>row.measurementItem||row.measurementPosition);
+    if(!measurements.length)return;
+    const first=measurements[0];
     pendingBimBinding = {
       kind:"measure",
       reportName:String(data.reportName||"").slice(0,120),
       measurementTime:String(data.measurementTime||"").slice(0,30),
-      measurementItem:String(data.measurementItem||"").slice(0,100),
-      measurementPosition:String(data.measurementPosition||"").slice(0,160),
-      points,
-      result:String(data.result||"").slice(0,20),
-      passRate:String(data.passRate||"").slice(0,20),
-      sourceId:String(data.sourceId||"").slice(0,80)
+      measurements,
+      measurementItem:first.measurementItem,
+      measurementPosition:first.measurementPosition,
+      points:first.points,
+      result:first.result,
+      passRate:first.passRate,
+      sourceId:first.sourceId
     };
   }else return;
   route = {module:"bim", view:"bimUnified", target:null, childId:null};
