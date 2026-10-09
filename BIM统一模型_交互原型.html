@@ -140,6 +140,15 @@
 .plan-table .plan-complete{color:#77e0b5}
 @media(max-height:680px){.board-body{grid-template-rows:repeat(4,minmax(0,1fr));gap:4px}.dash-module{padding:5px}.dash-plan .dash-plan-summary strong{font-size:21px}.dash-plan .dash-plan-kpis b{font-size:14px}.dash-status-grid .dash-stat b{font-size:14px}}
 </style>
+<style>
+.card-fields{display:grid;gap:3px;margin-top:2px}
+.card-field{display:grid;grid-template-columns:52px minmax(0,1fr);gap:4px;align-items:start;font-size:10px;line-height:1.35;min-width:0}
+.card-field>span{color:#8ea7bd;white-space:nowrap}
+.card-field>strong{font-weight:400;color:#dce8f5;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-field>strong[title]{cursor:default}
+.card-field .status-chip{justify-self:start;line-height:16px}
+.card-field .overdue{color:#ff907b;font-weight:600;margin-left:4px}
+</style>
 </head>
 <body>
 <div id="app">
@@ -243,7 +252,7 @@ function renderList(){if(currentListType()==='panorama'){renderPanoramaList();re
 if(listType==='briefing'){const briefingRows=listed();html+='<div class="briefing-list">'+(briefingRows.length?briefingRows.map(r=>'<button class="briefing-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><span class="kind">'+esc(r.subtype)+'</span><span class="name">'+esc(r.subtype==='三维交底'?(r.modelName||r.resourceName||r.title):(r.fileName||r.title))+'</span><span class="field-name">'+(r.subtype==='三维交底'?'模型名称':'文件名称')+'：'+esc(r.subtype==='三维交底'?(r.modelName||r.resourceName||r.title):(r.fileName||r.title))+'</span><span class="location">挂接构件：'+esc(briefLocation(r))+'</span></button>').join(''):'<div class="list-empty">'+(listQuery?'未找到匹配的交底':'暂无已挂接交底')+'</div>')+'</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;return}
 if(listType==='measure'){const measureRows=listed();html+='<div class="briefing-list">'+(measureRows.length?measureRows.map(r=>'<button class="briefing-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><span class="kind" style="background:#1f9e81">实测实量</span><span class="name">'+esc(r.measurementItem||r.title)+'</span><span class="field-name">测量部位：'+esc(r.measurementPosition||briefLocation(r))+'</span><span class="location">'+(r.points?.length||0)+'个测点：'+esc(measurePointSummary(r,2))+'</span></button>').join(''):'<div class="list-empty">'+(listQuery?'未找到匹配的测量项':'暂无已挂接实测实量记录')+'</div>')+'</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;return}
 if(filterOpen){const statuses=[...new Set(visible().map(r=>r.status))];html+='<div class="list-filter"><select id="statusFilter" aria-label="状态筛选"><option value="all">全部状态</option><option value="open">未完成</option>'+statuses.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join('')+'</select></div>'}
-const rows=filtered(),dates=[...new Set(rows.map(r=>r.checkTime.slice(0,10)))];html+='<div class="list-scroll">';if(!rows.length)html+='<div class="list-empty">当前筛选下暂无挂接记录</div>';dates.forEach((date,index)=>{const day=rows.filter(r=>r.checkTime.startsWith(date));const group=listType==='plan'?[''+planGroupLabel(day),'plan']:dateSummary(day),summary=group[0],cls=group[1],isCollapsed=collapsedDates.has(date);html+='<section class="date-group"><button class="date-head" data-date="'+date+'" aria-expanded="'+!isCollapsed+'"><span class="date-label">'+date+' <small>'+day.length+'条</small></span><span class="date-status '+cls+'">'+summary+'</span><span class="date-chevron">'+(isCollapsed?'›':'⌄')+'</span></button>';if(!isCollapsed)day.forEach(r=>{const overdue=isIssue(r)&&r.deadline<today()&&r.status!=='已复查',recordLabel=r.checkType||r.subtype||r.owner||'';html+='<button class="issue-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><div class="card-top"><span class="card-title">'+esc(r.title)+'</span><span class="status-chip '+statusClass(r.status)+'">'+esc(r.status)+'</span></div><div class="card-desc">'+esc(r.description)+'</div><div class="card-meta">'+esc(briefLocation(r))+'</div><div class="card-meta">'+(recordLabel?esc(recordLabel):'')+(r.deadline?' · 截止 '+esc(r.deadline.slice(5)):'')+(overdue?' <strong class="overdue">已逾期</strong>':'')+'</div></button>'});html+='</section>'});html+='</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;if(q('#statusFilter'))q('#statusFilter').value=statusFilter}
+const rows=filtered(),dates=[...new Set(rows.map(r=>r.checkTime.slice(0,10)))];html+='<div class="list-scroll">';if(!rows.length)html+='<div class="list-empty">当前筛选下暂无挂接记录</div>';dates.forEach((date,index)=>{const day=rows.filter(r=>r.checkTime.startsWith(date));const group=listType==='plan'?[''+planGroupLabel(day),'plan']:dateSummary(day),summary=group[0],cls=group[1],isCollapsed=collapsedDates.has(date);html+='<section class="date-group"><button class="date-head" data-date="'+date+'" aria-expanded="'+!isCollapsed+'"><span class="date-label">'+date+' <small>'+day.length+'条</small></span><span class="date-status '+cls+'">'+summary+'</span><span class="date-chevron">'+(isCollapsed?'›':'⌄')+'</span></button>';if(!isCollapsed)day.forEach(r=>{const overdue=isIssue(r)&&r.deadline<today()&&r.status!=='已复查';html+=listCardHtml(r,selectedId===r.id,overdue)});html+='</section>'});html+='</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;if(q('#statusFilter'))q('#statusFilter').value=statusFilter}
 function focusOn(id){focusComponent=id;const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.42,bl=boardLeftOpen&&!active.size?300:0,br=boardRightOpen&&!active.size?320:0,available=w-(listOpen&&active.size?280:0)-bl-br,targetX=bl+available*.53,targetY=h*.37,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';q('#focus').innerHTML='<div class="focus-ring" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>';renderMarkers()}
 function resetFocus(){focusComponent=null;q('#stage').style.transform='';q('#focus').innerHTML='';renderMarkers()}
 function tableRows(){if(listType==='panorama'||!focusComponent)return[];const selected=records.find(r=>r.id===selectedId);return visible().filter(r=>r.componentId===focusComponent&&(!selected||(isIssue(selected)?isIssue(r):r.type===selected.type))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')))}
@@ -359,6 +368,29 @@ function openProgressPlan(){q('#modalMount').innerHTML=progressPlanHtml()}
 q('#boardMount').addEventListener('click',e=>{if(e.target.closest('[data-plan-open]')){openProgressPlan();return}});
 q('#modalMount').addEventListener('click',e=>{if(e.target.closest('[data-plan-refresh]'))toast('进度计划已刷新')});
 renderBoards();
+function listValue(v){return v===undefined||v===null||v===''?'--':String(v)}
+function listField(label,value,tail,cls){const val=listValue(value);return '<div class="card-field"><span>'+label+'</span><strong class="'+(cls||'')+'" title="'+esc(val)+'">'+esc(val)+(tail||'')+'</strong></div>'}
+function listStatusField(value){const val=listValue(value);return '<div class="card-field"><span>状态</span><em class="status-chip '+statusClass(value)+'">'+esc(val)+'</em></div>'}
+function listCardHtml(r,selected,overdue){
+  const deadlineTail=overdue?' <small class="overdue">已逾期</small>':'';
+  const status=listStatusField(r.status);
+  const rows=r.type==='annotation'
+    ? listField('问题描述',r.description)+status+listField('挂接构件',briefLocation(r))+listField('整改期限',r.deadline,deadlineTail)
+    : listField('问题分类',r.category||r.issueCategory)+status+listField('问题描述',r.description)+listField('挂接构件',briefLocation(r))+listField('检查类型',r.checkType||r.subtype)+listField('整改期限',r.deadline,deadlineTail);
+  return '<button class="issue-card '+(selected?'selected':'')+'" data-item="'+r.id+'"><div class="card-fields">'+rows+'</div></button>';
+}
+
+/* 交底媒体在同一构件上有多条记录时，先展示清单表，再从表格打开具体动画或小 BIM。 */
+function openBriefingMarkerSelection(id,variant){
+  const rows=records.filter(r=>r.type==='briefing'&&r.componentId===id&&(r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));
+  const all=records.filter(r=>r.type==='briefing'&&r.componentId===id);
+  if(!rows.length)return;
+  boardFilter=null;listType='briefing';listQuery='';statusFilter='all';filterOpen=false;selectedId=rows[0].id;listOpen=true;focusOn(id);renderList();
+  if(all.length>1){q('#modalMount').innerHTML='';renderTable();return}
+  q('#tableMount').innerHTML='';openBriefingPreview(rows[0]);
+}
+q('#markers').addEventListener('click',e=>{const marker=e.target.closest('[data-marker]');if(marker?.dataset.markerType!=='briefing')return;e.stopImmediatePropagation();openBriefingMarkerSelection(marker.dataset.marker,marker.dataset.markerVariant)},true);
+
 })();
 </script>
 </body>
