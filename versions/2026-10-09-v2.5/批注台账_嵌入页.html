@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>批注台账</title>
+<style>
+/* 样式与 实测实量_测量记录台账_嵌入页.html 保持一致 */
+:root{--blue:#3a82ee;--text:#34445a;--muted:#8290a4;--line:#e4eaf2;--head:#f3f4f6}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",Arial,sans-serif;color:var(--text);background:#fff}button,input,select{font:inherit}button{cursor:pointer}
+.page{height:100%;padding:22px;overflow:auto}
+.filters{display:flex;align-items:center;gap:14px;padding-bottom:20px;border-bottom:1px solid #edf1f5;flex-wrap:wrap}
+.filters input,.filters select{height:40px;border:1px solid #dbe3ed;border-radius:4px;padding:0 12px;color:#41546c;background:#fff}
+.filters input{width:240px}
+.btn{height:40px;padding:0 18px;border:1px solid #d8e1ec;border-radius:4px;background:#fff;color:#43556d}
+.btn:hover{border-color:#b9cde8;color:var(--blue)}
+.btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.btn.primary:hover{background:#2f74dc;border-color:#2f74dc;color:#fff}
+.summary{display:flex;justify-content:space-between;align-items:center;margin:19px 0 12px}
+.summary b{color:var(--blue)}
+.summary .sub{color:var(--muted);margin-left:4px}
+.table-wrap{min-width:1080px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{height:56px;padding:0 12px;background:var(--head);color:#33465e;text-align:left;font-weight:700}
+td{height:64px;padding:0 12px;border-bottom:1px solid var(--line);color:#566980;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tbody tr:hover td{background:#fbfdff}
+tbody tr{cursor:pointer}
+.wrap-cell{white-space:normal;line-height:1.55;padding-top:12px;padding-bottom:12px;height:auto}
+.cell-title{font-weight:600;color:#33465e}
+.cell-sub{color:var(--muted);margin-top:4px;font-size:13px}
+.comp small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;background:#f0f4f9;color:#5a6d86;border:1px solid #e6edf6;font-size:12px;margin:5px 5px 0 0}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.badge.wait{background:#fff1f2;color:#d94252;border:1px solid #ffd9dd}
+.badge.cont{background:#fff6ea;color:#c2690a;border:1px solid #ffe2bd}
+.badge.check{background:#eef6ff;color:#2176cf;border:1px solid #cfe6ff}
+.badge.done{background:#eefaf3;color:#148659;border:1px solid #cdeedb}
+.badge.over{background:#e45555;color:#fff;border:1px solid #e45555}
+.over-days{color:#e45555;font-size:12.5px;font-weight:700;margin-left:6px}
+.action{border:0;background:transparent;color:#237bea;padding:4px 6px}
+.action:hover{text-decoration:underline}
+.pagination{display:flex;justify-content:flex-end;gap:14px;align-items:center;padding:22px 0;color:#74849a}
+.page-no{color:#237bea;font-weight:700;border:0;background:transparent;padding:2px 6px}
+.page-no.on{color:#fff;background:var(--blue);border-radius:3px}
+.empty{padding:50px;text-align:center;color:#91a0b2}
+.pick-note{padding:10px 12px;margin-bottom:14px;border:1px solid #d9eafd;border-radius:4px;background:#f2f8ff;color:#52718f}
+
+.mask{position:fixed;z-index:10;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:#17283f63}
+.mask.show{display:flex}
+.dialog{width:min(760px,96vw);max-height:88vh;display:flex;flex-direction:column;background:#fff;border-radius:6px;box-shadow:0 18px 45px #17283f42}
+.dialog-head{height:58px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);font-size:17px;font-weight:700}
+.close{margin-left:auto;border:0;background:transparent;color:#7f8da1;font-size:24px}
+.dialog-body{padding:19px 20px;overflow:auto}
+.dialog-foot{height:62px;display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 20px;border-top:1px solid var(--line);background:#fafcff}
+.sec-title{font-weight:700;color:#33465e;margin:18px 0 4px;font-size:13.5px}
+.sec-title:first-child{margin-top:0}
+.kv{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13.5px;line-height:1.6}
+.kv:last-child{border-bottom:0}
+.kv .k{width:88px;flex:none;color:var(--muted)}
+.kv .v{flex:1;min-width:0;word-break:break-word}
+.steps{position:relative;padding-left:18px}
+.steps::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.step{position:relative;padding-bottom:14px}
+.step:last-child{padding-bottom:0}
+.step::before{content:"";position:absolute;left:-17px;top:5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.step.on::before{border-color:var(--blue)}
+.step.over::before{border-color:#e45555}
+.step .st{font-weight:700;color:#33465e}
+.step .sm{color:var(--muted);font-size:13px;margin-top:2px}
+@media(max-width:900px){.page{padding:15px}.dialog{width:97vw}.dialog-body{padding:14px}}
+.detail-bar{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid #edf1f5;margin-bottom:20px}
+.detail-bar .detail-name{font-weight:700;color:#33465e;font-size:15px}
+.page[hidden]{display:none}
+.img-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.img-list img{width:96px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.round-card{margin:10px 0 14px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden}
+.round-head{padding:9px 12px;background:#f6f9fc;font-weight:700;color:#425a76}
+.round-body{padding:2px 12px 9px}
+.annotation-table{min-width:1400px;table-layout:fixed}.annotation-description{font-weight:400;color:#41546c;line-height:1.65}.annotation-table td{vertical-align:middle}
+</style>
+</head>
+<body>
+<main class="page" id="listView">
+  <div class="filters">
+    <select id="fStatus">
+      <option value="all">全部状态</option>
+      <option value="noIssue">无需整改</option>
+      <option value="待整改">待整改</option>
+      <option value="继续整改">继续整改</option>
+      <option value="待复查">待复查</option>
+      <option value="已复查">已复查</option>
+      
+    </select>
+    <select id="fOverdue" aria-label="是否逾期"><option value="">是否逾期：全部</option><option value="yes">是</option><option value="no">否</option></select>
+    <select id="fChecker"><option value="">全部批注人</option></select>
+    <select id="fComp"><option value="">全部构件</option></select>
+    <input id="fSearch" placeholder="搜索批注内容 / 构件 / 责任人"/>
+    <button class="btn" id="resetBtn">重置</button>
+    <button class="btn primary" id="searchBtn">搜索</button>
+  </div>
+
+  <div class="summary">
+    <span>共 <b id="count">0</b> 条批注<span class="sub" id="subInfo"></span></span>
+    <span class="sub" id="pageInfo"></span>
+  </div>
+
+  <div id="tableMount"></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<main class="page" id="detailView" hidden>
+  <div class="detail-bar">
+    <button class="btn" id="backBtn">← 返回台账</button>
+    <span class="detail-name" id="detailName"></span>
+    <span class="badge" id="detailState"></span>
+  </div>
+  <div id="detailBody"></div>
+</main>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toLocaleDateString('sv-SE');
+const PAGE_SIZE=10;
+const PH=t=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="72"><rect width="96" height="72" fill="#e8eef5"/><text x="48" y="41" font-size="11" fill="#8290a4" text-anchor="middle">'+t+'</text></svg>');
+
+/* ===== 数据 =====
+   与 BIM统一模型_交互原型（批注页签）、分屏对比、移动端共用同一份批注数据。
+   存储 key 统一为 xa-annotations-v1；本页作为嵌入页（sandbox 无 same-origin）时读不到 localStorage，
+   自动回落到种子数据，因此任何环境下都能独立演示。 */
+const SEED=[
+  {id:101,type:'annotation',title:'桥架与风管净距不足',componentId:'C-A1',compName:'1号楼 · 14层 · 柱 KZ-01',checkTime:'2026-10-12 09:26',checker:'张恒毓',category:'机电安装 / 管线综合',level:'一般',
+   description:'电气桥架与排风管交叉处净距不足 50mm，不满足规范要求。',requirement:'调整桥架标高或路由，避让排风管后复检。',
+   deadline:'2026-10-15',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:102,type:'annotation',title:'模板拼缝处漏浆痕迹',componentId:'C-A3',compName:'1号楼 · 14层 · 柱 KZ-02',checkTime:'2026-10-08 15:40',checker:'刘振',category:'主体结构工程 / 模板工程',level:'一般',
+   description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',requirement:'封堵拼缝，后续浇筑前复查。',
+   deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-10-10 14:20',rectifyDescription:'已封堵拼缝并清理表面，申请复查。',rectifyImages:[PH('整改照片1'),PH('整改照片2')]},
+  {id:103,type:'annotation',title:'临边防护栏杆缺失',componentId:'C-A2',compName:'1号楼 · 14层 · 楼板 B-01',checkTime:'2026-09-18 10:05',checker:'王会彬',category:'高处作业 / 临边防护',level:'严重',
+   description:'楼板临边防护栏杆未安装到位，存在坠落风险。',requirement:'立即补齐防护栏并设置警示标识。',
+   deadline:'2026-09-20',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:104,type:'annotation',title:'地面成品保护不到位',componentId:'C-A5',compName:'1号楼 · 14层 · 梁 KL-05',checkTime:'2026-09-22 11:20',checker:'张恒毓',category:'文明施工 / 成品保护',level:'一般',
+   description:'已完工地坪未做覆盖保护，材料堆放造成划痕。',requirement:'覆盖保护并清理堆放材料。',
+   deadline:'',unit:'',assignee:'',reviewer:'',baseStatus:'待整改',issueRequired:false,round:1,source:'移动端'},
+  {id:105,type:'annotation',title:'桥架吊架间距偏大',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-09-16 14:30',checker:'李强',category:'机电安装 / 支吊架',level:'一般',
+   description:'桥架吊架间距超过规范要求，需加密。',requirement:'按规范加密吊架。',
+   deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比',rectifiedAt:'2026-09-18 11:00',rectifyDescription:'已按规范加密吊架至 1.5m 间距。',rectifyImages:[PH('整改照片')],reviewAt:'2026-09-19 09:30',reviewResult:'不通过',reviewDescription:'抽检仍有 2 处间距超 1.8m，需继续加密后重新提交。',reviewImages:[PH('复查照片')]},
+  {id:106,type:'annotation',title:'风管保温层局部破损',componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',checkTime:'2026-09-10 16:05',checker:'刘振',category:'机电安装 / 暖通',level:'一般',
+   description:'风管保温层局部破损，影响保温效果。',requirement:'修补保温层并复查。',
+   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-09-12 10:30',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]}
+];
+
+function loadStore(){
+  let raw=null;
+  try{ raw=localStorage.getItem('xa-annotations-v1') }catch(e){ raw=null }
+  if(!raw) return null;
+  try{
+    const d=JSON.parse(raw);
+    const list=Array.isArray(d)?d:(d.annotations||[]);
+    return list.length?list:null;
+  }catch(e){ return null }
+}
+let DATA=(loadStore()||SEED).map(r=>({...r}));
+
+/* ===== 状态派生（与其它端一致） ===== */
+function displayStatus(r){
+  if(r.issueRequired===false)return '无需整改';
+  const b=r.baseStatus||r.status||'待整改';
+  return b==='待整改逾期'?'待整改':b;
+}
+function overdueDays(r){
+  const status=displayStatus(r);
+  if(status==='无需整改'||!r.deadline)return 0;
+  const end=status==='待整改'||status==='继续整改'?today():(r.rectifiedAt||r.reviewAt||'').slice(0,10);
+  if(!end)return 0;
+  const days=Math.round((Date.parse(end)-Date.parse(r.deadline.slice(0,10)))/86400000);
+  return Number.isFinite(days)?Math.max(0,days):0;
+}
+function badgeCls(s){
+  return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':(s==='已复查'||s==='无需整改')?'done':'wait';
+}
+const isClosed=s=>s==='已复查'||s==='无需整改';
+
+/* ===== 查询 ===== */
+let view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1};
+function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
+function filtered(){
+  return allRows().filter(({r,s})=>{
+    if(view.status==='noIssue'){ if(s!=='无需整改') return false }
+    else if(view.status!=='all'&&s!==view.status) return false;
+    if(view.overdue&&(overdueDays(r)>0)!==(view.overdue==='yes'))return false;
+    if(view.checker&&r.checker!==view.checker) return false;
+    if(view.comp&&r.compName!==view.comp) return false;
+    if(view.kw){
+      const hay=[r.description||r.title,r.compName,r.assignee,r.checker].join(' ').toLowerCase();
+      if(hay.indexOf(view.kw)<0) return false;
+    }
+    return true;
+  }).sort((a,b)=>{
+    const rank=x=>x==='待整改逾期'?0:x==='待整改'?1:x==='继续整改'?2:x==='待复查'?3:4;
+    return rank(a.s)-rank(b.s)||String(b.r.checkTime).localeCompare(a.r.checkTime);
+  });
+}
+
+/* ===== 渲染 ===== */
+function renderFilters(){
+  const cs=[...new Set(DATA.map(r=>r.checker))].sort();
+  const ps=[...new Set(DATA.map(r=>r.compName).filter(Boolean))].sort();
+  $('#fChecker').innerHTML='<option value="">全部批注人</option>'+cs.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fComp').innerHTML='<option value="">全部构件</option>'+ps.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fStatus').value=view.status;$('#fOverdue').value=view.overdue;
+  $('#fChecker').value=view.checker;
+  $('#fComp').value=view.comp;
+  $('#fSearch').value=view.kw;
+}
+function renderTable(){
+  const list=filtered(), total=list.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(view.page>pages) view.page=pages;
+  if(view.page<1) view.page=1;
+  const start=(view.page-1)*PAGE_SIZE, paged=list.slice(start,start+PAGE_SIZE);
+
+  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)).length, overCnt=all.filter(x=>overdueDays(x.r)>0).length;
+  $('#count').textContent=total;
+  $('#subInfo').textContent=' · 未复查 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
+  $('#pageInfo').textContent='第 '+view.page+' / '+pages+' 页';
+
+  const mount=$('#tableMount');
+  if(!list.length){
+    mount.innerHTML='<div class="empty">没有符合条件的批注</div>';
+  }else{
+    mount.innerHTML='<div class="table-wrap"><table class="annotation-table"><colgroup><col style="width:50px"><col style="width:280px"><col style="width:180px"><col style="width:90px"><col style="width:155px"><col style="width:100px"><col style="width:90px"><col style="width:115px"><col style="width:85px"><col style="width:85px"><col style="width:65px"></colgroup><thead><tr>'+['序号','批注内容','关联构件','批注人','批注时间','整改状态','整改人','整改期限','是否逾期','逾期天数','操作'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+paged.map(({r,s},i)=>{const days=overdueDays(r),required=s!=='无需整改';return '<tr data-id="'+r.id+'"><td>'+(start+i+1)+'</td><td class="wrap-cell annotation-description">'+esc(r.description||r.title||'--')+'</td><td class="wrap-cell">'+esc(r.compName||r.componentId||'--')+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></td><td>'+esc(required?r.assignee||'--':'--')+'</td><td>'+esc(required?r.deadline||'--':'--')+'</td><td class="'+(days?'over-days':'')+'">'+(days?'是':'否')+'</td><td class="'+(days?'over-days':'')+'">'+days+'</td><td><button class="action" data-detail="'+r.id+'">详情</button></td></tr>'}).join('')+'</tbody></table></div>';
+  }
+
+  const pg=$('#pagination');
+  if(pages<=1){ pg.innerHTML=''; }
+  else{
+    let h='<span>共 '+total+' 条</span>';
+    for(let i=1;i<=pages;i++) h+='<button class="page-no'+(i===view.page?' on':'')+'" data-page="'+i+'">'+i+'</button>';
+    pg.innerHTML=h;
+  }
+}
+function renderAll(){ renderFilters(); renderTable(); }
+
+/* ===== 详情 ===== */
+function stepHtml(r){
+  const s=displayStatus(r), od=overdueDays(r), steps=[];
+  steps.push({t:'批注发起',m:r.checker+' · '+r.checkTime+' · 来源：'+(r.source||'—'),on:true});
+  if(r.issueRequired===false){
+    steps.push({t:'无需整改',m:'仅记录问题，未指派整改人与期限',on:true});
+  }else{
+    steps.push({t:'下发整改单',m:'整改人：'+r.assignee+' · 期限：'+r.deadline+' · 复查人：'+r.reviewer,on:true});
+    historyOf(r).forEach(x=>{
+      if(x.rectifiedAt) steps.push({t:'第 '+(x.round||1)+' 轮整改已提交',m:r.assignee+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});
+      if(x.reviewAt) steps.push({t:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),m:r.reviewer+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'});
+    });
+    if(s==='待整改') steps.push({t:'等待整改',m:r.assignee+' 尚未提交第 '+(r.round||1)+' 轮整改结果',on:false});
+    if(s==='继续整改') steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交',on:false});
+    if(s==='待复查') steps.push({t:'待复查',m:'等待 '+r.reviewer+' 提交复查结果',on:false});
+    if(s==='已复查') steps.push({t:'问题闭环',m:'最终复查通过',on:true});
+    if(od>0) steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',on:false,over:true});
+  }
+  return '<div class="steps">'+steps.map(x=>'<div class="step '+(x.over?'over':x.on?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>').join('')+'</div>';
+}
+let curDetail=null;
+function imgList(a){
+  if(!Array.isArray(a)||!a.length) return '<span style="color:#8290a4">--</span>';
+  return '<div class="img-list">'+a.map(src=>'<img src="'+src+'" alt="附件"/>').join('')+'</div>';
+}
+function historyOf(r){
+  if(Array.isArray(r.workflowHistory)&&r.workflowHistory.length) return r.workflowHistory.map(x=>({...x}));
+  if(!r.rectifiedAt&&!r.reviewAt) return [];
+  const n=r.baseStatus==='继续整改'?Math.max(1,(r.round||2)-1):(r.round||1);
+  return [{round:n,rectifiedAt:r.rectifiedAt,rectifyDescription:r.rectifyDescription,rectifyImages:r.rectifyImages||[],reviewAt:r.reviewAt,reviewResult:r.reviewResult,reviewDescription:r.reviewDescription,reviewImages:r.reviewImages||[]}];
+}
+function historyHtml(r){
+  const rows=historyOf(r);
+  if(!rows.length) return '<div class="kv"><span class="k">处理记录</span><span class="v" style="color:#8290a4">尚未提交整改记录</span></div>';
+  return rows.map(x=>'<div class="round-card"><div class="round-head">第 '+esc(x.round||1)+' 轮整改与复查</div><div class="round-body">'
+    +'<div class="kv"><span class="k">实际整改日期</span><span class="v">'+esc(x.rectifiedAt||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">整改说明</span><span class="v">'+esc(x.rectifyDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">整改照片</span><span class="v">'+imgList(x.rectifyImages)+'</span></div>'
+    +'<div class="kv"><span class="k">复查结果</span><span class="v" style="font-weight:700;color:'+(x.reviewResult==='通过'?'#148659':x.reviewResult==='不通过'?'#e45555':'#8290a4')+'">'+esc(x.reviewResult||'待复查')+'</span></div>'
+    +'<div class="kv"><span class="k">复查说明</span><span class="v">'+esc(x.reviewDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(x.reviewAt||'--')+'</span></div>'
+    +'</div></div>').join('');
+}
+function renderDetail(){
+  const r=DATA.find(x=>x.id===curDetail);
+  if(!r){ backToList(); return }
+  const s=displayStatus(r), od=overdueDays(r);
+  $('#detailName').textContent='批注详情';
+  const st=$('#detailState');
+  st.textContent=s+(od?' 超 '+od+' 天':'');
+  st.className='badge '+badgeCls(s);
+
+  let h='<div class="sec-title">基本信息</div>'
+    +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
+    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'</span></div>'
+    +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'
+    +'<div class="kv"><span class="k">批注时间</span><span class="v">'+esc(r.checkTime)+'</span></div>'
+    +'<div class="kv"><span class="k">来源</span><span class="v">'+esc(r.source||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">是否需整改</span><span class="v">'+(r.issueRequired===false?'否':'是')+'</span></div>';
+
+  h+='<div class="sec-title">整改信息</div>';
+  if(r.issueRequired===false){
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></span></div>'
+      +'<div class="kv"><span class="k">说明</span><span class="v" style="color:#8290a4">未下发整改单，无需整改。</span></div>';
+  }else{
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超 '+od+' 天</span>':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
+      +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>';
+    h+=historyHtml(r);
+  }
+
+  h+='<div class="sec-title">流转记录</div>'+stepHtml(r);
+  $('#detailBody').innerHTML=h;
+}
+function openDetail(id){
+  curDetail=id;
+  $('#listView').hidden=true;
+  $('#detailView').hidden=false;
+  $('#detailView').scrollTop=0;
+  renderDetail();
+}
+function backToList(){
+  curDetail=null;
+  $('#detailView').hidden=true;
+  $('#listView').hidden=false;
+}
+/* ===== 事件 ===== */
+$('#searchBtn').onclick=()=>{
+  view.overdue=$('#fOverdue').value;view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
+  view.comp=$('#fComp').value; view.kw=$('#fSearch').value.trim().toLowerCase();
+  view.page=1; renderTable();
+};
+$('#resetBtn').onclick=()=>{
+  view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1}; renderFilters(); renderTable();
+};
+$('#fSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#searchBtn').click() });
+$('#tableMount').addEventListener('click',e=>{
+  const b=e.target.closest('[data-detail]');
+  if(b){ e.stopPropagation(); openDetail(+b.dataset.detail); return }
+  const tr=e.target.closest('tr[data-id]');
+  if(tr) openDetail(+tr.dataset.id);
+});
+$('#pagination').addEventListener('click',e=>{
+  const b=e.target.closest('[data-page]'); if(!b) return;
+  view.page=+b.dataset.page; renderTable();
+});
+$('#backBtn').onclick=backToList;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') backToList() });
+
+/* ===== 跨端同步 ===== */
+window.addEventListener('message',e=>{
+  const d=e.data; if(!d||d.channel!=='xa-annotation') return;
+  if(d.action==='refresh'||d.action==='changed'){
+    if(Array.isArray(d.data)&&d.data.length){
+      d.data.forEach(x=>{
+        const i=DATA.findIndex(y=>y.id===x.id);
+        if(i<0) DATA.push({...x}); else DATA[i]={...DATA[i],...x};
+      });
+    }else{
+      const s=loadStore(); if(s) DATA=s.map(r=>({...r}));
+    }
+    renderAll();
+  }
+});
+try{
+  const bc=new BroadcastChannel('xa-annotation-sync');
+  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=s.map(r=>({...r})); renderAll() } };
+}catch(e){}
+try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ const s=loadStore(); if(s){DATA=s.map(r=>({...r})); renderAll()} } }) }catch(e){}
+
+renderAll();
+})();
+</script>
+</body>
+</html>
