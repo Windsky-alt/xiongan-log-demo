@@ -148,6 +148,11 @@
 .card-field>strong[title]{cursor:default}
 .card-field .status-chip{justify-self:start;line-height:16px}
 .card-field .overdue{color:#ff907b;font-weight:600;margin-left:4px}
+.annotation-create-modal .required{color:#d34b4b;font-weight:700}
+.annotation-create-modal .annotation-radio{display:flex;gap:24px;align-items:center}
+.annotation-create-modal .annotation-radio label{display:flex;align-items:center;gap:6px;color:#40526a}
+.annotation-create-modal .annotation-radio input{width:auto}
+.annotation-create-modal .field[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -390,6 +395,42 @@ function openBriefingMarkerSelection(id,variant){
   q('#tableMount').innerHTML='';openBriefingPreview(rows[0]);
 }
 q('#markers').addEventListener('click',e=>{const marker=e.target.closest('[data-marker]');if(marker?.dataset.markerType!=='briefing')return;e.stopImmediatePropagation();openBriefingMarkerSelection(marker.dataset.marker,marker.dataset.markerVariant)},true);
+
+function annotationNow(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())}
+function annotationPeople(items){return '<option value="">请选择</option>'+items.map(x=>'<option value="'+esc(x[0])+'" data-unit="'+esc(x[1])+'">'+esc(x[0])+'（'+esc(x[1])+'）</option>').join('')}
+function publishAnnotationRecord(rec){
+  if(parent!==window){parent.postMessage({channel:'xa-annotation',action:'annotate',record:rec},'*');return}
+  try{const raw=localStorage.getItem('xa-annotations-v1'),obj=raw?JSON.parse(raw):{annotations:[]},list=Array.isArray(obj)?obj:(obj.annotations||[]);if(!list.some(x=>x.id===rec.id)){list.push(rec);localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length}))}}catch(e){}
+  try{const ch=new BroadcastChannel('xa-annotation-sync');ch.postMessage({type:'changed'});ch.close()}catch(e){}
+}
+function openAnnotationCreate(comp){
+  const d=new Date(Date.now()+3*864e5).toISOString().slice(0,10);
+  const body='<div class="field"><span>问题描述 <b class="required">*</b></span><textarea id="annotationCreateDesc" rows="3" placeholder="描述构件现场发现的问题"></textarea></div>'
+    +'<div class="field"><span>是否需要整改 <b class="required">*</b></span><div class="annotation-radio"><label><input type="radio" name="annotationCreateIssue" value="yes" checked>是</label><label><input type="radio" name="annotationCreateIssue" value="no">否</label></div></div>'
+    +'<div id="annotationCreateIssueFields">'
+    +'<div class="field"><span>整改人 <b class="required">*</b></span><select id="annotationCreateAssignee">'+annotationPeople([['李强','机电安装班组'],['徐志成','主体施工班组'],['赵明','装饰班组']])+'</select></div>'
+    +'<div class="field"><span>整改截止日期 <b class="required">*</b></span><input id="annotationCreateDeadline" type="date" value="'+d+'"></div>'
+    +'<div class="field"><span>复查人 <b class="required">*</b></span><select id="annotationCreateReviewer">'+annotationPeople([['王会彬','质量员'],['刘振','专业工程师'],['张恒毓','项目技术员']])+'</select></div>'
+    +'</div>';
+  showModal('新增批注 · '+comp[1],body,()=>{
+    const desc=q('#annotationCreateDesc')?.value.trim()||'',issue=q('input[name="annotationCreateIssue"]:checked')?.value==='yes';
+    const error=q('#formError');if(!desc){error.textContent='请填写问题描述';return false}
+    const assignee=q('#annotationCreateAssignee'),reviewer=q('#annotationCreateReviewer'),deadline=q('#annotationCreateDeadline');
+    if(issue&&!assignee?.value){error.textContent='请选择整改人';return false}
+    if(issue&&!deadline?.value){error.textContent='请选择整改截止日期';return false}
+    if(issue&&!reviewer?.value){error.textContent='请选择复查人';return false}
+    let id=Date.now()%1000000;while(records.some(r=>r.id===id))id++;
+    const selected=assignee?.options[assignee.selectedIndex];
+    const rec={id,type:'annotation',title:desc.slice(0,20),componentId:comp[0],compName:comp[1],x:comp[2],y:comp[3],checkTime:annotationNow(),checkType:'现场批注',checker:'系统管理员',area:'施工区',position:comp[1],category:'现场批注',level:'一般',result:'不合格',description:desc,requirement:issue?'按方案整改并复查':'仅记录问题，无需整改',deadline:issue?deadline.value:'',unit:issue?(selected?.dataset.unit||''):'',assignee:issue?assignee.value:'',reviewer:issue?reviewer.value:'',baseStatus:issue?'待整改':'无需整改',status:issue?'待整改':'无需整改',issueRequired:issue,round:1,photoId:'',yaw:0,pitch:0,source:'BIM模型',workflowHistory:[]};
+    records.push(rec);refreshAnnotationStatus();publishAnnotationRecord(rec);closeModal();active.add('annotation');listType='annotation';selectedId=rec.id;listOpen=true;render();focusOn(rec.componentId);renderTable();toast(issue?'批注已提交，整改单已下发':'批注已提交，无需整改');return true;
+  });
+  q('#modalMount .modal')?.classList.add('annotation-create-modal');
+  const toggle=()=>{const yes=q('input[name="annotationCreateIssue"]:checked')?.value==='yes';const fields=q('#annotationCreateIssueFields');if(fields)fields.hidden=!yes};
+  q('#modalMount').querySelectorAll('input[name="annotationCreateIssue"]').forEach(input=>input.addEventListener('change',toggle));toggle();
+}
+q('#markers').addEventListener('dblclick',e=>{const marker=e.target.closest('[data-marker]');if(!marker||listType!=='annotation'||!active.has('annotation')||marker.dataset.markerType!=='annotation')return;e.preventDefault();e.stopImmediatePropagation();const comp=component(marker.dataset.marker);if(comp)openAnnotationCreate(comp)});
+q('#stage').addEventListener('dblclick',e=>{if(listType!=='annotation'||!active.has('annotation')||placing||e.target.closest('[data-marker]'))return;e.preventDefault();const rect=q('#stage').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100,c=nearestComponent(Math.max(4,Math.min(96,x)),Math.max(8,Math.min(90,y)));if(c)openAnnotationCreate(c)});
+window.addEventListener('message',e=>{const d=e.data;if(!d||d.channel!=='xa-annotation'||d.action!=='refresh'||!Array.isArray(d.data))return;let changed=false;d.data.filter(r=>r&&r.type==='annotation').forEach(r=>{if(records.some(x=>x.id===r.id))return;const c=component(r.componentId);records.push(Object.assign({},r,{x:r.x??c[2],y:r.y??c[3]}));changed=true});if(changed){refreshAnnotationStatus();render()}});
 
 })();
 </script>
