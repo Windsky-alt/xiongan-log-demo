@@ -168,6 +168,11 @@
 .toolbar-icon-mask.mask-tools{left:calc(50% + max(6.154cqw,13.058cqh));background:linear-gradient(90deg,#0b121c,#0c131d)}
 .toolbar-icon-mask.mask-cloud{left:calc(50% + max(12.338cqw,26.181cqh));background:linear-gradient(90deg,#0d141e,#0f151f)}
 </style>
+<style>
+/* 收起的质量、安全日期分组只保留日期、数量与展开箭头。 */
+.list:has([data-list-tab="quality"].active) .date-head[aria-expanded="false"] .date-status,
+.list:has([data-list-tab="safety"].active) .date-head[aria-expanded="false"] .date-status{display:none}
+</style>
 </head>
 <body>
 <div id="app">
