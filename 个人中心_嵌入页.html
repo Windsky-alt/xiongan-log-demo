@@ -64,6 +64,7 @@
 .round-card{margin:10px 0 14px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden}
 .round-head{padding:9px 12px;background:#f6f9fc;font-weight:700;color:#425a76}
 .round-body{padding:2px 12px 9px}
+.flow-steps{position:relative;padding-left:18px;margin:14px 0 18px}.flow-steps:before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:1px;background:var(--line)}.flow-step{position:relative;padding-bottom:14px}.flow-step:last-child{padding-bottom:0}.flow-step:before{content:"";position:absolute;left:-17px;top:5px;width:9px;height:9px;border:2px solid var(--line);border-radius:50%;background:#fff}.flow-step.on:before{border-color:var(--blue)}.flow-step.over:before{border-color:#e45555}.flow-step b{display:block;color:#33465e;font-size:13.5px}.flow-step small{display:block;margin-top:3px;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -113,7 +114,7 @@ const MSGS=[
 function loadAnnos(){
   try{
     const raw=localStorage.getItem('xa-annotations-v1');
-    if(raw){ const d=JSON.parse(raw); const list=Array.isArray(d)?d:(d.annotations||[]); if(list.length) return list }
+    if(raw){ const d=JSON.parse(raw); const list=Array.isArray(d)?d:(d.annotations||[]); if(list.length) return [...new Map(SEED.concat(list).map(r=>[r.id,{...r}])).values()] }
   }catch(e){}
   return SEED.slice();
 }
@@ -155,6 +156,8 @@ function historyHtml(r){
     +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(x.reviewAt||'--')+'</span></div>'
     +'</div></div>').join('');
 }
+function flowOverdueDays(r){const status=r.issueRequired===false?'无需整改':(r.baseStatus||r.status||'待整改').replace('逾期','');if(status==='无需整改'||!r.deadline)return 0;const end=status==='待整改'||status==='继续整改'?today():(r.rectifiedAt||r.reviewAt||'').slice(0,10);if(!end)return 0;const days=Math.round((Date.parse(end)-Date.parse(r.deadline.slice(0,10)))/86400000);return Number.isFinite(days)?Math.max(0,days):0}
+function flowHtml(r){const status=r.issueRequired===false?'无需整改':(r.baseStatus||r.status||'待整改').replace('逾期',''),od=flowOverdueDays(r),steps=[{title:'批注发起',meta:(r.checker||'--')+' · '+(r.checkTime||'--')+' · 来源：'+(r.source||'—'),on:true}];if(r.issueRequired===false)steps.push({title:'无需整改',meta:'仅记录问题，未指派整改人与期限',on:true});else{steps.push({title:'下发整改单',meta:'整改人：'+(r.assignee||'--')+' · 期限：'+(r.deadline||'--')+' · 复查人：'+(r.reviewer||'--'),on:true});historyOf(r).forEach(x=>{if(x.rectifiedAt)steps.push({title:'第 '+(x.round||1)+' 轮整改已提交',meta:(r.assignee||'--')+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});if(x.reviewAt)steps.push({title:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),meta:(r.reviewer||'--')+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'})});if(status==='待整改')steps.push({title:'等待整改',meta:(r.assignee||'--')+' 尚未提交第 '+(r.round||1)+' 轮整改结果'});if(status==='继续整改')steps.push({title:'等待重新整改',meta:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交'});if(status==='待复查')steps.push({title:'待复查',meta:'等待 '+(r.reviewer||'--')+' 提交复查结果'});if(status==='已复查')steps.push({title:'问题闭环',meta:'最终复查通过',on:true});if(od>0)steps.push({title:'已超期 '+od+' 天',meta:'超过整改期限 '+r.deadline+'，需督办',over:true})}return '<div class="sec-title">流转记录</div><div class="flow-steps">'+steps.map(x=>'<div class="flow-step '+(x.over?'over':x.on?'on':'')+'"><b>'+esc(x.title)+'</b><small>'+esc(x.meta)+'</small></div>').join('')+'</div>'}
 
 /* ===== 待办 / 已办 / 发起 ===== */
 const USERS=['李强','徐志成','赵明','王会彬','刘振','张恒毓'];
@@ -256,7 +259,7 @@ function openForm(id,mode){
   const box=$('#formBody');
 
   if(mode==='view'){
-    let h=baseBlock(r)+historyHtml(r);
+    let h=baseBlock(r)+historyHtml(r)+flowHtml(r);
     box.innerHTML=h;
     return;
   }
@@ -269,6 +272,7 @@ function openForm(id,mode){
       +'<div class="field"><label>整改描述<span class="req">*</span></label><textarea id="fDesc" placeholder="描述整改做法与结果"></textarea></div>'
       +'<div class="field"><label>整改图片<span class="req">*</span></label><input type="file" id="fImg" accept="image/*" multiple><div class="file-list" id="fFileList"></div></div>'
       +'<div class="err" id="fErr"></div>'
+      +flowHtml(r)
       +'<div class="form-foot"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fSubmit">提交整改</button></div>';
     $('#fImg').onchange=()=>{ $('#fFileList').textContent=Array.from($('#fImg').files).map(f=>f.name).join('、')||'未选择文件' };
     $('#fCancel').onclick=backToList;
@@ -286,6 +290,7 @@ function openForm(id,mode){
       +'</div></div>'
       +'<div class="field"><label>复查说明</label><textarea id="fDesc" placeholder="选填，可填写复查情况或不通过原因"></textarea></div>'
       +'<div class="err" id="fErr"></div>'
+      +flowHtml(r)
       +'<div class="form-foot"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fSubmit">提交复查</button></div>';
     $('#fCancel').onclick=backToList;
     $('#fSubmit').onclick=submitReview;

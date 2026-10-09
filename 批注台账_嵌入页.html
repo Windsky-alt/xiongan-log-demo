@@ -160,7 +160,8 @@ function loadStore(){
     return list.length?list:null;
   }catch(e){ return null }
 }
-let DATA=(loadStore()||SEED).map(r=>({...r}));
+function mergeAnnotationRows(list){return [...new Map(SEED.concat(list||[]).map(r=>[r.id,{...r}])).values()]}
+let DATA=mergeAnnotationRows(loadStore());
 
 /* ===== 状态派生（与其它端一致） ===== */
 function displayStatus(r){
@@ -361,16 +362,16 @@ window.addEventListener('message',e=>{
         if(i<0) DATA.push({...x}); else DATA[i]={...DATA[i],...x};
       });
     }else{
-      const s=loadStore(); if(s) DATA=s.map(r=>({...r}));
+      const s=loadStore(); if(s) DATA=mergeAnnotationRows(s);
     }
     renderAll();
   }
 });
 try{
   const bc=new BroadcastChannel('xa-annotation-sync');
-  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=s.map(r=>({...r})); renderAll() } };
+  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=mergeAnnotationRows(s); renderAll() } };
 }catch(e){}
-try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ const s=loadStore(); if(s){DATA=s.map(r=>({...r})); renderAll()} } }) }catch(e){}
+try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ const s=loadStore(); if(s){DATA=mergeAnnotationRows(s); renderAll()} } }) }catch(e){}
 
 renderAll();
 })();
