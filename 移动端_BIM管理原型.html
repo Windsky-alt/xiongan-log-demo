@@ -368,12 +368,12 @@ function openAnnoDetail(r){
  $('#overlay').innerHTML='<section class="detail-page"><div class="detail-bar"><button id="annoDetailBack">‹</button><b>批注详情</b><span class="issue-status '+issueStatusClass(status)+'">'+escapeHtml(status)+(od?' · 超 '+od+' 天':'')+'</span></div><div class="detail-section"><h3>基本信息</h3>'+issueRows(basic)+'</div><div class="detail-section"><h3>整改信息</h3>'+rectify+'</div><div class="detail-section"><h3>流转记录</h3>'+mobileAnnoFlowHtml(r)+'</div></section>';
  $('#annoDetailBack').onclick=()=>$('#overlay').innerHTML='';
 }
-function openPanoAnnoForm(modelEntry=false){
+function openPanoAnnoForm(modelEntry=false,selectedComp=null,saved=null){
   const metas=records.anno.map(a=>a.meta).filter((v,i,s)=>s.indexOf(v)===i);
   const d=new Date(Date.now()+3*864e5).toISOString().slice(0,10);
-  openSheet('发起批注',
-    '<div class="field-row"><label>关联构件</label><select id="pAnnoComp">'+metas.map(x=>'<option>'+escapeHtml(x)+'</option>').join('')+'</select></div>'
-   +'<div class="field-row"><label>问题描述</label><textarea id="pAnnoDesc" rows="3" placeholder="描述实景与模型对照中发现的问题" style="width:100%;border:1px solid #d9e1ed;border-radius:4px;padding:8px;font:inherit;outline:0"></textarea></div>'
+  const componentField=modelEntry?'<div class="field-row"><label>已选构件</label><strong style="flex:1">'+escapeHtml(selectedComp.name)+'</strong><button id="pAnnoChange" type="button">更换构件</button></div>':'<div class="field-row"><label>关联构件</label><select id="pAnnoComp">'+metas.map(x=>'<option>'+escapeHtml(x)+'</option>').join('')+'</select></div>';
+  openSheet('发起批注',componentField
+   +'<div class="field-row"><label>问题描述</label><textarea id="pAnnoDesc" rows="3" placeholder="描述现场发现的问题" style="width:100%;border:1px solid #d9e1ed;border-radius:4px;padding:8px;font:inherit;outline:0"></textarea></div>'
    +'<label class="switch-row"><input type="checkbox" id="pAnnoIssue" checked> 下发整改单</label>'
    +'<div id="pAnnoFields">'
    +'<div class="field-row"><label>整改人</label><select id="pAnnoAssignee"><option>李强（机电班组）</option><option>徐志成（主体施工班组）</option><option>赵明（装饰班组）</option></select></div>'
@@ -381,40 +381,37 @@ function openPanoAnnoForm(modelEntry=false){
    +'<div class="field-row"><label>复查人</label><select id="pAnnoReviewer"><option>王会彬（质量员）</option><option>刘振（专业工程师）</option></select></div>'
    +'</div>',
     '<button data-close>取消</button><button class="primary" id="pAnnoSubmit">下发整改单</button>');
-  const toggle=()=>{const on=$('#pAnnoIssue').checked;$('#pAnnoFields').hidden=!on;$('#pAnnoSubmit').textContent=on?'下发整改单':'提交批注'};
+  if(saved){$('#pAnnoDesc').value=saved.desc;$('#pAnnoIssue').checked=saved.issue;$('#pAnnoAssignee').value=saved.assignee;$('#pAnnoDeadline').value=saved.deadline;$('#pAnnoReviewer').value=saved.reviewer}
+  const toggle=()=>{const on=$('#pAnnoIssue').checked;$('#pAnnoFields').hidden=!on;$('#pAnnoSubmit').textContent=modelEntry?'提交批注并挂接':on?'下发整改单':'提交批注'};
   $('#pAnnoIssue').onchange=toggle;toggle();
-  if(modelEntry){$('#pAnnoComp').closest('.field-row').hidden=true;$('#pAnnoSubmit').textContent='构件挂接';$('#pAnnoIssue').onchange=()=>{toggle();$('#pAnnoSubmit').textContent='构件挂接'}}
+  const values=()=>({desc:$('#pAnnoDesc').value,issue:$('#pAnnoIssue').checked,assignee:$('#pAnnoAssignee').value,deadline:$('#pAnnoDeadline').value,reviewer:$('#pAnnoReviewer').value});
+  if(modelEntry)$('#pAnnoChange').onclick=()=>{const draft=values(),old=selectedComp;openMobileAnnotationPicker(c=>openPanoAnnoForm(true,c,draft),old,()=>openPanoAnnoForm(true,old,draft))};
   $('#pAnnoSubmit').onclick=()=>{
-    const desc=$('#pAnnoDesc').value.trim(),issue=$('#pAnnoIssue').checked;
+    const value=values(),desc=value.desc.trim(),issue=value.issue;
     if(!desc){toast('请填写问题描述');return}
-    const meta=$('#pAnnoComp').value,found=records.anno.find(a=>a.meta===meta)||{};
+    const meta=modelEntry?selectedComp.name:$('#pAnnoComp').value,found=records.anno.find(a=>a.meta===meta)||{};
     const nm=v=>v.replace(/（.*/,'');
-    const rec={title:desc.slice(0,18),state:issue?'待整改':'无需整改',meta,person:'系统管理员',time:annoNow(),issueRequired:issue,source:'移动端',
-      pos:(found.pos||[48,48]).slice(),comp:found.comp||'',level:'一般',round:1,desc,
-      assignee:issue?nm($('#pAnnoAssignee').value):'',deadline:issue?$('#pAnnoDeadline').value:'',
-      reviewer:issue?nm($('#pAnnoReviewer').value):''};
+    const rec={title:desc.slice(0,18),state:issue?'待整改':'无需整改',meta,person:'系统管理员',time:annoNow(),issueRequired:issue,source:modelEntry?'BIM模型':'移动端',
+      pos:modelEntry?selectedComp.pos.slice():(found.pos||[48,48]).slice(),comp:modelEntry?(found.comp||selectedComp.name):(found.comp||''),level:'一般',round:1,desc,
+      assignee:issue?nm(value.assignee):'',deadline:issue?value.deadline:'',reviewer:issue?nm(value.reviewer):''};
     if(issue&&!rec.deadline){toast('请选择截止日期');return}
-    if(modelEntry){rec.comp='';rec.meta='';rec.source='BIM模型';openMobileAnnotationPicker(rec);return}
-    saveAnno(rec);
-    $('#overlay').innerHTML='';
-    activeTypes.add('anno');listType='anno';recordState=1;renderModel();
-    toast(issue?'批注已提交，整改单已下发':'批注已提交');
+    saveAnno(rec);$('#overlay').innerHTML='';activeTypes.add('anno');listType='anno';recordState=modelEntry?2:1;recordQuery='';renderModel();toast(modelEntry?'批注已新增并完成构件挂接':issue?'批注已提交，整改单已下发':'批注已提交');
   };
 }
-function openMobileAnnotationPicker(rec){
-  const formNodes=[...$('#overlay').childNodes];let selected=null,keyword='';$('#overlay').innerHTML='';$('#modelPage').classList.add('binding-mode');$('#bimBindPanel').hidden=false;
+function openMobileAnnotationPicker(onSelect,initialComp=null,onBack=null){
+  let selected=initialComp?bindableComponents.findIndex(c=>c.name===initialComp.name):-1,keyword='';$('#overlay').innerHTML='';$('#modelPage').classList.add('binding-mode');$('#bimBindPanel').hidden=false;
   const exit=()=>{$('#bimBindPanel').hidden=true;$('#bimBindPanel').innerHTML='';$('#componentLayer').innerHTML='';$('#modelPage').classList.remove('binding-mode')};
   const draw=()=>{
     $('#componentLayer').innerHTML=bindableComponents.map((c,i)=>'<button class="component-hotspot '+(selected===i?'selected':'')+'" data-anno-pick="'+i+'" style="left:'+c.pos[0]+'%;top:'+c.pos[1]+'%">'+escapeHtml(c.name)+'</button>').join('');
-    $('#bimBindPanel').innerHTML='<b>批注构件挂接 · 单选</b><input id="annoComponentQuery" placeholder="搜索构件名称" value="'+escapeHtml(keyword)+'" style="width:100%;margin:8px 0;padding:8px"><div style="max-height:120px;overflow:auto">'+bindableComponents.map((c,i)=>({c,i})).filter(x=>x.c.name.includes(keyword)).map(x=>'<label style="display:block;padding:6px"><input type="radio" name="annoComponent" data-anno-pick="'+x.i+'" '+(selected===x.i?'checked':'')+'> '+escapeHtml(x.c.name)+'</label>').join('')+'</div><div class="bind-selection">预挂接：'+escapeHtml(selected===null?'未选择':bindableComponents[selected].name)+'</div><div class="bind-actions"><button id="annoPickerBack">返回填写</button><button id="annoPickerConfirm" class="primary" '+(selected===null?'disabled':'')+'>确定</button></div>';
+    $('#bimBindPanel').innerHTML='<b>选择批注构件 · 单选</b><input id="annoComponentQuery" placeholder="搜索构件名称" value="'+escapeHtml(keyword)+'" style="width:100%;margin:8px 0;padding:8px"><div style="max-height:120px;overflow:auto">'+bindableComponents.map((c,i)=>({c,i})).filter(x=>x.c.name.includes(keyword)).map(x=>'<label style="display:block;padding:6px"><input type="radio" name="annoComponent" data-anno-pick="'+x.i+'" '+(selected===x.i?'checked':'')+'> '+escapeHtml(x.c.name)+'</label>').join('')+'</div><div class="bind-selection">已选构件：'+escapeHtml(selected<0?'未选择':bindableComponents[selected].name)+'</div><div class="bind-actions"><button id="annoPickerBack">'+(onBack?'返回填写':'取消')+'</button><button id="annoPickerConfirm" class="primary" '+(selected<0?'disabled':'')+'>下一步：填写批注</button></div>';
     $$('[data-anno-pick]').forEach(el=>{const pick=e=>{e.stopPropagation();selected=+el.dataset.annoPick;draw()};if(el.tagName==='INPUT')el.onchange=pick;else el.onclick=pick});
     $('#annoComponentQuery').oninput=e=>{keyword=e.target.value;draw();const input=$('#annoComponentQuery');input.focus();input.setSelectionRange(keyword.length,keyword.length)};
-    $('#annoPickerBack').onclick=()=>{exit();formNodes.forEach(n=>$('#overlay').appendChild(n))};
-    $('#annoPickerConfirm').onclick=()=>{if(selected===null)return;const c=bindableComponents[selected],found=Object.values(records).flat().find(r=>r.meta===c.name);Object.assign(rec,{comp:found?.comp||c.name,meta:c.name,pos:c.pos.slice()});saveAnno(rec);exit();activeTypes.add('anno');listType='anno';recordState=2;recordQuery='';renderModel();toast('批注已新增并完成构件挂接')};
+    $('#annoPickerBack').onclick=()=>{exit();if(onBack)onBack();else renderModel()};
+    $('#annoPickerConfirm').onclick=()=>{if(selected<0)return;const c=bindableComponents[selected];exit();onSelect(c)};
   };draw();
 }
 const annotationRenderRecords=renderRecords;
-renderRecords=function(){annotationRenderRecords();if(listType!=='anno')return;const search=$('.record-search');if(!search)return;const add=document.createElement('button');add.textContent='＋ 新增';add.style.cssText='width:auto;white-space:nowrap;background:#1689ff;color:white;font-size:11px;padding:0 6px';add.onclick=()=>openPanoAnnoForm(true);search.style.gridTemplateColumns='16px minmax(0,1fr) 20px auto auto';search.appendChild(add)};
+renderRecords=function(){annotationRenderRecords();if(listType!=='anno')return;const search=$('.record-search');if(!search)return;const add=document.createElement('button');add.textContent='＋ 新增';add.style.cssText='width:auto;white-space:nowrap;background:#1689ff;color:white;font-size:11px;padding:0 6px';add.onclick=()=>openMobileAnnotationPicker(c=>openPanoAnnoForm(true,c));search.style.gridTemplateColumns='16px minmax(0,1fr) 20px auto auto';search.appendChild(add)};
 try{const annoBC=new BroadcastChannel('xa-annotation-sync');annoBC.onmessage=e=>{if(e.data&&e.data.type==='changed'){loadAnnoFromStore();if(activeTypes.has('anno'))renderModel()}}}catch(e){}
 updateTime();setInterval(updateTime,30000);renderModel();loadAnnoFromStore();
 })();
