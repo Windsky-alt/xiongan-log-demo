@@ -335,7 +335,7 @@ function saveAnno(rec){
     list.push({id:rec.id,type:'annotation',title:rec.title,componentId:rec.comp,compName:rec.meta,
       checkTime:rec.time,checker:rec.person,category:'现场批注',level:rec.level,description:rec.desc,
       requirement:rec.issueRequired?'按方案整改并复查':'仅记录问题，无需整改',deadline:rec.deadline,unit:rec.unit||'',assignee:rec.assignee,reviewer:rec.reviewer,
-      baseStatus:rec.issueRequired?'待整改':'无需整改',issueRequired:rec.issueRequired,round:rec.round,photoId:'F1',yaw:0,pitch:0,source:'移动端',workflowHistory:[]});
+      baseStatus:rec.issueRequired?'待整改':'无需整改',issueRequired:rec.issueRequired,round:rec.round,photoId:rec.source==='BIM模型'?'':'F1',yaw:0,pitch:0,source:rec.source||'移动端',workflowHistory:[]});
     localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length}));
   }catch(e){}
   try{const ch=new BroadcastChannel('xa-annotation-sync');ch.postMessage({type:'changed'});ch.close()}catch(e){}
@@ -369,7 +369,7 @@ function openAnnoDetail(r){
  $('#overlay').innerHTML='<section class="detail-page"><div class="detail-bar"><button id="annoDetailBack">‹</button><b>批注详情</b><span class="issue-status '+issueStatusClass(status)+'">'+escapeHtml(status)+(od?' · 超 '+od+' 天':'')+'</span></div><div class="detail-section"><h3>基本信息</h3>'+issueRows(basic)+'</div><div class="detail-section"><h3>整改信息</h3>'+rectify+'</div><div class="detail-section"><h3>流转记录</h3>'+mobileAnnoFlowHtml(r)+'</div></section>';
  $('#annoDetailBack').onclick=()=>$('#overlay').innerHTML='';
 }
-function openPanoAnnoForm(){
+function openPanoAnnoForm(modelEntry=false){
   const metas=records.anno.map(a=>a.meta).filter((v,i,s)=>s.indexOf(v)===i);
   const d=new Date(Date.now()+3*864e5).toISOString().slice(0,10);
   openSheet('发起批注',
@@ -384,6 +384,7 @@ function openPanoAnnoForm(){
     '<button data-close>取消</button><button class="primary" id="pAnnoSubmit">下发整改单</button>');
   const toggle=()=>{const on=$('#pAnnoIssue').checked;$('#pAnnoFields').hidden=!on;$('#pAnnoSubmit').textContent=on?'下发整改单':'提交批注'};
   $('#pAnnoIssue').onchange=toggle;toggle();
+  if(modelEntry){$('#pAnnoComp').closest('.field-row').hidden=true;$('#pAnnoSubmit').textContent='构件挂接';$('#pAnnoIssue').onchange=()=>{toggle();$('#pAnnoSubmit').textContent='构件挂接'}}
   $('#pAnnoSubmit').onclick=()=>{
     const desc=$('#pAnnoDesc').value.trim(),issue=$('#pAnnoIssue').checked;
     if(!desc){toast('请填写问题描述');return}
@@ -393,12 +394,28 @@ function openPanoAnnoForm(){
       pos:(found.pos||[48,48]).slice(),comp:found.comp||'',level:'一般',round:1,desc,
       assignee:issue?nm($('#pAnnoAssignee').value):'',deadline:issue?$('#pAnnoDeadline').value:'',
       reviewer:issue?nm($('#pAnnoReviewer').value):''};
+    if(issue&&!rec.deadline){toast('请选择截止日期');return}
+    if(modelEntry){rec.comp='';rec.meta='';rec.source='BIM模型';openMobileAnnotationPicker(rec);return}
     saveAnno(rec);
     $('#overlay').innerHTML='';
     activeTypes.add('anno');listType='anno';recordState=1;renderModel();
     toast(issue?'批注已提交，整改单已下发':'批注已提交');
   };
 }
+function openMobileAnnotationPicker(rec){
+  const formNodes=[...$('#overlay').childNodes];let selected=null,keyword='';$('#overlay').innerHTML='';$('#modelPage').classList.add('binding-mode');$('#bimBindPanel').hidden=false;
+  const exit=()=>{$('#bimBindPanel').hidden=true;$('#bimBindPanel').innerHTML='';$('#componentLayer').innerHTML='';$('#modelPage').classList.remove('binding-mode')};
+  const draw=()=>{
+    $('#componentLayer').innerHTML=bindableComponents.map((c,i)=>'<button class="component-hotspot '+(selected===i?'selected':'')+'" data-anno-pick="'+i+'" style="left:'+c.pos[0]+'%;top:'+c.pos[1]+'%">'+escapeHtml(c.name)+'</button>').join('');
+    $('#bimBindPanel').innerHTML='<b>批注构件挂接 · 单选</b><input id="annoComponentQuery" placeholder="搜索构件名称" value="'+escapeHtml(keyword)+'" style="width:100%;margin:8px 0;padding:8px"><div style="max-height:120px;overflow:auto">'+bindableComponents.map((c,i)=>({c,i})).filter(x=>x.c.name.includes(keyword)).map(x=>'<label style="display:block;padding:6px"><input type="radio" name="annoComponent" data-anno-pick="'+x.i+'" '+(selected===x.i?'checked':'')+'> '+escapeHtml(x.c.name)+'</label>').join('')+'</div><div class="bind-selection">预挂接：'+escapeHtml(selected===null?'未选择':bindableComponents[selected].name)+'</div><div class="bind-actions"><button id="annoPickerBack">返回填写</button><button id="annoPickerConfirm" class="primary" '+(selected===null?'disabled':'')+'>确定</button></div>';
+    $$('[data-anno-pick]').forEach(el=>{const pick=e=>{e.stopPropagation();selected=+el.dataset.annoPick;draw()};if(el.tagName==='INPUT')el.onchange=pick;else el.onclick=pick});
+    $('#annoComponentQuery').oninput=e=>{keyword=e.target.value;draw();const input=$('#annoComponentQuery');input.focus();input.setSelectionRange(keyword.length,keyword.length)};
+    $('#annoPickerBack').onclick=()=>{exit();formNodes.forEach(n=>$('#overlay').appendChild(n))};
+    $('#annoPickerConfirm').onclick=()=>{if(selected===null)return;const c=bindableComponents[selected],found=Object.values(records).flat().find(r=>r.meta===c.name);Object.assign(rec,{comp:found?.comp||c.name,meta:c.name,pos:c.pos.slice()});saveAnno(rec);exit();activeTypes.add('anno');listType='anno';recordState=2;recordQuery='';renderModel();toast('批注已新增并完成构件挂接')};
+  };draw();
+}
+const annotationRenderRecords=renderRecords;
+renderRecords=function(){annotationRenderRecords();if(listType!=='anno')return;const search=$('.record-search');if(!search)return;const add=document.createElement('button');add.textContent='＋ 新增';add.style.cssText='width:auto;white-space:nowrap;background:#1689ff;color:white;font-size:11px;padding:0 6px';add.onclick=()=>openPanoAnnoForm(true);search.style.gridTemplateColumns='16px minmax(0,1fr) 20px auto auto';search.appendChild(add)};
 try{const annoBC=new BroadcastChannel('xa-annotation-sync');annoBC.onmessage=e=>{if(e.data&&e.data.type==='changed'){loadAnnoFromStore();if(activeTypes.has('anno'))renderModel()}}}catch(e){}
 updateTime();setInterval(updateTime,30000);renderModel();loadAnnoFromStore();
 })();
