@@ -319,11 +319,14 @@ function showOverview(){clearViews();screen='overview';$('#root').innerHTML='<di
   $('#backRoam').onclick=()=>{panoBindingStage=0;showRoamStep()};
   $('#nextRange').onclick=()=>{draft.calibration={yaw:left.yaw,pitch:left.pitch,fov:left.fov};panoBindingStage=2;showRangeFinal()}
  }
+ function wireRangeFinal(){
+  const next=$('#next'),hint=$('#wizardHint');if(!next||!hint)return;
+  next.textContent='完成挂接';hint.textContent=draft.region.bindMode==='structure'?'确认所选构件后完成全景照片 BIM 挂接':'确认轴网范围与标高后完成全景照片 BIM 挂接';
+  next.onclick=()=>{if(!saveFields())return;finishPanoBinding()}
+ }
  function showRangeFinal(){
-  step=0;showWizard();
-  $('#next').textContent='完成挂接';
-  $('#wizardHint').textContent=draft.region.bindMode==='structure'?'确认所选构件后完成全景照片 BIM 挂接':'确认轴网范围与标高后完成全景照片 BIM 挂接';
-  $('#next').onclick=()=>{if(!saveFields())return;finishPanoBinding()}
+  step=0;showWizard();wireRangeFinal();
+  window.rangeFinalObserver?.disconnect();window.rangeFinalObserver=new MutationObserver(()=>{if(panoBindingStage===2)wireRangeFinal()});window.rangeFinalObserver.observe($('#root'),{childList:true,subtree:true})
  }
  function finishPanoBinding(){
   const pose=draft.roamPose,cal=draft.calibration||{};draft.photo.bound=true;draft.photo.yaw=(cal.yaw??0)*180/Math.PI;draft.photo.pitch=cal.pitch??0;draft.photo.fov=cal.fov??80;draft.photo.bimYaw=pose.yaw*180/Math.PI;draft.photo.bimPitch=pose.pitch;draft.photo.bimFov=pose.fov;draft.point.yaw=draft.photo.bimYaw;
