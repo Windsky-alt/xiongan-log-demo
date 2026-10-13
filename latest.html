@@ -212,6 +212,11 @@
 .rpt-kv .v{color:#2b3b4f;flex:1;word-break:break-all}
 .rpt-file{display:inline-flex;align-items:center;gap:8px;background:#f4f7fb;border-radius:6px;padding:10px 12px;color:#2b3b4f}
 .rpt-modal{width:920px}
+.rpt-page-head{display:flex;align-items:center;gap:14px;padding:2px 0 16px;border-bottom:1px solid #e8eef5;margin-bottom:18px}
+.rpt-page-head b{font-size:17px}
+.rpt-page-body{max-width:980px}
+.rpt-file-row,.rpt-bind-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px dashed #eef3f9;font-size:14px}
+.rpt-bind-row .v{color:#2b3b4f}
 </style>
 </head>
 <body>
@@ -267,7 +272,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261013-report-bim-binding-1";
+const BUILD = "20261013-report-fix-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4369,7 +4374,7 @@ const reportData = REPORT_SEED.map(r => Object.assign({}, REPORT_DEFAULT, r));
 let reportBindings = {};
 try { reportBindings = JSON.parse(localStorage.getItem('xa_report_bim_bindings_v1') || '{}'); } catch(e){ reportBindings = {}; }
 const REPORT_STATUS_CLS = { '合格':'ok', '待检':'wait', '不合格':'bad' };
-const reportState = { tab:'all', code:'', name:'', archived:'', page:1, size:10, sel:new Set() };
+const reportState = { tab:'all', code:'', name:'', archived:'', page:1, size:10, sel:new Set(), detail:null };
 
 function reportDetailName(r){ return r.materialName + '-' + r.materialCode + '-' + r.spec; }
 function reportFiltered(){
@@ -4383,6 +4388,7 @@ function reportFiltered(){
   }).sort((a,b)=>String(b.sendDate).localeCompare(String(a.sendDate)) || String(a.sendCode).localeCompare(String(b.sendCode)));
 }
 function renderReportLedger(){
+  if(reportState.detail){ renderReportDetailPage(); return; }
   const rows = reportFiltered(), total = reportData.length;
   const pages = Math.max(1, Math.ceil(rows.length/reportState.size));
   if(reportState.page > pages) reportState.page = pages;
@@ -4460,30 +4466,32 @@ function renderReportLedger(){
     toast(`已归档 ${reportState.sel.size} 份检测报告`); reportState.sel.clear(); renderReportLedger();
   };
 }
-function openReportDetail(code){
-  const r = reportData.find(x=>x.sendCode===code);
-  if(!r) return;
-  const kv = (k,v,full)=>`<div class="row${full?' full':''}"><span class="k">${esc(k)}</span><span class="v">${esc(v||'--')}</span></div>`;
-  const body = `<div class="rpt-kv">
-    ${kv('送检单号', r.sendCode)}${kv('物资名称', reportDetailName(r))}
-    ${kv('物资编码', r.materialCode)}${kv('规格型号', r.spec)}
-    ${kv('炉批号', r.heatNo)}${kv('数量', r.qty)}
-    ${kv('使用部位', r.part)}${kv('送检日期', r.sendDate)}
-    ${kv('送检人名称', r.sender)}${kv('质检人', r.inspector)}
-    ${kv('试验人', r.tester)}${kv('送检机构名称', r.org)}
-    ${kv('送检类型', r.sendType)}${kv('送检项目', r.project)}
-    ${kv('送检要求', r.requirement)}${kv('预计完成日期', r.planDate)}
-    ${kv('送检状态', r.status)}${kv('不合格描述', r.defect)}
-    ${kv('处理建议', r.advice, true)}
-    ${kv('创建人姓名', r.creator)}${kv('创建时间', r.createTime)}
-    <div class="row full"><span class="k">送检报告</span><span class="v"><span class="rpt-file">▤ ${esc(r.reportFile)}</span></span></div>
-  </div>`;
+function openReportDetail(code){ reportState.detail = code; renderReportLedger(); }
+function renderReportDetailPage(){
+  const r = reportData.find(x=>x.sendCode===reportState.detail);
+  if(!r){ reportState.detail = null; renderReportLedger(); return; }
   const bound = reportBindings[r.sendCode] || [];
-  const foot = `<span style="margin-right:auto;color:#8b98a8;font-size:13px">${bound.length?'已挂接 BIM 构件：'+esc(bound.join('、')):'尚未挂接 BIM 构件'}</span>
-    <button class="ghost" id="rptDetailBind">BIM模型挂接</button>
-    <button class="primary" onclick="document.getElementById('modalClose').click()">关闭</button>`;
-  openModal('检测报告详情', body, foot, 'rpt-modal');
-  $("#rptDetailBind").onclick = () => { closeModal(); startReportBinding(code); };
+  const rows = [
+    ['送检单号',r.sendCode],['物资名称',reportDetailName(r)],
+    ['物资编码',r.materialCode],['规格型号',r.spec],
+    ['炉批号',r.heatNo],['数量',r.qty],
+    ['使用部位',r.part],['送检日期',r.sendDate],
+    ['送检人名称',r.sender],['质检人',r.inspector],
+    ['试验人',r.tester],['送检机构名称',r.org],
+    ['送检类型',r.sendType],['送检项目',r.project],
+    ['送检要求',r.requirement],['预计完成日期',r.planDate],
+    ['送检状态',r.status],['不合格描述',r.defect],
+    ['处理建议',r.advice],['创建人姓名',r.creator],
+    ['创建时间',r.createTime]
+  ];
+  $("#content").innerHTML =
+    '<div class="rpt-page-head"><button class="ghost" id="rptDetailBack">‹ 返回检测报告</button><b>检测报告详情</b></div>'
+    +'<div class="rpt-page-body"><div class="rpt-kv">'+rows.map(x=>'<div class="row"><span class="k">'+esc(x[0])+'</span><span class="v">'+esc(x[1]||'--')+'</span></div>').join('')+'</div>'
+    +'<div class="rpt-file-row"><span class="k">送检报告</span><span class="rpt-file">▤ '+esc(r.reportFile||'--')+'</span></div>'
+    +'<div class="rpt-bind-row"><span class="k">BIM 构件挂接</span><span class="v">'+(bound.length?esc(bound.join('、'))+'（'+bound.length+' 个）':'尚未挂接 BIM 构件')+'</span>'
+    +'<button class="ghost" id="rptDetailBind" style="margin-left:auto">BIM模型挂接</button></div></div>';
+  $('#rptDetailBack').onclick = () => { reportState.detail = null; renderReportLedger(); };
+  $('#rptDetailBind').onclick = () => { reportState.detail = null; startReportBinding(r.sendCode); };
 }
 /* 从检测报告跳到 BIM 应用模型，进入构件挂接（步骤与三维交底一致） */
 function startReportBinding(code){
