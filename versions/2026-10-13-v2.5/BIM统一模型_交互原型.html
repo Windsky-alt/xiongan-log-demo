@@ -345,7 +345,7 @@
 .report-date em{margin-left:auto;font-style:normal;color:#7fa8cc;font-size:11px}
 .report-items{display:grid;gap:2px;padding:2px 0 6px}
 .report-items .briefing-card{border-radius:5px;border:1px solid #ffffff1f;margin:0 1px}
-.report-table{min-width:560px;width:100%}
+.report-table{min-width:760px;width:100%}
 .report-table th,.report-table td{white-space:nowrap;padding:0 8px}
 .report-table tr.is-current td{background:#61b9ff1a}
 .rpt-status{padding:2px 6px;border-radius:8px;font-size:11px;background:#ffffff14;color:#cfe2f5}
@@ -426,20 +426,36 @@ function renderReportList(){
   q('#listMount').innerHTML='<aside class="list '+(listOpen?'':'collapsed')+'" aria-label="模型挂接清单"><div class="list-head"><span>模型挂接清单 <small>('+rows.length+')</small></span><button class="icon-btn" data-action="collapse" aria-label="收起清单" title="收起清单">×</button></div><div class="list-tabs" role="tablist">'+tabs+'</div>'+listSearchHtml()+body+'</aside>'+(!listOpen?'<button class="list-toggle" data-action="expand">检测报告清单</button>':'');
 }
 /* 点击某份检测报告 → 该送检日期的报告明细列表 */
+function reportPopupRows(rows, currentId){
+  const head='<colgroup><col style="width:56px"><col style="width:170px"><col style="width:150px"><col style="width:110px"><col style="width:70px"><col style="width:120px"><col style="width:76px"></colgroup>'
+    +'<thead><tr><th>序号</th><th>送检单号</th><th>物资名称</th><th>炉批号</th><th>数量</th><th>送检日期</th><th>操作</th></tr></thead>';
+  const body = rows.map((r,i)=>'<tr class="'+(r.id===currentId?'is-current':'')+'"><td>'+(i+1)+'</td><td>'+esc(r.sendCode)+'</td><td>'+esc(r.materialName||'--')+'</td><td>'+esc(r.heatNo||'--')+'</td><td>'+esc(r.qty||'--')+'</td><td>'+esc(String(r.sendDate||'').slice(0,10))+'</td><td><button class="detail-link" data-report-page="'+r.id+'">详情</button></td></tr>').join('');
+  return {head,body};
+}
 function openReportTable(key){
   const all = reportRecordsAll().filter(r=>reportKeyOf(r)===key);
   if(!all.length) return;
   const rec = all[0], date = String(rec.sendDate||'').slice(0,10);
+  const rows = reportUniqueByDate(date).map(g=>g.rec);
   selectedId = rec.id;
   q('#pageMount').innerHTML='';
-  const rows = reportUniqueByDate(date);
-  const head='<colgroup><col style="width:56px"><col style="width:180px"><col style="width:260px"><col style="width:76px"></colgroup>'
-    +'<thead><tr><th>序号</th><th>送检单号</th><th>物资名称</th><th>操作</th></tr></thead>';
-  const body = rows.map((g,i)=>'<tr class="'+(g.rec.id===rec.id?'is-current':'')+'"><td>'+(i+1)+'</td><td>'+esc(g.rec.sendCode)+'</td><td>'+esc(g.rec.materialName||'--')+'</td><td><button class="locate" data-report-page="'+g.rec.id+'">详情</button></td></tr>').join('');
-  q('#tableMount').innerHTML='<section class="plan-table-wrap report-table-wrap"><div class="table-top"><span>检测报告明细 · 送检日期 '+esc(date)+' <small>('+rows.length+' 份)</small></span><button data-action="close-table" class="icon-btn">×</button></div><div class="table-scroll"><table class="report-table">'+head+'<tbody>'+body+'</tbody></table></div></section>';
+  q('#modalMount').innerHTML='';
+  const t = reportPopupRows(rows, rec.id);
+  q('#tableMount').innerHTML='<section class="table-popup" aria-label="检测报告列表"><div class="table-top"><span>检测报告 · 送检日期 '+esc(date)+'（'+rows.length+'）</span><button data-action="close-table" class="icon-btn" aria-label="关闭表格">×</button></div><div class="table-scroll"><table class="report-table">'+t.head+'<tbody>'+t.body+'</tbody></table></div><div class="table-foot"><span>共 '+rows.length+' 条</span><button class="page-active">1 / 1</button></div></section>';
   renderReportList();
 }
-/* 点击明细行 → 检测报告详情页（字段与 WEB 检测报告详情一致） */
+/* 点模型标记 / 清单卡片：列出该构件关联的检测报告 */
+function openReportTableByComponent(componentId){
+  const rows = reportRecordsAll().filter(r=>r.componentId===componentId);
+  if(!rows.length) return;
+  selectedId = rows[0].id;
+  q('#pageMount').innerHTML='';
+  q('#modalMount').innerHTML='';
+  const t = reportPopupRows(rows, rows[0].id);
+  const name = (typeof component==='function' && component(componentId)) ? component(componentId)[1] : componentId;
+  q('#tableMount').innerHTML='<section class="table-popup" aria-label="检测报告列表"><div class="table-top"><span>'+esc(name)+' · 关联检测报告（'+rows.length+'）</span><button data-action="close-table" class="icon-btn" aria-label="关闭表格">×</button></div><div class="table-scroll"><table class="report-table">'+t.head+'<tbody>'+t.body+'</tbody></table></div><div class="table-foot"><span>共 '+rows.length+' 条</span><button class="page-active">1 / 1</button></div></section>';
+  renderReportList();
+}
 function renderReportPage(){
   const mount=q('#pageMount'), r=records.find(x=>x.id===detailId);
   if(!r||r.type!=='report'){ mount.innerHTML=''; return; }
@@ -461,7 +477,6 @@ function renderReportPage(){
   mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-report">← 返回检测报告</button><strong>检测报告详情</strong><span class="page-state">'+esc(r.status||'')+'</span></div>'
     +'<section class="page-section"><div class="page-grid report-grid">'+rows.map(x=>kv(x[0],x[1])).join('')+'</div></section>'
     +'<section class="page-section"><div class="report-file-row"><span class="report-file-label">送检报告</span><span class="report-file-box">▤ '+esc(r.reportFile||'--')+'</span></div></section>'
-    +'<section class="page-section"><h2>BIM 挂接</h2><div class="page-grid report-grid"><div class="kv"><span class="k">已挂接构件</span><span class="v">'+esc(bound.join('、')||'--')+'</span></div><div class="kv"><span class="k">挂接数量</span><span class="v">'+bound.length+' 个</span></div></div></section>'
     +'</main>';
 }
 function normalizePendingPoints(raw){let points=[];try{points=Array.isArray(raw)?raw:JSON.parse(raw||'[]')}catch(e){}return Array.isArray(points)?points.slice(0,40).map((p,i)=>({no:String(p?.no||`测点${i+1}`).slice(0,30),value:String(p?.value||'').slice(0,40),unit:String(p?.unit||'').slice(0,20),result:String(p?.result||'').slice(0,20),standard:String(p?.standard||'').slice(0,60)})):[]}
@@ -675,7 +690,7 @@ function locateBindingComponent(id){const c=component(id),stage=q('#stage'),view
 function renderBindingHighlights(){if(!(pendingWork()&&placing&&selectedModel)){q('#focus').innerHTML='';return}q('#focus').innerHTML=selectedComponentRows().map(c=>'<div class="component-pick" data-label="'+esc(c[1])+'" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>').join('')}
 function renderPlacement(){if(placing==='annotation'){renderAnnotationPicker();return}const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),measurements=work.type==='measure'?measurementRows(pending):[],sourceText=work.type==='report'?('送检单号 '+pending.sendCode+' · '+pending.materialName+' · '+pending.spec):work.type==='briefing'?(pending.resourceName||pending.fileName):(measurements.length===1?(measurements[0].measurementItem+' · '+measurements[0].measurementPosition+' · '+(measurements[0].points?.length||0)+'个测点'):'已选 '+measurements.length+' 个测量部位 · 共 '+measurements.reduce((total,row)=>total+(row.points?.length||0),0)+' 个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="checkbox" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div><div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all"><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
 function render(){refreshAnnotationStatus();renderTabs();renderMarkers();renderList();renderTable();renderPlacement();renderDetailPage();renderBoards();renderFilterPanel()}
-function choose(r){if(r&&r.type==='report'){listType='report';selectedId=r.id;detailId=r.id;q('#tableMount').innerHTML='';q('#modalMount').innerHTML='';renderList();renderReportPage();return}listType=r.type;selectedId=r.id;tablePage=1;statusFilter='all';listOpen=true;collapsedDates.delete(r.checkTime.slice(0,10));focusOn(r.componentId);renderList();renderTable()}
+function choose(r){if(r&&r.type==='report'){listType='report';selectedId=r.id;listOpen=true;focusOn(r.componentId);renderList();openReportTableByComponent(r.componentId);return}listType=r.type;selectedId=r.id;tablePage=1;statusFilter='all';listOpen=true;collapsedDates.delete(r.checkTime.slice(0,10));focusOn(r.componentId);renderList();renderTable()}
 function showModal(title,body,onSave){modalMode=onSave;q('#modalMount').innerHTML='<div class="shade"><section class="modal" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="modal-head"><span>'+esc(title)+'</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button data-action="close-modal">取消</button><button class="primary" data-action="save-modal">确定</button></div></section></div>'}
 function closeModal(){q('#modalMount').innerHTML='';modalMode=null}
 function openBriefingPreview(r){const isModel=r.subtype==='三维交底',name=isModel?(r.modelName||r.resourceName||r.title):(r.fileName||r.title),viewer=isModel?'<div class="brief-viewer"><div class="model-demo"><span></span><span></span><span></span></div><div class="brief-caption"><span>三维模型预览（原型）</span><span>旋转 · 缩放 · 剖切</span></div></div>':'<div class="brief-viewer"><div class="video-demo"><div class="play">▶</div><div class="timeline"></div></div><div class="brief-caption"><span>施工工艺动画预览（原型）</span><span>00:00 / 03:26</span></div></div>';q('#modalMount').innerHTML='<div class="shade"><section class="modal" role="dialog" aria-modal="true" aria-label="'+esc(r.subtype)+'预览"><div class="modal-head"><span>'+esc(r.subtype)+'查看</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body">'+viewer+'<div class="brief-meta"><label>'+(isModel?'模型名称':'文件名称')+'</label><strong>'+esc(name)+'</strong><label>挂接构件</label><span>'+esc(briefLocation(r))+'</span><label>交底类型</label><span>'+esc(r.subtype)+'</span></div></div></section></div>'}
