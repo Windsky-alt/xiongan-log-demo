@@ -624,11 +624,8 @@ function openReportRecordDetail(r){
   $('#overlay').innerHTML='<section class="detail-page"><div class="detail-bar"><button id="detailBack">‹</button><b>检测报告详情</b></div>'
     +'<div class="detail-section"><h3>送检信息</h3>'+rows.map(x=>'<div class="detail-row"><label>'+escapeHtml(x[0])+'</label><span>'+escapeHtml(x[1]||'--')+'</span></div>').join('')+'</div>'
     +'<div class="detail-section"><h3>送检报告</h3><div class="detail-row"><label>附件</label><span>▤ '+escapeHtml(r.reportFile||'--')+'</span></div></div>'
-    +'<div class="detail-section"><h3>BIM 模型挂接</h3><div class="detail-row"><label>挂接构件</label><span>'+escapeHtml((reportBimBindings[r.sendCode]||[]).join('、')||'尚未挂接')+'</span></div><button class="flow-action" id="reportRecordBind" style="margin:10px 0 0">BIM模型挂接</button></div>'
     +'</section>';
   $('#detailBack').onclick=function(){$('#overlay').innerHTML=''};
-  const bb=$('#reportRecordBind');
-  if(bb) bb.onclick=function(){$('#overlay').innerHTML='';const idx=records.report.indexOf(r);chooseBindingModel(r,idx,r.sendCode,'report')};
 }
 renderTabs();
 })();
