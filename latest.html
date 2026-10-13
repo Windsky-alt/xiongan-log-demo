@@ -29,7 +29,16 @@
   .round-user{width:29px;height:29px;border-radius:50%;background:#a9aaad;position:relative}
   .round-user:before{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#fff;left:9px;top:5px}
   .round-user:after{content:"";position:absolute;width:18px;height:9px;border-radius:12px 12px 6px 6px;background:#fff;left:5px;bottom:4px}
-  .device-ico{font-size:18px;color:#64758c}.device-ico.mobile-entry{display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;color:#0787f7;text-decoration:none;border-radius:5px}.device-ico.mobile-entry:hover{background:#eaf4ff;color:#006edc}
+  .device-ico{font-size:18px;color:#64758c}
+  .screen-entry{display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;color:#0787f7;text-decoration:none;border-radius:5px;cursor:pointer}
+  .screen-entry:hover{background:#eaf4ff}
+  .app.screen-mode .topbar,.app.screen-mode .sidebar,.app.screen-mode .crumbs{display:none!important}
+  .app.screen-mode{height:100vh;min-height:100vh}
+  .app.screen-mode .body{height:100vh!important;min-height:100vh}
+  .app.screen-mode .main{padding:0!important;height:100vh!important}
+  .app.screen-mode .panel{border:0!important;border-radius:0!important;box-shadow:none!important;height:100vh!important}
+  .app.screen-mode .content,.app.screen-mode .content.briefing-content{height:100vh!important;padding:0!important;flex:1 1 auto}
+  .app.screen-mode .content iframe.briefing-frame{height:100vh!important;min-height:100vh}.device-ico.mobile-entry{display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;color:#0787f7;text-decoration:none;border-radius:5px}.device-ico.mobile-entry:hover{background:#eaf4ff;color:#006edc}
 
   .body{height:calc(100vh - 72px);display:flex}
   .sidebar{width:242px;padding:6px 14px 14px;background:linear-gradient(180deg,rgba(255,255,255,.44),rgba(247,250,255,.95));border-right:1px solid #edf2f7;overflow:auto}
@@ -236,7 +245,7 @@
     </div>
     <div class="userbox">
       <span class="project-name">雄安科创园项目部　⌄</span>
-      <span class="divider"></span><span class="device-ico">▱</span>
+      <span class="divider"></span><a class="device-ico screen-entry" id="bimScreenEntry" href="javascript:void(0)" title="进入BIM大屏" aria-label="进入BIM大屏">▱</a>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
       <span class="divider"></span><span>退出</span>
@@ -272,7 +281,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261013-report-fix-5";
+const BUILD = "20261013-bim-screen-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4545,6 +4554,22 @@ ensureLogNumbers();
   else if(h === "bim") route = { module:"bim", view:"bimUnified", target:null, childId:null };
 })();
 render();
+
+/* ===== BIM 大屏模式：只渲染 BIM 模型，隐藏顶部与左侧导航 ===== */
+(function(){
+  var entry = document.getElementById("bimScreenEntry");
+  if(entry) entry.onclick = function(){
+    var url = location.pathname + (location.search||"") + "#bimScreen";
+    window.open(url, "_blank", "noopener");
+  };
+  if((location.hash||"").replace("#","") === "bimScreen"){
+    var app = document.querySelector(".app");
+    if(app) app.classList.add("screen-mode");
+    route = { module:"bim", view:"bimUnified", target:null, childId:null };
+    render();
+    document.title = "BIM大屏 · 雄安科创园智慧工地";
+  }
+})();
 })();
 </script>
 </body>
