@@ -190,6 +190,28 @@
     .fld-unit{color:#111}
   }
 .user-entry{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;cursor:pointer;border-radius:6px;padding:4px 8px;transition:.15s}.user-entry:hover{background:#eef4fb;color:#1688f8}
+/* =========================================================================
+   检测报告（质量管理）样式
+   ========================================================================= */
+.rpt-tabs{display:flex;gap:26px;border-bottom:1px solid #e8eef5;margin-bottom:16px}
+.rpt-tabs span{padding:0 2px 12px;font-size:15px;color:#5b6b80;cursor:pointer;position:relative}
+.rpt-tabs span.active{color:#0d87f7;font-weight:700}
+.rpt-tabs span.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#0d87f7}
+.rpt-bar{display:flex;align-items:center;gap:10px;height:52px;margin-bottom:6px;color:#5d6e83;font-size:14px}
+.rpt-bar b{color:#1688f8}
+.rpt-bar .sp{flex:1}
+.rpt-bar i{color:#dbe4ee;font-style:normal}
+.rpt-table{min-width:1400px}
+.rpt-table td,.rpt-table th{padding:0 10px}
+.rpt-table th.c,.rpt-table td.c{text-align:center;padding:0}
+.rpt-table td[title]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rpt-kv{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.rpt-kv .row{display:flex;gap:8px;padding:10px 0;font-size:14px;line-height:1.5;border-bottom:1px dashed #eef3f9}
+.rpt-kv .row.full{grid-column:1 / -1}
+.rpt-kv .k{color:#8b98a8;width:106px;flex:none}
+.rpt-kv .v{color:#2b3b4f;flex:1;word-break:break-all}
+.rpt-file{display:inline-flex;align-items:center;gap:8px;background:#f4f7fb;border-radius:6px;padding:10px 12px;color:#2b3b4f}
+.rpt-modal{width:920px}
 </style>
 </head>
 <body>
@@ -245,7 +267,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261013-inspect-bim-binding-1";
+const BUILD = "20261013-report-bim-binding-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -953,7 +975,7 @@ function renderNav(){
     ? `<div class="menu-group">BIM应用</div><div class="menu-item ${route.view==="bimUnified"?"active":""}" data-go="bimUnified">BIM模型</div><div class="menu-item ${route.view==="panoramaLedger"?"active":""}" data-go="panoramaLedger">全景照片台账</div><div class="menu-item ${route.view==="annotationLedger"?"active":""}" data-go="annotationLedger">批注台账</div>`
     : `<div class="menu-group">${route.module==="quality"?"质量管理":"进度管理"}</div>
        <div class="menu-item ${route.view==="ledger"?"active":""}" data-go="ledger">${route.module==="quality"?"质量日志":"施工日志"}</div>
-       ${route.module==="quality"?`<div class="menu-item ${route.view==="measurementLedger"?"active":""}" data-go="measurementLedger">测量记录台账</div><div class="menu-item ${route.view==="briefing"?"active":""}" data-go="briefing">三维交底</div><div class="menu-item ${route.view==="processBriefing"?"active":""}" data-go="processBriefing">施工工艺交底</div>`:""}`;
+       ${route.module==="quality"?`<div class="menu-item ${route.view==="reportLedger"?"active":""}" data-go="reportLedger">检测报告</div><div class="menu-item ${route.view==="measurementLedger"?"active":""}" data-go="measurementLedger">测量记录台账</div><div class="menu-item ${route.view==="briefing"?"active":""}" data-go="briefing">三维交底</div><div class="menu-item ${route.view==="processBriefing"?"active":""}" data-go="processBriefing">施工工艺交底</div>`:""}`;
   document.querySelectorAll("#sideMenu [data-go]").forEach(el=>{
     el.onclick = ()=>go(el.dataset.go);
   });
@@ -972,6 +994,8 @@ function renderNav(){
     c.innerHTML = `<span>质量管理</span><span>/</span><span class="cur">施工工艺交底</span>`;
   }else if(route.view==="briefing"){
     c.innerHTML = `<span>质量管理</span><span>/</span><span class="cur">三维交底</span>`;
+  }else if(route.view==="reportLedger"){
+    c.innerHTML = `<span>质量管理</span><span>/</span><span class="cur">检测报告</span>`;
   }else if(route.view==="ledger"){
     c.innerHTML = `<span>${route.module==="quality"?"质量管理":"进度管理"}</span><span>/</span><span class="cur">${route.module==="quality"?"质量日志":"施工日志"}</span>`;
   }else if(route.view==="edit"){
@@ -4128,6 +4152,17 @@ function refreshAnnotationFrames(list){
   }catch(e){}
 }
 window.addEventListener("message", event=>{
+  const rf=$("#content iframe.briefing-frame"), rd=event.data;
+  if(rf && event.source===rf.contentWindow && rd && rd.channel==="xa-report-binding" && rd.action==="bind"){
+    const code=String(rd.sendCode||"");
+    if(code){
+      reportBindings[code]=Array.isArray(rd.components)?rd.components.map(x=>String(x).slice(0,80)):[];
+      try{ localStorage.setItem("xa_report_bim_bindings_v1", JSON.stringify(reportBindings)); }catch(e){}
+    }
+  }
+  if(rf && event.source===rf.contentWindow && rd && rd.channel==="xa-report-binding") return;
+});
+window.addEventListener("message", event=>{
   const d = event.data;
   if(!d || d.channel!=="xa-annotation") return;
   let list=loadAnnotationData(), tip="";
@@ -4182,6 +4217,17 @@ function renderBimUnified(){
       passRate:firstMeasurement.passRate,
       sourceId:firstMeasurement.sourceId,
       measurements:JSON.stringify(pendingBimBinding.measurements||[])
+    } : pendingBimBinding.kind==="report" ? {
+      bind:"report",
+      data:JSON.stringify(pendingBimBinding.report||{}),
+      sendCode:pendingBimBinding.sendCode,
+      materialName:pendingBimBinding.materialName,
+      materialCode:pendingBimBinding.materialCode,
+      spec:pendingBimBinding.spec,
+      heatNo:pendingBimBinding.heatNo,
+      sendDate:pendingBimBinding.sendDate,
+      status:pendingBimBinding.status,
+      sourceId:pendingBimBinding.sourceId
     } : {
       bind:"briefing",
       briefingType:pendingBimBinding.briefingType,
@@ -4283,6 +4329,184 @@ window.addEventListener('message',event=>{
     route={module:'bim',view:'bimUnified',target:null,childId:null};render();
   }
 });
+/* =========================================================================
+   检测报告（质量管理）—— 数据来自物资送检报告
+   ========================================================================= */
+const REPORT_DEFAULT = {
+  materialCode:'WL-LWG', heatNo:'--', qty:'--', part:'--', sender:'王克远',
+  inspector:'张恒毓', tester:'朱贺敏', org:'河北雄安唐银检验认证有限公司',
+  sendType:'第三方检验', project:'雄安科创园项目部', requirement:'符合规范要求',
+  defect:'--', advice:'--', creator:'陈书峡', createTime:'2026-07-30',
+  archived:'否', reportFile:'Document_260730_105126_7.pdf'
+};
+const REPORT_SEED = [
+  {sendCode:'SJ-20260730-0005',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0009',materialName:'螺纹钢',spec:'HRB500E 22mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0007',materialName:'螺纹钢',spec:'HRB500E 25mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0006',materialName:'螺纹钢',spec:'HRB400E 16mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0013',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0008',materialName:'螺纹钢',spec:'HRB500E 20mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0004',materialName:'螺纹钢',spec:'HRB400E 22mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
+  {sendCode:'SJ-20260730-0014',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-07-12',planDate:'2026-08-05',status:'待检'},
+  {sendCode:'SJ-20260730-0015',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-07-12',planDate:'2026-08-05',status:'合格'},
+  {sendCode:'SJ-20260730-0016',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-14',planDate:'2026-08-07',status:'合格'},
+  {sendCode:'SJ-20260730-0017',materialName:'防水卷材',materialCode:'WL-WP',spec:'SBS II PY PE 4mm',sendDate:'2026-07-16',planDate:'2026-08-09',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0018',materialName:'螺纹钢',spec:'HRB400E 18mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'合格'},
+  {sendCode:'SJ-20260730-0019',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB400E 10mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'不合格',defect:'屈服强度低于 HRB400E 标准值',advice:'退场处理并重新取样复检'},
+  {sendCode:'SJ-20260730-0020',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-07-20',planDate:'2026-08-13',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0021',materialName:'螺纹钢',spec:'HRB500E 28mm',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
+  {sendCode:'SJ-20260730-0022',materialName:'砂',materialCode:'WL-SAND',spec:'粗砂',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
+  {sendCode:'SJ-20260730-0023',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'10-30mm',sendDate:'2026-07-24',planDate:'2026-08-17',status:'合格'},
+  {sendCode:'SJ-20260730-0010',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-18',planDate:'2026-07-12',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0011',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',sendDate:'2026-06-22',planDate:'2026-07-16',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0012',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-06-26',planDate:'2026-07-20',status:'合格'},
+  {sendCode:'SJ-20260730-0001',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-28',planDate:'2026-07-22',status:'合格'},
+  {sendCode:'SJ-20260730-0002',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-06-30',planDate:'2026-07-24',status:'合格'},
+  {sendCode:'SJ-20260730-0003',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-02',planDate:'2026-07-26',status:'待检'}
+];
+const reportData = REPORT_SEED.map(r => Object.assign({}, REPORT_DEFAULT, r));
+/* 检测报告挂接的 BIM 构件（按送检单号聚合） */
+let reportBindings = {};
+try { reportBindings = JSON.parse(localStorage.getItem('xa_report_bim_bindings_v1') || '{}'); } catch(e){ reportBindings = {}; }
+const REPORT_STATUS_CLS = { '合格':'ok', '待检':'wait', '不合格':'bad' };
+const reportState = { tab:'all', code:'', name:'', archived:'', page:1, size:10, sel:new Set() };
+
+function reportDetailName(r){ return r.materialName + '-' + r.materialCode + '-' + r.spec; }
+function reportFiltered(){
+  const kw1 = reportState.code.trim().toLowerCase(), kw2 = reportState.name.trim().toLowerCase();
+  return reportData.filter(r=>{
+    if(reportState.tab==='archived' && r.archived!=='是') return false;
+    if(kw1 && !String(r.sendCode).toLowerCase().includes(kw1)) return false;
+    if(kw2 && !String(r.materialName).toLowerCase().includes(kw2)) return false;
+    if(reportState.archived && r.archived!==reportState.archived) return false;
+    return true;
+  }).sort((a,b)=>String(b.sendDate).localeCompare(String(a.sendDate)) || String(a.sendCode).localeCompare(String(b.sendCode)));
+}
+function renderReportLedger(){
+  const rows = reportFiltered(), total = reportData.length;
+  const pages = Math.max(1, Math.ceil(rows.length/reportState.size));
+  if(reportState.page > pages) reportState.page = pages;
+  if(reportState.page < 1) reportState.page = 1;
+  const start = (reportState.page-1)*reportState.size;
+  const paged = rows.slice(start, start+reportState.size);
+  const archivedCount = reportData.filter(r=>r.archived==='是').length;
+  let pageBtns = '';
+  for(let i=1;i<=pages && i<=5;i++) pageBtns += `<span class="page-num ${i===reportState.page?'active':''}" data-rpt-page="${i}">${i}</span>`;
+  const body = paged.length ? paged.map((r,i)=>`<tr>
+      <td class="c"><input type="checkbox" class="rpt-ck" data-rpt-ck="${esc(r.sendCode)}" ${reportState.sel.has(r.sendCode)?'checked':''}></td>
+      <td>${start+i+1}</td>
+      <td>${esc(r.sendCode)}</td>
+      <td>${esc(r.archived)}</td>
+      <td>${esc(r.materialCode)}</td>
+      <td>${esc(r.materialName)}</td>
+      <td title="${esc(r.spec)}">${esc(r.spec)}</td>
+      <td>${esc(r.heatNo)}</td>
+      <td>${esc(r.qty)}</td>
+      <td>${esc(r.part)}</td>
+      <td>${esc(r.inspector)}</td>
+      <td>${esc(r.tester)}</td>
+      <td>${esc(r.sendDate)}</td>
+      <td>${esc(r.sender)}</td>
+      <td><span class="action" data-rpt-detail="${esc(r.sendCode)}">详情</span><span class="action" data-rpt-bind="${esc(r.sendCode)}">BIM模型挂接</span></td>
+    </tr>`).join('') : `<tr><td colspan="15" class="empty">没有符合条件的检测报告</td></tr>`;
+
+  $("#content").innerHTML = `
+  <div class="rpt-tabs"><span class="${reportState.tab==='all'?'active':''}" data-rpt-tab="all">全部报告</span><span class="${reportState.tab==='archived'?'active':''}" data-rpt-tab="archived">报告归档</span></div>
+  <div class="ledger-filter">
+    <label>送检单号</label><input id="rptCode" placeholder="请输入" value="${esc(reportState.code)}" style="width:200px">
+    <label>物资名称</label><input id="rptName" placeholder="请输入" value="${esc(reportState.name)}" style="width:200px">
+    <label>是否已归档</label>
+    <select id="rptArchived" class="select-mini"><option value="">请选择</option><option value="是" ${reportState.archived==='是'?'selected':''}>是</option><option value="否" ${reportState.archived==='否'?'selected':''}>否</option></select>
+    <button class="primary" id="rptSearch">搜索</button>
+    <button class="ghost" id="rptReset">重置</button>
+  </div>
+  <div class="rpt-bar">
+    <span>共 <b>${rows.length}</b> 条</span><i>|</i><span>已选中 <b>${reportState.sel.size}</b> 条</span>
+    <span class="sp"></span>
+    <button class="ghost" id="rptExport">⬆ 导出</button>
+    <button class="primary" id="rptArchive">归档</button>
+  </div>
+  <div class="tblwrap"><table class="rpt-table">
+    <colgroup><col style="width:40px"><col style="width:52px"><col style="width:150px"><col style="width:92px"><col style="width:92px"><col style="width:92px"><col style="width:132px"><col style="width:80px"><col style="width:70px"><col style="width:90px"><col style="width:82px"><col style="width:82px"><col style="width:112px"><col style="width:82px"><col style="width:170px"></colgroup>
+    <thead><tr><th class="c"><input type="checkbox" id="rptCkAll"></th><th>序号</th><th>送检单号</th><th>是否已归档</th><th>物资编码</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>使用部位</th><th>质检人</th><th>试验人</th><th>送检日期</th><th>送检人</th><th>操作</th></tr></thead>
+    <tbody>${body}</tbody></table></div>
+  <div class="pagination">
+    <span>共 <span>${rows.length}</span> 条</span>
+    <select class="select-mini" id="rptSize"><option ${reportState.size===10?'selected':''}>10条/页</option><option ${reportState.size===20?'selected':''}>20条/页</option></select>
+    <span class="page-num" data-rpt-page="${Math.max(1,reportState.page-1)}">‹</span>
+    ${pageBtns}
+    <span class="page-num" data-rpt-page="${Math.min(pages,reportState.page+1)}">›</span>
+    <span>前往</span><input class="page-input" id="rptJump" value="${reportState.page}" style="width:50px"><span>页</span>
+  </div>`;
+  $("#rptCode").oninput = e => reportState.code = e.target.value;
+  $("#rptName").oninput = e => reportState.name = e.target.value;
+  $("#rptArchived").onchange = e => reportState.archived = e.target.value;
+  $("#rptSearch").onclick = () => { reportState.page = 1; renderReportLedger(); };
+  $("#rptReset").onclick = () => { reportState.code=''; reportState.name=''; reportState.archived=''; reportState.page=1; renderReportLedger(); };
+  $("#rptSize").onchange = e => { reportState.size = parseInt(e.target.value,10)||10; reportState.page=1; renderReportLedger(); };
+  $("#rptJump").onchange = e => { reportState.page = Math.min(pages, Math.max(1, parseInt(e.target.value,10)||1)); renderReportLedger(); };
+  document.querySelectorAll("[data-rpt-tab]").forEach(el=>el.onclick=()=>{ reportState.tab = el.dataset.rptTab; reportState.page=1; reportState.sel.clear(); renderReportLedger(); });
+  document.querySelectorAll("[data-rpt-page]").forEach(el=>el.onclick=()=>{ reportState.page = parseInt(el.dataset.rptPage,10)||1; renderReportLedger(); });
+  document.querySelectorAll("[data-rpt-detail]").forEach(el=>el.onclick=()=>openReportDetail(el.dataset.rptDetail));
+  document.querySelectorAll("[data-rpt-bind]").forEach(el=>el.onclick=()=>startReportBinding(el.dataset.rptBind));
+  document.querySelectorAll("[data-rpt-ck]").forEach(el=>el.onchange=()=>{ el.checked ? reportState.sel.add(el.dataset.rptCk) : reportState.sel.delete(el.dataset.rptCk); renderReportLedger(); });
+  const ckAll = $("#rptCkAll");
+  ckAll.checked = paged.length>0 && paged.every(r=>reportState.sel.has(r.sendCode));
+  ckAll.onchange = () => { paged.forEach(r=> ckAll.checked ? reportState.sel.add(r.sendCode) : reportState.sel.delete(r.sendCode)); renderReportLedger(); };
+  $("#rptExport").onclick = () => toast(reportState.sel.size ? `已导出选中的 ${reportState.sel.size} 份检测报告` : "已导出当前筛选结果");
+  $("#rptArchive").onclick = () => {
+    if(!reportState.sel.size){ toast("请先勾选要归档的检测报告"); return; }
+    reportData.forEach(r=>{ if(reportState.sel.has(r.sendCode)) r.archived='是'; });
+    toast(`已归档 ${reportState.sel.size} 份检测报告`); reportState.sel.clear(); renderReportLedger();
+  };
+}
+function openReportDetail(code){
+  const r = reportData.find(x=>x.sendCode===code);
+  if(!r) return;
+  const kv = (k,v,full)=>`<div class="row${full?' full':''}"><span class="k">${esc(k)}</span><span class="v">${esc(v||'--')}</span></div>`;
+  const body = `<div class="rpt-kv">
+    ${kv('送检单号', r.sendCode)}${kv('物资名称', reportDetailName(r))}
+    ${kv('物资编码', r.materialCode)}${kv('规格型号', r.spec)}
+    ${kv('炉批号', r.heatNo)}${kv('数量', r.qty)}
+    ${kv('使用部位', r.part)}${kv('送检日期', r.sendDate)}
+    ${kv('送检人名称', r.sender)}${kv('质检人', r.inspector)}
+    ${kv('试验人', r.tester)}${kv('送检机构名称', r.org)}
+    ${kv('送检类型', r.sendType)}${kv('送检项目', r.project)}
+    ${kv('送检要求', r.requirement)}${kv('预计完成日期', r.planDate)}
+    ${kv('送检状态', r.status)}${kv('不合格描述', r.defect)}
+    ${kv('处理建议', r.advice, true)}
+    ${kv('创建人姓名', r.creator)}${kv('创建时间', r.createTime)}
+    <div class="row full"><span class="k">送检报告</span><span class="v"><span class="rpt-file">▤ ${esc(r.reportFile)}</span></span></div>
+  </div>`;
+  const bound = reportBindings[r.sendCode] || [];
+  const foot = `<span style="margin-right:auto;color:#8b98a8;font-size:13px">${bound.length?'已挂接 BIM 构件：'+esc(bound.join('、')):'尚未挂接 BIM 构件'}</span>
+    <button class="ghost" id="rptDetailBind">BIM模型挂接</button>
+    <button class="primary" onclick="document.getElementById('modalClose').click()">关闭</button>`;
+  openModal('检测报告详情', body, foot, 'rpt-modal');
+  $("#rptDetailBind").onclick = () => { closeModal(); startReportBinding(code); };
+}
+/* 从检测报告跳到 BIM 应用模型，进入构件挂接（步骤与三维交底一致） */
+function startReportBinding(code){
+  const r = reportData.find(x=>x.sendCode===code);
+  if(!r) return;
+  closeModal();
+  pendingBimBinding = {
+    kind:"report",
+    sendCode:r.sendCode,
+    materialName:r.materialName,
+    materialCode:r.materialCode,
+    spec:r.spec,
+    heatNo:r.heatNo,
+    sendDate:r.sendDate,
+    report:r,
+    status:r.status,
+    sourceId:"report:"+r.sendCode
+  };
+  route = { module:"bim", view:"bimUnified", target:null, childId:null };
+  render();
+  toast("请在模型中点选或搜索构件完成挂接");
+}
+
 function render(){
   renderNav();
   $("#content").classList.toggle("briefing-content", route.view==="panoramaLedger" || route.view==="annotationLedger" || route.view==="profile" || route.view==="briefing" || route.view==="processBriefing" || route.view==="measurementLedger" || route.view==="bimUnified");
@@ -4293,6 +4517,7 @@ function render(){
   else if(route.view==="panoramaLedger") renderPanoramaLedger();
   else if(route.view==="annotationLedger") renderAnnotationLedger();
   else if(route.view==="profile") renderProfile();
+  else if(route.view==="reportLedger") renderReportLedger();
   else if(route.view==="ledger") renderLedger();
   else if(route.view==="edit") renderEdit();
   else renderPreview();
