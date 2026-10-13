@@ -345,7 +345,7 @@
 .report-date em{margin-left:auto;font-style:normal;color:#7fa8cc;font-size:11px}
 .report-items{display:grid;gap:2px;padding:2px 0 6px}
 .report-items .briefing-card{border-radius:5px;border:1px solid #ffffff1f;margin:0 1px}
-.report-table{min-width:1180px;width:100%}
+.report-table{min-width:560px;width:100%}
 .report-table th,.report-table td{white-space:nowrap;padding:0 8px}
 .report-table tr.is-current td{background:#61b9ff1a}
 .rpt-status{padding:2px 6px;border-radius:8px;font-size:11px;background:#ffffff14;color:#cfe2f5}
@@ -433,9 +433,9 @@ function openReportTable(key){
   selectedId = rec.id;
   q('#pageMount').innerHTML='';
   const rows = reportUniqueByDate(date);
-  const head='<colgroup><col style="width:56px"><col style="width:150px"><col style="width:92px"><col style="width:140px"><col style="width:92px"><col style="width:76px"><col style="width:92px"><col style="width:96px"><col style="width:92px"><col style="width:92px"><col style="width:96px"><col style="width:76px"></colgroup>'
-    +'<thead><tr><th>序号</th><th>送检单号</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>送检日期</th><th>送检状态</th><th>质检人</th><th>试验人</th><th>挂接构件</th><th>操作</th></tr></thead>';
-  const body = rows.map((g,i)=>'<tr class="'+(g.rec.id===rec.id?'is-current':'')+'"><td>'+(i+1)+'</td><td>'+esc(g.rec.sendCode)+'</td><td>'+esc(g.rec.materialName||'--')+'</td><td title="'+esc(g.rec.spec||'')+'">'+esc(g.rec.spec||'--')+'</td><td>'+esc(g.rec.heatNo||'--')+'</td><td>'+esc(g.rec.qty||'--')+'</td><td>'+esc(g.rec.sendDate||'--')+'</td><td><span class="rpt-status '+(REPORT_STATUS_CLS[g.rec.status]||'')+'">'+esc(g.rec.status||'--')+'</span></td><td>'+esc(g.rec.inspector||'--')+'</td><td>'+esc(g.rec.tester||'--')+'</td><td>'+g.count+' 个</td><td><button class="locate" data-report-page="'+g.rec.id+'">详情</button></td></tr>').join('');
+  const head='<colgroup><col style="width:56px"><col style="width:180px"><col style="width:260px"><col style="width:76px"></colgroup>'
+    +'<thead><tr><th>序号</th><th>送检单号</th><th>物资名称</th><th>操作</th></tr></thead>';
+  const body = rows.map((g,i)=>'<tr class="'+(g.rec.id===rec.id?'is-current':'')+'"><td>'+(i+1)+'</td><td>'+esc(g.rec.sendCode)+'</td><td>'+esc(g.rec.materialName||'--')+'</td><td><button class="locate" data-report-page="'+g.rec.id+'">详情</button></td></tr>').join('');
   q('#tableMount').innerHTML='<section class="plan-table-wrap report-table-wrap"><div class="table-top"><span>检测报告明细 · 送检日期 '+esc(date)+' <small>('+rows.length+' 份)</small></span><button data-action="close-table" class="icon-btn">×</button></div><div class="table-scroll"><table class="report-table">'+head+'<tbody>'+body+'</tbody></table></div></section>';
   renderReportList();
 }
