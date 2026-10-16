@@ -226,6 +226,35 @@
 .rpt-page-body{max-width:980px}
 .rpt-file-row,.rpt-bind-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px dashed #eef3f9;font-size:14px}
 .rpt-bind-row .v{color:#2b3b4f}
+/* ===== 报告归档：左类别目录树 + 右台账 ===== */
+.rpt-arch{display:flex;align-items:stretch;gap:0;border:1px solid #e4edf6;border-radius:8px;background:#fff;overflow:hidden;min-height:700px}
+.app.screen-mode .rpt-arch{border:0;border-radius:0;min-height:100vh}
+.rpt-arch-tree{width:262px;flex:none;border-right:1px solid #e8eef5;background:#fbfdff;display:flex;flex-direction:column}
+.rpt-arch-tree-head{display:flex;align-items:center;gap:8px;padding:12px 12px 10px}
+.rpt-arch-tree-head>b{font-size:15px;color:#2b3b4f}
+.rpt-arch-tree-head .select-mini{height:30px;flex:1;min-width:0}
+.rpt-cat-add{flex:none;height:30px;padding:0 10px;font-size:13px}
+.rpt-cat-search{margin:0 12px 10px;display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid #d8e3ef;border-radius:5px;background:#fff;color:#8494a8}
+.rpt-cat-search input{border:0;background:transparent;outline:none;flex:1;min-width:0;height:32px;padding:0;color:#435873;font-size:13px}
+.rpt-cat-search .mag{font-size:14px;flex:none}
+.rpt-cat-body{flex:1;overflow:auto;padding:0 8px 16px}
+.rpt-cat-node{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:5px;font-size:14px;color:#435873;cursor:pointer;user-select:none}
+.rpt-cat-node .car{width:16px;height:20px;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8697ab;border-radius:4px}
+.rpt-cat-node .car:hover{background:#dcecff;color:#0d87f7}
+.rpt-cat-node .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rpt-cat-node .ct{flex:none;color:#9aa8b8;font-size:12px}
+.rpt-cat-node:hover{background:#f0f6fe}
+.rpt-cat-node.active{background:#e8f3ff;color:#0d87f7;font-weight:700}
+.rpt-cat-node.active .ct{color:#0d87f7}
+.rpt-cat-empty{padding:24px 10px;text-align:center;color:#9ba7b7;font-size:13px}
+.rpt-arch-main{flex:1;min-width:0;padding:14px 16px 18px;display:flex;flex-direction:column}
+.rpt-arch-tip{flex:1;display:flex;align-items:center;justify-content:center;color:#9ba7b7;font-size:15px;min-height:420px}
+.rpt-arch-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;border:1px solid #e4edf6;background:#fbfdff;border-radius:6px;color:#435873;font-size:14px}
+.rpt-arch-filter input{height:34px;border:1px solid #d8e3ef;border-radius:4px;padding:0 9px;color:#435873;background:#fff}
+.rpt-arch .rpt-bar{height:44px;margin-bottom:2px}
+.rpt-arch .pagination{padding-top:16px}
+.rpt-arch .rpt-table{min-width:1088px}
+.rpt-arch .tblwrap{border:1px solid #eef3f9;border-radius:6px}
 </style>
 </head>
 <body>
@@ -281,7 +310,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261013-bim-screen-1";
+const BUILD = "20261016-axis-focus-archive-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4351,7 +4380,7 @@ const REPORT_DEFAULT = {
   inspector:'张恒毓', tester:'朱贺敏', org:'河北雄安唐银检验认证有限公司',
   sendType:'第三方检验', project:'雄安科创园项目部', requirement:'符合规范要求',
   defect:'--', advice:'--', creator:'陈书峡', createTime:'2026-07-30',
-  archived:'否', reportFile:'Document_260730_105126_7.pdf'
+  archived:'否', reportFile:'Document_260730_105126_7.pdf', reportCategory:''
 };
 const REPORT_SEED = [
   {sendCode:'SJ-20260730-0005',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
@@ -4365,53 +4394,73 @@ const REPORT_SEED = [
   {sendCode:'SJ-20260730-0015',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-07-12',planDate:'2026-08-05',status:'合格'},
   {sendCode:'SJ-20260730-0016',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-14',planDate:'2026-08-07',status:'合格'},
   {sendCode:'SJ-20260730-0017',materialName:'防水卷材',materialCode:'WL-WP',spec:'SBS II PY PE 4mm',sendDate:'2026-07-16',planDate:'2026-08-09',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0018',materialName:'螺纹钢',spec:'HRB400E 18mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'合格'},
-  {sendCode:'SJ-20260730-0019',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB400E 10mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'不合格',defect:'屈服强度低于 HRB400E 标准值',advice:'退场处理并重新取样复检'},
+  {sendCode:'SJ-20260730-0018',materialName:'螺纹钢',spec:'HRB400E 18mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0019',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB400E 10mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'不合格',defect:'屈服强度低于 HRB400E 标准值',advice:'退场处理并重新取样复检',archived:'是'},
   {sendCode:'SJ-20260730-0020',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-07-20',planDate:'2026-08-13',status:'合格',archived:'是'},
   {sendCode:'SJ-20260730-0021',materialName:'螺纹钢',spec:'HRB500E 28mm',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
   {sendCode:'SJ-20260730-0022',materialName:'砂',materialCode:'WL-SAND',spec:'粗砂',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
   {sendCode:'SJ-20260730-0023',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'10-30mm',sendDate:'2026-07-24',planDate:'2026-08-17',status:'合格'},
   {sendCode:'SJ-20260730-0010',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-18',planDate:'2026-07-12',status:'合格',archived:'是'},
   {sendCode:'SJ-20260730-0011',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',sendDate:'2026-06-22',planDate:'2026-07-16',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0012',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-06-26',planDate:'2026-07-20',status:'合格'},
+  {sendCode:'SJ-20260730-0012',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-06-26',planDate:'2026-07-20',status:'合格',archived:'是'},
   {sendCode:'SJ-20260730-0001',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-28',planDate:'2026-07-22',status:'合格'},
   {sendCode:'SJ-20260730-0002',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-06-30',planDate:'2026-07-24',status:'合格'},
-  {sendCode:'SJ-20260730-0003',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-02',planDate:'2026-07-26',status:'待检'}
+  {sendCode:'SJ-20260730-0003',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-02',planDate:'2026-07-26',status:'待检'},
+  {sendCode:'SJ-20260730-0024',materialName:'螺纹钢',spec:'HRB400E 25mm',sendDate:'2026-06-14',planDate:'2026-07-08',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0025',materialName:'螺纹钢',spec:'HRB500E 20mm',sendDate:'2026-06-16',planDate:'2026-07-10',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0026',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-16mm',sendDate:'2026-06-20',planDate:'2026-07-14',status:'合格',archived:'是'},
+  {sendCode:'SJ-20260730-0027',materialName:'防水卷材',materialCode:'WL-WP',spec:'SBS I PY PE 3mm',sendDate:'2026-06-24',planDate:'2026-07-18',status:'合格',archived:'是'}
 ];
 const reportData = REPORT_SEED.map(r => Object.assign({}, REPORT_DEFAULT, r));
 /* 检测报告挂接的 BIM 构件（按送检单号聚合） */
 let reportBindings = {};
 try { reportBindings = JSON.parse(localStorage.getItem('xa_report_bim_bindings_v1') || '{}'); } catch(e){ reportBindings = {}; }
 const REPORT_STATUS_CLS = { '合格':'ok', '待检':'wait', '不合格':'bad' };
-const reportState = { tab:'all', code:'', name:'', archived:'', page:1, size:10, sel:new Set(), detail:null };
+const reportState = { tab:'all', cat:'', catOpen:new Set(['原材料','钢材','砂石']), catKw:'', code:'', name:'', archived:'', page:1, size:10, sel:new Set(), detail:null };
 
-function reportDetailName(r){ return r.materialName + '-' + r.materialCode + '-' + r.spec; }
-function reportFiltered(){
-  const kw1 = reportState.code.trim().toLowerCase(), kw2 = reportState.name.trim().toLowerCase();
-  return reportData.filter(r=>{
-    if(reportState.tab==='archived' && r.archived!=='是') return false;
-    if(kw1 && !String(r.sendCode).toLowerCase().includes(kw1)) return false;
-    if(kw2 && !String(r.materialName).toLowerCase().includes(kw2)) return false;
-    if(reportState.archived && r.archived!==reportState.archived) return false;
-    return true;
-  }).sort((a,b)=>String(b.sendDate).localeCompare(String(a.sendDate)) || String(a.sendCode).localeCompare(String(b.sendCode)));
+/* ---------- 报告类别目录（原材料 / 防水材料 两级 taxonomy） ---------- */
+const REPORT_CAT_TAXONOMY = [
+  { name:'原材料', children:[
+    { name:'钢材', children:[ {name:'螺纹钢'}, {name:'盘螺'} ] },
+    { name:'水泥' },
+    { name:'砂石', children:[ {name:'砂'}, {name:'碎石'} ] }
+  ]},
+  { name:'防水材料', children:[ { name:'防水卷材' } ] }
+];
+let reportCustomCats = [];
+try { const _c = JSON.parse(localStorage.getItem('xa_report_categories_v1') || '[]'); if(Array.isArray(_c)) reportCustomCats = _c.map(x=>String(x)).filter(Boolean); } catch(e){ reportCustomCats = []; }
+const REPORT_MATERIAL_CAT = { '螺纹钢':'螺纹钢', '盘螺':'盘螺', '水泥':'水泥', '砂':'砂', '碎石':'碎石', '防水卷材':'防水卷材' };
+/* 报告类别：优先取记录自带字段，其次取自定义类别，最后按物资名称归入默认末级类别 */
+function resolveReportCategory(name){
+  const n = String(name||'').trim();
+  if(!n) return '未分类';
+  const inTree = node => node.some(x => x.name===n || (x.children && inTree(x.children)));
+  if(inTree(REPORT_CAT_TAXONOMY)) return n;
+  if(reportCustomCats.some(p => p.split('/').pop()===n)) return n;
+  return REPORT_MATERIAL_CAT[n] || '未分类';
 }
-function renderReportLedger(){
-  if(reportState.detail){ renderReportDetailPage(); return; }
-  const rows = reportFiltered(), total = reportData.length;
-  const pages = Math.max(1, Math.ceil(rows.length/reportState.size));
-  if(reportState.page > pages) reportState.page = pages;
-  if(reportState.page < 1) reportState.page = 1;
-  const start = (reportState.page-1)*reportState.size;
-  const paged = rows.slice(start, start+reportState.size);
-  const archivedCount = reportData.filter(r=>r.archived==='是').length;
-  let pageBtns = '';
-  for(let i=1;i<=pages && i<=5;i++) pageBtns += `<span class="page-num ${i===reportState.page?'active':''}" data-rpt-page="${i}">${i}</span>`;
-  const body = paged.length ? paged.map((r,i)=>`<tr>
+function reportCategoryOf(r){ return String((r && r.reportCategory) || '') || resolveReportCategory(r && r.materialName); }
+function reportCategoryPath(leaf){
+  const walk = (nodes, path) => {
+    for(const n of nodes){
+      const next = path.concat(n.name);
+      if(n.name===leaf) return next;
+      if(n.children){ const hit = walk(n.children, next); if(hit) return hit; }
+    }
+    return null;
+  };
+  return walk(REPORT_CAT_TAXONOMY, []) || [leaf];
+}
+function reportCategoryBranch(leaf){
+  const p = reportCategoryPath(leaf);
+  return p.length>1 ? p[p.length-2] : leaf;
+}
+/* 归档台账行（“全部报告”与“报告归档”共用一套渲染） */
+function reportRowHtml(r, no, withBind){
+  return `<tr>
       <td class="c"><input type="checkbox" class="rpt-ck" data-rpt-ck="${esc(r.sendCode)}" ${reportState.sel.has(r.sendCode)?'checked':''}></td>
-      <td>${start+i+1}</td>
+      <td>${no}</td>
       <td>${esc(r.sendCode)}</td>
-      <td>${esc(r.archived)}</td>
       <td>${esc(r.materialCode)}</td>
       <td>${esc(r.materialName)}</td>
       <td title="${esc(r.spec)}">${esc(r.spec)}</td>
@@ -4420,10 +4469,78 @@ function renderReportLedger(){
       <td>${esc(r.part)}</td>
       <td>${esc(r.inspector)}</td>
       <td>${esc(r.tester)}</td>
-      <td>${esc(r.sendDate)}</td>
       <td>${esc(r.sender)}</td>
-      <td><span class="action" data-rpt-detail="${esc(r.sendCode)}">详情</span><span class="action" data-rpt-bind="${esc(r.sendCode)}">BIM模型挂接</span></td>
-    </tr>`).join('') : `<tr><td colspan="15" class="empty">没有符合条件的检测报告</td></tr>`;
+      <td><span class="action" data-rpt-detail="${esc(r.sendCode)}">详情</span>${withBind?`<span class="action" data-rpt-bind="${esc(r.sendCode)}">BIM模型挂接</span>`:''}</td>
+    </tr>`;
+}
+function reportPagerHtml(rows, pages, pageBtns){
+  return `<div class="pagination">
+    <span>共 <span>${rows.length}</span> 条</span>
+    <select class="select-mini" id="rptSize"><option ${reportState.size===10?'selected':''}>10条/页</option><option ${reportState.size===20?'selected':''}>20条/页</option></select>
+    <span class="page-num" data-rpt-page="${Math.max(1,reportState.page-1)}">‹</span>
+    ${pageBtns}
+    <span class="page-num" data-rpt-page="${Math.min(pages,reportState.page+1)}">›</span>
+    <span>前往</span><input class="page-input" id="rptJump" value="${reportState.page}" style="width:50px"><span>页</span>
+  </div>`;
+}
+function reportPageButtons(pages){
+  let s = '';
+  for(let i=1;i<=pages && i<=5;i++) s += `<span class="page-num ${i===reportState.page?'active':''}" data-rpt-page="${i}">${i}</span>`;
+  return s;
+}
+function bindReportLedgerEvents(rows, pages, paged, withBind){
+  if($("#rptCode")) $("#rptCode").oninput = e => reportState.code = e.target.value;
+  if($("#rptName")) $("#rptName").oninput = e => reportState.name = e.target.value;
+  if($("#rptArchived")) $("#rptArchived").onchange = e => reportState.archived = e.target.value;
+  if($("#rptSearch")) $("#rptSearch").onclick = () => { reportState.page = 1; renderReportLedger(); };
+  if($("#rptReset")) $("#rptReset").onclick = () => { reportState.code=''; reportState.name=''; reportState.archived=''; reportState.page=1; renderReportLedger(); };
+  if($("#rptSize")) $("#rptSize").onchange = e => { reportState.size = parseInt(e.target.value,10)||10; reportState.page=1; renderReportLedger(); };
+  if($("#rptJump")) $("#rptJump").onchange = e => { reportState.page = Math.min(pages, Math.max(1, parseInt(e.target.value,10)||1)); renderReportLedger(); };
+  document.querySelectorAll("[data-rpt-tab]").forEach(el=>el.onclick=()=>{ reportState.tab = el.dataset.rptTab; reportState.page=1; reportState.sel.clear(); renderReportLedger(); });
+  document.querySelectorAll("[data-rpt-page]").forEach(el=>el.onclick=()=>{ reportState.page = parseInt(el.dataset.rptPage,10)||1; renderReportLedger(); });
+  document.querySelectorAll("[data-rpt-detail]").forEach(el=>el.onclick=()=>openReportDetail(el.dataset.rptDetail));
+  if(withBind) document.querySelectorAll("[data-rpt-bind]").forEach(el=>el.onclick=()=>startReportBinding(el.dataset.rptBind));
+  document.querySelectorAll("[data-rpt-ck]").forEach(el=>el.onchange=()=>{ el.checked ? reportState.sel.add(el.dataset.rptCk) : reportState.sel.delete(el.dataset.rptCk); renderReportLedger(); });
+  const ckAll = $("#rptCkAll");
+  if(ckAll){
+    ckAll.checked = paged.length>0 && paged.every(r=>reportState.sel.has(r.sendCode));
+    ckAll.onchange = () => { paged.forEach(r=> ckAll.checked ? reportState.sel.add(r.sendCode) : reportState.sel.delete(r.sendCode)); renderReportLedger(); };
+  }
+  if($("#rptExport")) $("#rptExport").onclick = () => toast(reportState.sel.size ? `已导出选中的 ${reportState.sel.size} 份检测报告` : "已导出当前筛选结果");
+  if($("#rptArchive")) $("#rptArchive").onclick = () => {
+    if(!reportState.sel.size){ toast("请先勾选要归档的检测报告"); return; }
+    reportData.forEach(r=>{ if(reportState.sel.has(r.sendCode)) r.archived='是'; });
+    toast(`已归档 ${reportState.sel.size} 份检测报告`); reportState.sel.clear(); renderReportLedger();
+  };
+}
+
+function reportDetailName(r){ return r.materialName + '-' + r.materialCode + '-' + r.spec; }
+function reportFiltered(){
+  const kw1 = reportState.code.trim().toLowerCase(), kw2 = reportState.name.trim().toLowerCase();
+  const cat = reportState.cat;
+  const catNode = cat ? rptFindNode(cat) : null;
+  const catLeaves = (catNode && catNode.children && catNode.children.length) ? new Set(rptBranchLeaves(catNode)) : null;
+  return reportData.filter(r=>{
+    if(reportState.tab==='archived' && r.archived!=='是') return false;
+    if(catLeaves){ if(!catLeaves.has(reportCategoryOf(r))) return false; }
+    else if(cat && cat!=='全部'){ if(reportCategoryOf(r)!==cat) return false; }
+    if(kw1 && !String(r.sendCode).toLowerCase().includes(kw1)) return false;
+    if(kw2 && !String(r.materialName).toLowerCase().includes(kw2)) return false;
+    if(reportState.archived && r.archived!==reportState.archived) return false;
+    return true;
+  }).sort((a,b)=>String(b.sendDate).localeCompare(String(a.sendDate)) || String(a.sendCode).localeCompare(String(b.sendCode)));
+}
+function renderReportLedger(){
+  if(reportState.detail){ renderReportDetailPage(); return; }
+  if(reportState.tab==='archived'){ renderReportArchive(); return; }
+  const rows = reportFiltered();
+  const pages = Math.max(1, Math.ceil(rows.length/reportState.size));
+  if(reportState.page > pages) reportState.page = pages;
+  if(reportState.page < 1) reportState.page = 1;
+  const start = (reportState.page-1)*reportState.size;
+  const paged = rows.slice(start, start+reportState.size);
+  const body = paged.length ? paged.map((r,i)=>reportRowHtml(r, start+i+1, false)).join('')
+    : `<tr><td colspan="13" class="empty">没有符合条件的检测报告</td></tr>`;
 
   $("#content").innerHTML = `
   <div class="rpt-tabs"><span class="${reportState.tab==='all'?'active':''}" data-rpt-tab="all">全部报告</span><span class="${reportState.tab==='archived'?'active':''}" data-rpt-tab="archived">报告归档</span></div>
@@ -4434,6 +4551,8 @@ function renderReportLedger(){
     <select id="rptArchived" class="select-mini"><option value="">请选择</option><option value="是" ${reportState.archived==='是'?'selected':''}>是</option><option value="否" ${reportState.archived==='否'?'selected':''}>否</option></select>
     <button class="primary" id="rptSearch">搜索</button>
     <button class="ghost" id="rptReset">重置</button>
+    <span class="sp" style="flex:1"></span>
+    ${reportFsButtonHtml()}
   </div>
   <div class="rpt-bar">
     <span>共 <b>${rows.length}</b> 条</span><i>|</i><span>已选中 <b>${reportState.sel.size}</b> 条</span>
@@ -4442,47 +4561,210 @@ function renderReportLedger(){
     <button class="primary" id="rptArchive">归档</button>
   </div>
   <div class="tblwrap"><table class="rpt-table">
-    <colgroup><col style="width:40px"><col style="width:52px"><col style="width:150px"><col style="width:92px"><col style="width:92px"><col style="width:92px"><col style="width:132px"><col style="width:80px"><col style="width:70px"><col style="width:90px"><col style="width:82px"><col style="width:82px"><col style="width:112px"><col style="width:82px"><col style="width:170px"></colgroup>
-    <thead><tr><th class="c"><input type="checkbox" id="rptCkAll"></th><th>序号</th><th>送检单号</th><th>是否已归档</th><th>物资编码</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>使用部位</th><th>质检人</th><th>试验人</th><th>送检日期</th><th>送检人</th><th>操作</th></tr></thead>
+    <colgroup><col style="width:40px"><col style="width:52px"><col style="width:150px"><col style="width:92px"><col style="width:92px"><col style="width:132px"><col style="width:80px"><col style="width:70px"><col style="width:90px"><col style="width:82px"><col style="width:82px"><col style="width:82px"><col style="width:170px"></colgroup>
+    <thead><tr><th class="c"><input type="checkbox" id="rptCkAll"></th><th>序号</th><th>送检单号</th><th>物资编码</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>使用部位</th><th>质检人</th><th>试验人</th><th>送检人</th><th>操作</th></tr></thead>
     <tbody>${body}</tbody></table></div>
-  <div class="pagination">
-    <span>共 <span>${rows.length}</span> 条</span>
-    <select class="select-mini" id="rptSize"><option ${reportState.size===10?'selected':''}>10条/页</option><option ${reportState.size===20?'selected':''}>20条/页</option></select>
-    <span class="page-num" data-rpt-page="${Math.max(1,reportState.page-1)}">‹</span>
-    ${pageBtns}
-    <span class="page-num" data-rpt-page="${Math.min(pages,reportState.page+1)}">›</span>
-    <span>前往</span><input class="page-input" id="rptJump" value="${reportState.page}" style="width:50px"><span>页</span>
-  </div>`;
-  $("#rptCode").oninput = e => reportState.code = e.target.value;
-  $("#rptName").oninput = e => reportState.name = e.target.value;
-  $("#rptArchived").onchange = e => reportState.archived = e.target.value;
-  $("#rptSearch").onclick = () => { reportState.page = 1; renderReportLedger(); };
-  $("#rptReset").onclick = () => { reportState.code=''; reportState.name=''; reportState.archived=''; reportState.page=1; renderReportLedger(); };
-  $("#rptSize").onchange = e => { reportState.size = parseInt(e.target.value,10)||10; reportState.page=1; renderReportLedger(); };
-  $("#rptJump").onchange = e => { reportState.page = Math.min(pages, Math.max(1, parseInt(e.target.value,10)||1)); renderReportLedger(); };
+  ${reportPagerHtml(rows, pages, reportPageButtons(pages))}`;
+  bindReportLedgerEvents(rows, pages, paged, false);
+  bindReportFsButton();
+  applyReportFullscreen();
+}
+
+/* =========================================================================
+   报告归档：左侧类别目录树 + 右侧归档台账
+   ========================================================================= */
+function rptCatLeaves(){
+  const out = [];
+  const walk = (nodes, path) => nodes.forEach(n=>{
+    const next = path.concat(n.name);
+    if(n.children && n.children.length) walk(n.children, next); else out.push({leaf:n.name, path:next});
+  });
+  walk(REPORT_CAT_TAXONOMY, []);
+  return out;
+}
+function rptLeafCounts(){
+  const m = new Map();
+  const add = (k, n) => m.set(k, (m.get(k)||0)+n);
+  reportData.forEach(r=>{
+    if(r.archived!=='是') return;
+    add(reportCategoryOf(r), 1);
+    const path = reportCategoryPath(reportCategoryOf(r));
+    for(let i=0;i<path.length-1;i++) add(path[i], 1);
+  });
+  return m;
+}
+function rptBranchCount(node){
+  if(node.children && node.children.length) return node.children.reduce((s,c)=>s+rptBranchCount(c), 0);
+  return rptLeafCounts().get(node.name) || 0;
+}
+function rptBranchLeaves(node){
+  if(node.children && node.children.length) return node.children.flatMap(rptBranchLeaves);
+  return [node.name];
+}
+/* 在整棵树里按名称递归查找节点（父节点可能位于任意层级） */
+function rptFindNode(name){
+  const walk = nodes => {
+    for(const n of nodes){
+      if(n.name===name) return n;
+      if(n.children){ const hit = walk(n.children); if(hit) return hit; }
+    }
+    return null;
+  };
+  return walk(REPORT_CAT_TAXONOMY);
+}
+function rptIsParent(name){ const n = rptFindNode(name); return !!(n && n.children && n.children.length); }
+function rptCatMatch(kw){
+  if(!kw) return null;
+  const leaves = rptCatLeaves();
+  const keepLeaves = new Set(leaves.filter(x=>x.leaf.toLowerCase().includes(kw) || x.path.some(p=>p.toLowerCase().includes(kw))).map(x=>x.leaf));
+  if(!keepLeaves.size) return null;
+  return keepLeaves;
+}
+function rptCatTreeHtml(nodes, depth, kw){
+  const counts = rptLeafCounts();
+  const keep = kw ? rptCatMatch(kw) : null;
+  return nodes.map(node=>{
+    const isParent = !!(node.children && node.children.length);
+    if(keep){
+      /* 关键字搜索：只保留命中分支（父节点或其子树内有命中的末级类别） */
+      if(isParent){
+        if(!node.children.some(c=>keep.has(c.name) || (c.children||[]).some(g=>keep.has(g.name)))) return '';
+      }else if(!keep.has(node.name)) return '';
+    }
+    const active = reportState.cat === node.name;
+    const open = isParent && (reportState.catOpen.has(node.name) || !!kw);
+    const cnt = isParent ? rptBranchCount(node) : (counts.get(node.name)||0);
+    let h = `<div class="rpt-cat-node ${active?'active':''}" data-rpt-cat="${esc(node.name)}" data-cat-leaf="${isParent?'0':'1'}" title="${esc(node.name)}" style="padding-left:${8+depth*16}px">`
+      + `<span class="car" data-cat-toggle="1">${isParent?(open?'▾':'▸'):''}</span>`
+      + `<span class="nm">${esc(node.name)}</span><span class="ct">${cnt}</span></div>`;
+    if(isParent && open) h += rptCatTreeHtml(node.children, depth+1, kw);
+    return h;
+  }).join('');
+}
+function renderReportArchive(){
+  const tabBar = `<div class="rpt-tabs"><span class="${reportState.tab==='all'?'active':''}" data-rpt-tab="all">全部报告</span><span class="${reportState.tab==='archived'?'active':''}" data-rpt-tab="archived">报告归档</span></div>`;
+  const opts = ['全部', ...reportCustomCats];
+  const kw = reportState.catKw.trim().toLowerCase();
+  const keep = rptCatMatch(kw);
+  let treeHtml;
+  if(!kw) treeHtml = rptCatTreeHtml(REPORT_CAT_TAXONOMY, 0, '');
+  else if(keep) treeHtml = rptCatTreeHtml(REPORT_CAT_TAXONOMY, 0, kw);
+  else treeHtml = '';
+  if(kw && keep){
+    const extra = reportCustomCats.filter(c => c.toLowerCase().includes(kw) && !keep.has(c));
+    if(extra.length) treeHtml += extra.map(c=>`<div class="rpt-cat-node ${reportState.cat===c?'active':''}" data-rpt-cat="${esc(c)}" title="${esc(c)}" style="padding-left:8px"><span class="car"></span><span class="nm">${esc(c)}</span><span class="ct">0</span></div>`).join('');
+  }
+  const tree = `<aside class="rpt-arch-tree">
+      <div class="rpt-arch-tree-head"><b>类别目录</b>
+        <select class="select-mini" id="rptCatSelect">${opts.map(o=>`<option value="${esc(o)}" ${reportState.cat===o?'selected':''}>${esc(o)}</option>`).join('')}</select>
+        <button class="primary rpt-cat-add" id="rptCatAdd">新增</button>
+      </div>
+      <div class="rpt-cat-search"><span class="mag">⌕</span><input id="rptCatKw" placeholder="关键字搜索" value="${esc(reportState.catKw)}"></div>
+      <div class="rpt-cat-body">${treeHtml || '<div class="rpt-cat-empty">未找到匹配的类别</div>'}</div>
+    </aside>`;
+
+  const sel = reportState.cat;
+  let archPaged = [], archRowCount = 0, archPages = 1;
+  let mainHtml;
+  if(!sel){
+    mainHtml = '<div class="rpt-arch-tip">请选择左侧类别</div>';
+  }else{
+    const rows = reportFiltered();
+    const pages = Math.max(1, Math.ceil(rows.length/reportState.size));
+    if(reportState.page > pages) reportState.page = pages;
+    if(reportState.page < 1) reportState.page = 1;
+    const start = (reportState.page-1)*reportState.size;
+    const paged = rows.slice(start, start+reportState.size);
+    const body = paged.length ? paged.map((r,i)=>reportRowHtml(r, start+i+1, true)).join('')
+      : `<tr><td colspan="13" class="empty">该类别下没有符合条件的报告</td></tr>`;
+    mainHtml = `<div class="rpt-arch-filter">
+        <label>送检单号</label><input id="rptCode" placeholder="请输入" value="${esc(reportState.code)}" style="width:180px">
+        <label>物资名称</label><input id="rptName" placeholder="请输入" value="${esc(reportState.name)}" style="width:180px">
+        <button class="primary" id="rptSearch">搜索</button>
+        <button class="ghost" id="rptReset">重置</button>
+        <span class="sp" style="flex:1"></span>
+        ${reportFsButtonHtml()}
+      </div>
+      <div class="rpt-bar">
+        <span>共 <b>${rows.length}</b> 条</span><i>|</i><span>已选中 <b>${reportState.sel.size}</b> 条</span>
+        <span class="sp"></span>
+        <button class="ghost" id="rptExport">⬆ 导出</button>
+        <button class="primary" id="rptArchive">归档</button>
+      </div>
+      <div class="tblwrap"><table class="rpt-table">
+        <colgroup><col style="width:36px"><col style="width:44px"><col style="width:148px"><col style="width:84px"><col style="width:82px"><col style="width:122px"><col style="width:74px"><col style="width:62px"><col style="width:80px"><col style="width:74px"><col style="width:74px"><col style="width:74px"><col style="width:134px"></colgroup>
+        <thead><tr><th class="c"><input type="checkbox" id="rptCkAll"></th><th>序号</th><th>送检单号</th><th>物资编码</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>使用部位</th><th>质检人</th><th>试验人</th><th>送检人</th><th>操作</th></tr></thead>
+        <tbody>${body}</tbody></table></div>
+      ${reportPagerHtml(rows, pages, reportPageButtons(pages))}`;
+    archPaged = paged; archRowCount = rows.length; archPages = pages;
+  }
+
+  $("#content").innerHTML = tabBar + `<div class="rpt-arch">` + tree + `<div class="rpt-arch-main">${mainHtml}</div></div>`;
+
+  /* 事件绑定必须在写入 DOM 之后，否则会取到上一屏的节点 */
+  if(sel) bindReportLedgerEvents(archRowCount, archPages, archPaged, true);
   document.querySelectorAll("[data-rpt-tab]").forEach(el=>el.onclick=()=>{ reportState.tab = el.dataset.rptTab; reportState.page=1; reportState.sel.clear(); renderReportLedger(); });
-  document.querySelectorAll("[data-rpt-page]").forEach(el=>el.onclick=()=>{ reportState.page = parseInt(el.dataset.rptPage,10)||1; renderReportLedger(); });
-  document.querySelectorAll("[data-rpt-detail]").forEach(el=>el.onclick=()=>openReportDetail(el.dataset.rptDetail));
-  document.querySelectorAll("[data-rpt-bind]").forEach(el=>el.onclick=()=>startReportBinding(el.dataset.rptBind));
-  document.querySelectorAll("[data-rpt-ck]").forEach(el=>el.onchange=()=>{ el.checked ? reportState.sel.add(el.dataset.rptCk) : reportState.sel.delete(el.dataset.rptCk); renderReportLedger(); });
-  const ckAll = $("#rptCkAll");
-  ckAll.checked = paged.length>0 && paged.every(r=>reportState.sel.has(r.sendCode));
-  ckAll.onchange = () => { paged.forEach(r=> ckAll.checked ? reportState.sel.add(r.sendCode) : reportState.sel.delete(r.sendCode)); renderReportLedger(); };
-  $("#rptExport").onclick = () => toast(reportState.sel.size ? `已导出选中的 ${reportState.sel.size} 份检测报告` : "已导出当前筛选结果");
-  $("#rptArchive").onclick = () => {
-    if(!reportState.sel.size){ toast("请先勾选要归档的检测报告"); return; }
-    reportData.forEach(r=>{ if(reportState.sel.has(r.sendCode)) r.archived='是'; });
-    toast(`已归档 ${reportState.sel.size} 份检测报告`); reportState.sel.clear(); renderReportLedger();
+  $("#rptCatSelect").onchange = e => {
+    const v = e.target.value;
+    /* 「全部」= 回到未选类别状态（右侧提示「请选择左侧类别」）；其余为选中该类别 */
+    reportState.cat = (v==='全部') ? '' : v;
+    reportState.page = 1; reportState.sel.clear();
+    renderReportLedger();
+  };
+  $("#rptCatAdd").onclick = () => openReportCategoryModal();
+  bindReportFsButton();
+  applyReportFullscreen();
+  $("#rptCatKw").oninput = e => { reportState.catKw = e.target.value; renderReportLedger(); const i=$("#rptCatKw"); if(i){ i.focus(); i.setSelectionRange(i.value.length,i.value.length); } };
+  document.querySelectorAll("[data-rpt-cat]").forEach(el=>el.onclick=e=>{
+    const n = el.dataset.rptCat;
+    const isParent = rptIsParent(n);
+    if(e.target.closest("[data-cat-toggle]")){
+      /* 点箭头：只展开/收起，不改变当前筛选 */
+      if(isParent){ reportState.catOpen.has(n) ? reportState.catOpen.delete(n) : reportState.catOpen.add(n); renderReportLedger(); }
+      return;
+    }
+    /* 点名称：选中该类别，父节点同时保持/展开 */
+    if(isParent) reportState.catOpen.add(n);
+    reportState.cat = n;
+    reportState.page = 1;
+    reportState.sel.clear();
+    renderReportLedger();
+  });
+}
+/* 原型级“新增类别”：填写名称后加入下拉与树 */
+function openReportCategoryModal(){
+  openModal('新增报告类别',
+    '<div class="staff-form" style="grid-template-columns:1fr"><div class="form-item full"><span class="form-label required">类别名称</span><input id="rptNewCat" placeholder="请输入报告类别名称，例如：保温材料" maxlength="20"></div></div><div class="notice">原型演示：新增的类别会立即出现在左侧「类别目录」下拉与树中。</div>',
+    '<button class="ghost" id="rptNewCatCancel">取消</button><button class="primary" id="rptNewCatSave">确定</button>');
+  const input = $("#rptNewCat"); if(input) input.focus();
+  $("#rptNewCatCancel").onclick = () => closeModal();
+  $("#rptNewCatSave").onclick = () => {
+    const v = ($("#rptNewCat").value||'').trim();
+    if(!v){ toast('请输入类别名称'); return; }
+    if(!reportCustomCats.includes(v)) reportCustomCats.push(v);
+    try{ localStorage.setItem('xa_report_categories_v1', JSON.stringify(reportCustomCats)); }catch(e){}
+    reportState.cat = v; reportState.page = 1; closeModal(); renderReportLedger();
+    toast('已新增报告类别：' + v);
   };
 }
 function openReportDetail(code){ reportState.detail = code; renderReportLedger(); }
+/* 检测报告页：全屏（隐藏顶栏与左侧导航，给台账表留出完整宽度） */
+let reportFs = false;
+function applyReportFullscreen(){
+  const app = document.querySelector(".app");
+  if(app) app.classList.toggle("screen-mode", !!reportFs);
+  try{ window.dispatchEvent(new Event("resize")); }catch(e){}
+}
+function toggleReportFullscreen(){ reportFs = !reportFs; applyReportFullscreen(); renderReportLedger(); }
+function reportFsButtonHtml(){ return `<button class="ghost" id="rptFs">${reportFs?"退出全屏":"全屏"}</button>`; }
+function bindReportFsButton(){ const b = $("#rptFs"); if(b) b.onclick = () => toggleReportFullscreen(); }
 function renderReportDetailPage(){
   const r = reportData.find(x=>x.sendCode===reportState.detail);
   if(!r){ reportState.detail = null; renderReportLedger(); return; }
   const bound = reportBindings[r.sendCode] || [];
   const rows = [
     ['送检单号',r.sendCode],['物资名称',reportDetailName(r)],
-    ['物资编码',r.materialCode],['规格型号',r.spec],
+    ['报告类别',reportCategoryOf(r)],['物资编码',r.materialCode],['规格型号',r.spec],
     ['炉批号',r.heatNo],['数量',r.qty],
     ['使用部位',r.part],['送检日期',r.sendDate],
     ['送检人名称',r.sender],['质检人',r.inspector],
@@ -4498,9 +4780,9 @@ function renderReportDetailPage(){
     +'<div class="rpt-page-body"><div class="rpt-kv">'+rows.map(x=>'<div class="row"><span class="k">'+esc(x[0])+'</span><span class="v">'+esc(x[1]||'--')+'</span></div>').join('')+'</div>'
     +'<div class="rpt-file-row"><span class="k">送检报告</span><span class="rpt-file">▤ '+esc(r.reportFile||'--')+'</span></div>'
     +'<div class="rpt-bind-row"><span class="k">BIM 构件挂接</span><span class="v">'+(bound.length?esc(bound.join('、'))+'（'+bound.length+' 个）':'尚未挂接 BIM 构件')+'</span>'
-    +'<button class="ghost" id="rptDetailBind" style="margin-left:auto">BIM模型挂接</button></div></div>';
+    +(r.archived==='是'?'<button class="ghost" id="rptDetailBind" style="margin-left:auto">BIM模型挂接</button>':'<span class="smallnote" style="margin-left:auto">归档后可挂接 BIM 模型</span>')+'</div></div>';
   $('#rptDetailBack').onclick = () => { reportState.detail = null; renderReportLedger(); };
-  $('#rptDetailBind').onclick = () => { reportState.detail = null; startReportBinding(r.sendCode); };
+  if($('#rptDetailBind')) $('#rptDetailBind').onclick = () => { reportState.detail = null; startReportBinding(r.sendCode); };
 }
 /* 从检测报告跳到 BIM 应用模型，进入构件挂接（步骤与三维交底一致） */
 function startReportBinding(code){
@@ -4515,7 +4797,8 @@ function startReportBinding(code){
     spec:r.spec,
     heatNo:r.heatNo,
     sendDate:r.sendDate,
-    report:r,
+    reportCategory:reportCategoryOf(r),
+    report:Object.assign({}, r, {reportCategory:reportCategoryOf(r)}),
     status:r.status,
     sourceId:"report:"+r.sendCode
   };
