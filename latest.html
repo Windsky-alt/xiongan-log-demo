@@ -4449,7 +4449,7 @@ function reportRowHtml(r, no, withBind){
       <td>${esc(r.inspector)}</td>
       <td>${esc(r.tester)}</td>
       <td>${esc(r.sender)}</td>
-      <td><span class="action" data-rpt-detail="${esc(r.sendCode)}">详情</span>${withBind?`<span class="action" data-rpt-bind="${esc(r.sendCode)}">BIM模型挂接</span>`:''}</td>
+      <td><span class="action" data-rpt-detail="${esc(r.sendCode)}">详情</span>${withBind?(r.archived==='是'?`<span class="action" data-rpt-bind="${esc(r.sendCode)}">BIM模型挂接</span>`:`<span class="action" data-rpt-archive-bind="${esc(r.sendCode)}">归档并挂接</span>`):''}</td>
     </tr>`;
 }
 function reportPagerHtml(rows, pages, pageBtns){
@@ -4479,6 +4479,7 @@ function bindReportLedgerEvents(rows, pages, paged, withBind){
   document.querySelectorAll("[data-rpt-page]").forEach(el=>el.onclick=()=>{ reportState.page = parseInt(el.dataset.rptPage,10)||1; renderReportLedger(); });
   document.querySelectorAll("[data-rpt-detail]").forEach(el=>el.onclick=()=>openReportDetail(el.dataset.rptDetail));
   if(withBind) document.querySelectorAll("[data-rpt-bind]").forEach(el=>el.onclick=()=>startReportBinding(el.dataset.rptBind));
+  document.querySelectorAll("[data-rpt-archive-bind]").forEach(el=>el.onclick=()=>archiveAndBind(el.dataset.rptArchiveBind));
   document.querySelectorAll("[data-rpt-ck]").forEach(el=>el.onchange=()=>{ el.checked ? reportState.sel.add(el.dataset.rptCk) : reportState.sel.delete(el.dataset.rptCk); renderReportLedger(); });
   const ckAll = $("#rptCkAll");
   if(ckAll){
@@ -4520,7 +4521,7 @@ function renderReportLedger(){
   if(reportState.page < 1) reportState.page = 1;
   const start = (reportState.page-1)*reportState.size;
   const paged = rows.slice(start, start+reportState.size);
-  const body = paged.length ? paged.map((r,i)=>reportRowHtml(r, start+i+1, false)).join('')
+  const body = paged.length ? paged.map((r,i)=>reportRowHtml(r, start+i+1, true)).join('')
     : `<tr><td colspan="13" class="empty">没有符合条件的检测报告</td></tr>`;
 
   $("#content").innerHTML = `
@@ -4546,7 +4547,7 @@ function renderReportLedger(){
     <thead><tr><th class="c"><input type="checkbox" id="rptCkAll"></th><th>序号</th><th>送检单号</th><th>物资编码</th><th>物资名称</th><th>规格型号</th><th>炉批号</th><th>数量</th><th>使用部位</th><th>质检人</th><th>试验人</th><th>送检人</th><th>操作</th></tr></thead>
     <tbody>${body}</tbody></table></div>
   ${reportPagerHtml(rows, pages, reportPageButtons(pages))}`;
-  bindReportLedgerEvents(rows, pages, paged, false);
+  bindReportLedgerEvents(rows, pages, paged, true);
   bindReportFsButton();
   applyReportFullscreen();
 }
@@ -4787,6 +4788,17 @@ function startReportBinding(code){
   route = { module:"bim", view:"bimUnified", target:null, childId:null };
   render();
   toast("请在模型中点选或搜索构件完成挂接");
+}
+/* 「归档并挂接」：先置为已归档，再直接进入 BIM 挂接流程（复用 startReportBinding，一步到位） */
+function archiveAndBind(code){
+  const r = reportData.find(x=>x.sendCode===code);
+  if(!r) return;
+  if(r.archived==='是'){ startReportBinding(code); return; }
+  try{ XABimStore.save([], {reportOverrides:{[code]:{archived:'是'}}}) }
+  catch(error){ toast('归档保存失败，请检查浏览器存储后重试'); return; }
+  r.archived='是';
+  toast('已归档并进入挂接流程');
+  startReportBinding(code);
 }
 
 function render(){

@@ -775,7 +775,7 @@ function save(rows,options={}){
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
 }
-function status(r){return r.issueRequired===false?'无需整改':String(r.baseStatus||r.status||r.state||'待整改').replace('逾期','')}
+function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return(raw==='逾期未整改'||raw==='待整改逾期')?'待整改':raw}
 function overdueDays(r){
  const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
  const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
