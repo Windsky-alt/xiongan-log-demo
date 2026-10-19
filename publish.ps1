@@ -70,6 +70,7 @@ $DocNames = @(
 # 使 latest.html 与 versions/<版本>/index.html 中的相对链接都能正常打开。
 $WebAssetNames = @(
     '移动端_BIM管理原型.html',
+    'bim-shared.js',
     'BIM模型_示意背景.png',
     '三维交底_嵌入页.html',
     '施工工艺交底_嵌入页.html',
