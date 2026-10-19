@@ -301,6 +301,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="bim-shared.js?v=20261019-fix-1"></script>
 <script>
 (function(){
 "use strict";
@@ -310,7 +311,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261016-axis-focus-archive-1";
+const BUILD = "20261019-bim-corrections-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4185,7 +4186,7 @@ function loadAnnotationData(){
   }catch(e){ return [] }
 }
 function saveAnnotationData(list){
-  try{localStorage.setItem("xa-annotations-v1",JSON.stringify({annotations:list,seq:list.length}))}catch(e){}
+  localStorage.setItem("xa-annotations-v1",JSON.stringify({annotations:list,seq:list.length}));
 }
 function refreshAnnotationFrames(list){
   try{
@@ -4194,20 +4195,31 @@ function refreshAnnotationFrames(list){
     });
   }catch(e){}
 }
-window.addEventListener("message", event=>{
-  const rf=$("#content iframe.briefing-frame"), rd=event.data;
-  if(rf && event.source===rf.contentWindow && rd && rd.channel==="xa-report-binding" && rd.action==="bind"){
-    const code=String(rd.sendCode||"");
-    if(code){
-      reportBindings[code]=Array.isArray(rd.components)?rd.components.map(x=>String(x).slice(0,80)):[];
-      try{ localStorage.setItem("xa_report_bim_bindings_v1", JSON.stringify(reportBindings)); }catch(e){}
-    }
+window.addEventListener('message',event=>{
+  const frame=$('#content iframe[title="BIM模型统一视图"]'),d=event.data;
+  if(!frame||event.source!==frame.contentWindow||d?.channel!=='xa-bim-data')return;
+  try{
+    const data=d.action==='save'?XABimStore.save(d.records):XABimStore.load();
+    reportBindings=data.reportBindings;
+    event.source.postMessage({channel:'xa-bim-data',action:d.action==='save'?'saved':'init',requestId:d.requestId,data},'*');
+  }catch(error){event.source.postMessage({channel:'xa-bim-data',action:'saved',requestId:d.requestId,error:'挂接保存或读取失败，请检查浏览器存储空间后重试'},'*')}
+});
+window.addEventListener('message',event=>{
+ const frame=$('#content iframe[title="测量记录台账"]'),d=event.data;
+ if(frame&&event.source===frame.contentWindow&&d?.channel==='xa-measure-history'&&d.action==='ready'){
+  try{frame.contentWindow.postMessage({channel:'xa-measure-history',action:'init',data:XABimStore.measurementHistory()},'*')}catch{frame.contentWindow.postMessage({channel:'xa-measure-history',action:'error'},'*')}
+ }
+});
+window.addEventListener('storage',event=>{
+  if(event.key==='xa_measure_work_v1'){
+   try{$('#content iframe[title="测量记录台账"]')?.contentWindow.postMessage({channel:'xa-measure-history',action:'init',data:XABimStore.measurementHistory()},'*')}catch{}return;
   }
-  if(rf && event.source===rf.contentWindow && rd && rd.channel==="xa-report-binding") return;
+  if(event.key!==XABimStore.key)return;
+  try{const data=XABimStore.load();reportBindings=data.reportBindings;$('#content iframe[title="BIM模型统一视图"]')?.contentWindow.postMessage({channel:'xa-bim-data',action:'init',data},'*')}catch{}
 });
 window.addEventListener("message", event=>{
   const d = event.data;
-  if(!d || d.channel!=="xa-annotation") return;
+  if(!d || d.channel!=="xa-annotation" || !['#content iframe.briefing-frame','#panoramaHostFrame'].some(selector=>event.source===$(selector)?.contentWindow)) return;
   let list=loadAnnotationData(), tip="";
   if(d.action==="annotate"&&d.record){
     if(!list.some(x=>x.id===d.record.id)) list.push(d.record);
@@ -4216,7 +4228,11 @@ window.addEventListener("message", event=>{
     list=d.data;
     tip="整改复查记录已更新";
   }else return;
-  saveAnnotationData(list);
+  try{saveAnnotationData(list)}catch(error){
+    if(d.requestId)event.source.postMessage({channel:'xa-annotation',action:'saved',requestId:d.requestId,error:'保存失败，请检查浏览器存储空间后重试'},'*');
+    toast('批注保存失败，数据尚未提交');return;
+  }
+  if(d.requestId)event.source.postMessage({channel:'xa-annotation',action:'saved',requestId:d.requestId},'*');
   refreshAnnotationFrames(list);
   try{ const ch = new BroadcastChannel("xa-annotation-sync"); ch.postMessage({ type:"changed" }); ch.close(); }catch(e){}
   toast(tip);
@@ -4298,7 +4314,7 @@ window.addEventListener("message", event=>{
       briefingType:data.briefingType,
       resourceName:String(data.resourceName||"").slice(0,120),
       fileName:String(data.fileName||"").slice(0,160),
-      sourceId:String(data.sourceId||"").slice(0,60)
+      sourceId:String(data.sourceId||"").slice(0,120)
     };
   }else if(data.channel==="xa-bim-measure"){
     const normalizeMeasurement=(entry,index)=>{
@@ -4375,46 +4391,9 @@ window.addEventListener('message',event=>{
 /* =========================================================================
    检测报告（质量管理）—— 数据来自物资送检报告
    ========================================================================= */
-const REPORT_DEFAULT = {
-  materialCode:'WL-LWG', heatNo:'--', qty:'--', part:'--', sender:'王克远',
-  inspector:'张恒毓', tester:'朱贺敏', org:'河北雄安唐银检验认证有限公司',
-  sendType:'第三方检验', project:'雄安科创园项目部', requirement:'符合规范要求',
-  defect:'--', advice:'--', creator:'陈书峡', createTime:'2026-07-30',
-  archived:'否', reportFile:'Document_260730_105126_7.pdf', reportCategory:''
-};
-const REPORT_SEED = [
-  {sendCode:'SJ-20260730-0005',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0009',materialName:'螺纹钢',spec:'HRB500E 22mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0007',materialName:'螺纹钢',spec:'HRB500E 25mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0006',materialName:'螺纹钢',spec:'HRB400E 16mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0013',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0008',materialName:'螺纹钢',spec:'HRB500E 20mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0004',materialName:'螺纹钢',spec:'HRB400E 22mm',sendDate:'2026-07-06',planDate:'2026-07-30',status:'合格'},
-  {sendCode:'SJ-20260730-0014',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-07-12',planDate:'2026-08-05',status:'待检'},
-  {sendCode:'SJ-20260730-0015',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-07-12',planDate:'2026-08-05',status:'合格'},
-  {sendCode:'SJ-20260730-0016',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-14',planDate:'2026-08-07',status:'合格'},
-  {sendCode:'SJ-20260730-0017',materialName:'防水卷材',materialCode:'WL-WP',spec:'SBS II PY PE 4mm',sendDate:'2026-07-16',planDate:'2026-08-09',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0018',materialName:'螺纹钢',spec:'HRB400E 18mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0019',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB400E 10mm',sendDate:'2026-07-18',planDate:'2026-08-11',status:'不合格',defect:'屈服强度低于 HRB400E 标准值',advice:'退场处理并重新取样复检',archived:'是'},
-  {sendCode:'SJ-20260730-0020',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-07-20',planDate:'2026-08-13',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0021',materialName:'螺纹钢',spec:'HRB500E 28mm',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
-  {sendCode:'SJ-20260730-0022',materialName:'砂',materialCode:'WL-SAND',spec:'粗砂',sendDate:'2026-07-22',planDate:'2026-08-15',status:'合格'},
-  {sendCode:'SJ-20260730-0023',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'10-30mm',sendDate:'2026-07-24',planDate:'2026-08-17',status:'合格'},
-  {sendCode:'SJ-20260730-0010',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-18',planDate:'2026-07-12',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0011',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',sendDate:'2026-06-22',planDate:'2026-07-16',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0012',materialName:'水泥',materialCode:'WL-CEM',spec:'P.O 42.5',sendDate:'2026-06-26',planDate:'2026-07-20',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0001',materialName:'螺纹钢',spec:'HRB400E 20mm',sendDate:'2026-06-28',planDate:'2026-07-22',status:'合格'},
-  {sendCode:'SJ-20260730-0002',materialName:'砂',materialCode:'WL-SAND',spec:'中砂',sendDate:'2026-06-30',planDate:'2026-07-24',status:'合格'},
-  {sendCode:'SJ-20260730-0003',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',sendDate:'2026-07-02',planDate:'2026-07-26',status:'待检'},
-  {sendCode:'SJ-20260730-0024',materialName:'螺纹钢',spec:'HRB400E 25mm',sendDate:'2026-06-14',planDate:'2026-07-08',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0025',materialName:'螺纹钢',spec:'HRB500E 20mm',sendDate:'2026-06-16',planDate:'2026-07-10',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0026',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-16mm',sendDate:'2026-06-20',planDate:'2026-07-14',status:'合格',archived:'是'},
-  {sendCode:'SJ-20260730-0027',materialName:'防水卷材',materialCode:'WL-WP',spec:'SBS I PY PE 3mm',sendDate:'2026-06-24',planDate:'2026-07-18',status:'合格',archived:'是'}
-];
-const reportData = REPORT_SEED.map(r => Object.assign({}, REPORT_DEFAULT, r));
-/* 检测报告挂接的 BIM 构件（按送检单号聚合） */
+const reportData = XABimStore.reportCatalog();
 let reportBindings = {};
-try { reportBindings = JSON.parse(localStorage.getItem('xa_report_bim_bindings_v1') || '{}'); } catch(e){ reportBindings = {}; }
+try { reportBindings = XABimStore.load().reportBindings; } catch(e){ console.warn('BIM挂接数据读取失败',e); }
 const REPORT_STATUS_CLS = { '合格':'ok', '待检':'wait', '不合格':'bad' };
 const reportState = { tab:'all', cat:'', catOpen:new Set(['原材料','钢材','砂石']), catKw:'', code:'', name:'', archived:'', page:1, size:10, sel:new Set(), detail:null };
 
@@ -4509,6 +4488,8 @@ function bindReportLedgerEvents(rows, pages, paged, withBind){
   if($("#rptExport")) $("#rptExport").onclick = () => toast(reportState.sel.size ? `已导出选中的 ${reportState.sel.size} 份检测报告` : "已导出当前筛选结果");
   if($("#rptArchive")) $("#rptArchive").onclick = () => {
     if(!reportState.sel.size){ toast("请先勾选要归档的检测报告"); return; }
+    try{XABimStore.save([],{reportOverrides:Object.fromEntries([...reportState.sel].map(code=>[code,{archived:'是'}]))})}
+    catch(error){toast('归档保存失败，请检查浏览器存储后重试');return}
     reportData.forEach(r=>{ if(reportState.sel.has(r.sendCode)) r.archived='是'; });
     toast(`已归档 ${reportState.sel.size} 份检测报告`); reportState.sel.clear(); renderReportLedger();
   };
@@ -4788,6 +4769,7 @@ function renderReportDetailPage(){
 function startReportBinding(code){
   const r = reportData.find(x=>x.sendCode===code);
   if(!r) return;
+  if(r.archived!=="是"){toast("归档后可挂接 BIM 模型");return}
   closeModal();
   pendingBimBinding = {
     kind:"report",

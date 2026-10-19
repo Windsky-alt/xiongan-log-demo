@@ -372,6 +372,798 @@
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
   <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟</div>
 </div>
+<script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
+/* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
+(()=>{'use strict';
+const KEY='xa-bim-business-v2',LEGACY='xa_report_bim_bindings_v1';
+const components=[
+ ['C-A1','1号楼 · 14层 · 柱 KZ-01',33,39],['C-A3','1号楼 · 14层 · 柱 KZ-02',36,43],
+ ['C-A4','1号楼 · 14层 · 柱 KZ-03',39,47],['C-A2','1号楼 · 14层 · 楼板 B-01',42,53],
+ ['C-A5','1号楼 · 14层 · 梁 KL-05',46,48],['C-A6','1号楼 · 13层 · 梁 KL-03',49,44],
+ ['C-B1','2号楼 · 13层 · 梁 L-12',59,46],['C-B3','2号楼 · 13层 · 柱 KZ-08',62,43],
+ ['C-B2','2号楼 · 12层 · 外墙 W-18',66,58],['C-B4','2号楼 · 12层 · 外墙 W-19',69,55],
+ ['C-B5','2号楼 · 12层 · 楼板 B-08',63,61],['C-T1','塔吊 TC-02',72,39],
+ ['C-M1','1号楼 · 14层 · 剪力墙 Q-14',52,49],['C-M2','1号楼 · 14层 · 梁 KL-08',63,42],
+ ['C-M3','1号楼 · 14层 · 梁 KL-09',67,46],['C-M4','1号楼 · 14层 · 楼板 B-14',58,58],
+ ['C-M5','1号楼 · 14层 · 外墙 W-03',73,53]
+];
+const seedBindings={
+ 'SJ-20260730-0005':[components[0][1],components[1][1]],
+ 'SJ-20260730-0009':[components[4][1],components[5][1]],
+ 'SJ-20260730-0013':[components[3][1]],
+ 'SJ-20260730-0016':[components[8][1],components[9][1]],
+ 'SJ-20260730-0019':[components[2][1],components[6][1]]
+};
+/* REPORT_CATALOG */
+const catalog=[
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0005",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0009",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0007",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 25mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0006",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 16mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0013",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0008",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0004",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0014",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0015",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0016",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-14",
+  "planDate": "2026-08-07",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0017",
+  "materialName": "防水卷材",
+  "spec": "SBS II PY PE 4mm",
+  "sendDate": "2026-07-16",
+  "planDate": "2026-08-09",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0018",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 18mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "屈服强度低于 HRB400E 标准值",
+  "advice": "退场处理并重新取样复检",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0019",
+  "materialName": "盘螺",
+  "spec": "HRB400E 10mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "不合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0020",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-20",
+  "planDate": "2026-08-13",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0021",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 28mm",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0022",
+  "materialName": "砂",
+  "spec": "粗砂",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0023",
+  "materialName": "碎石",
+  "spec": "10-30mm",
+  "sendDate": "2026-07-24",
+  "planDate": "2026-08-17",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0010",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-18",
+  "planDate": "2026-07-12",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0011",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-06-22",
+  "planDate": "2026-07-16",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0012",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-06-26",
+  "planDate": "2026-07-20",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0001",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-28",
+  "planDate": "2026-07-22",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0002",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-06-30",
+  "planDate": "2026-07-24",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0003",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-02",
+  "planDate": "2026-07-26",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0024",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 25mm",
+  "sendDate": "2026-06-14",
+  "planDate": "2026-07-08",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0025",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-06-16",
+  "planDate": "2026-07-10",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0026",
+  "materialName": "碎石",
+  "spec": "5-16mm",
+  "sendDate": "2026-06-20",
+  "planDate": "2026-07-14",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0027",
+  "materialName": "防水卷材",
+  "spec": "SBS I PY PE 3mm",
+  "sendDate": "2026-06-24",
+  "planDate": "2026-07-18",
+  "status": "合格"
+ }
+];
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function read(key,fallback){const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}
+function normalizeBindings(raw){
+ const out={};
+ Object.entries(raw||{}).forEach(([key,values])=>{
+  const code=key.replace(/^(REPORT\||report:)/,'');
+  if(!Array.isArray(values))return;
+  out[code]=[...new Set([...(out[code]||[]),...values.filter(v=>typeof v==='string')])];
+ });
+ return out;
+}
+function sourceKey(r){return [r.type,r.type==='briefing'?r.subtype||'':'',r.type==='report'?'report:'+r.sendCode:r.sourceId||r.id].join('|')}
+function rowKey(r){return sourceKey(r)+'|'+r.componentId}
+function reportRows(bindings,rows,overrides={}){
+ const out=rows.filter(r=>r.type!=='report');
+ Object.entries(bindings).forEach(([code,names])=>{
+  const existing=rows.filter(r=>r.type==='report'&&r.sendCode===code);
+  const original=existing[0]||catalog.find(r=>r.sendCode===code);
+  if(!original)return;const data={...original,...overrides[code]};
+  names.forEach(name=>{const c=components.find(c=>c[0]===name||c[1]===name);if(!c)return;
+   const old=existing.find(r=>r.componentId===c[0]);
+   out.push({...data,...old,type:'report',sourceId:'report:'+code,componentId:c[0],compName:c[1],x:c[2],y:c[3],
+    title:code+' · '+data.materialName,checkTime:data.sendDate||'',bimModel:old?.bimModel||data.bimModel||'XA000_ZMXA_A_建筑单体主文件-01地块-地上.rvt'});
+  });
+ });
+ return out;
+}
+function baseline(){return{records:reportRows(seedBindings,[]),reportBindings:clone(seedBindings)}}
+function load(){
+ const state=read(KEY,{records:[],reportBindings:null});
+ const bindings={...clone(seedBindings),...normalizeBindings(state.reportBindings||read(LEGACY,{}))};
+ return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{}};
+}
+function save(rows,options={}){
+ const state=load(),incoming=(rows||[]).filter(r=>r&&['briefing','measure','report'].includes(r.type)&&r.sourceId&&r.componentId);
+ const replacing=new Set(options.replaceSources||[]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
+ incoming.forEach(r=>map.set(rowKey(r),clone(r)));
+ const bindings={...state.reportBindings};
+ incoming.filter(r=>r.type==='report').forEach(r=>{
+  if(!bindings[r.sendCode])bindings[r.sendCode]=[];
+  const c=components.find(c=>c[0]===r.componentId);
+  if(c&&!bindings[r.sendCode].includes(c[1]))bindings[r.sendCode].push(c[1]);
+ });
+ Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
+ const overrides={...state.reportOverrides,...options.reportOverrides};
+ const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides};
+ localStorage.setItem(KEY,JSON.stringify(next));
+ // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
+ try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
+ return next;
+}
+function status(r){return r.issueRequired===false?'无需整改':String(r.baseStatus||r.status||r.state||'待整改').replace('逾期','')}
+function overdueDays(r){
+ const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
+ const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
+ if(!end)return 0;const days=(Date.parse(end+'T00:00:00Z')-Date.parse(r.deadline+'T00:00:00Z'))/86400000;
+ return Number.isFinite(days)?Math.max(0,Math.round(days)):0;
+}
+function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
+function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
+function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,overdueDays,pointSummary};
+})();
+
+/* END BIM SHARED */</script>
 <script>
 (()=>{'use strict';
 const app=document.getElementById('app'),q=s=>app.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -379,6 +1171,27 @@ const types=[['quality','质量','质'],['safety','安全','安'],['briefing','�
 let active=new Set(['quality']),listType='quality',listOpen=true,filterOpen=false,statusFilter='all',listQuery='',collapsedDates=new Set(),selectedId=null,focusComponent=null,tablePage=1,placing=null,detailId=null,nextId=60,toastTimer=null,modalMode=null,selectedModel='',selectedComponents=new Set(),componentQuery='',expandedMeasureRows=new Set(),focusSnapshot=null,focusVariant='',focusTx=0,focusTy=0,focusAlignTimer=null,focusAlignTries=0;
 const FOCUS_SCALE=1.48;
 const queryParams=new URLSearchParams(location.search);
+let businessReady=parent===window,bindingSaving=false,bindingRequestSeq=0;
+const bindingRequests=new Map();
+function applyBusinessState(state){
+  const reportCodes=new Set(Object.keys(state.reportBindings||{})),savedKeys=new Set((state.records||[]).map(XABimStore.rowKey));
+  for(let i=records.length-1;i>=0;i--)if((records[i].type==='report'&&reportCodes.has(records[i].sendCode))||(records[i].storeManaged&&!savedKeys.has(XABimStore.rowKey(records[i]))))records.splice(i,1);
+  for(const row of state.records||[]){
+    const current=records.find(r=>XABimStore.rowKey(r)===XABimStore.rowKey(row));
+    if(current){const id=current.id;Object.assign(current,row,{id,storeManaged:true});continue}
+    while(records.some(r=>r.id===nextId))nextId++;
+    records.push({...row,id:nextId++,storeManaged:true});
+  }
+}
+function saveBindingRecords(rows){
+  if(parent===window)return Promise.resolve(XABimStore.save(rows));
+  return new Promise((resolve,reject)=>{
+    const requestId='binding-'+Date.now()+'-'+(++bindingRequestSeq);
+    const timer=setTimeout(()=>{bindingRequests.delete(requestId);reject(Error('保存未得到确认，请重试'))},6000);
+    bindingRequests.set(requestId,{resolve,reject,timer});
+    parent.postMessage({channel:'xa-bim-data',action:'save',requestId,records:rows},'*');
+  });
+}
 let pendingBriefing=queryParams.get('bind')==='briefing'?{subtype:queryParams.get('briefingType')||'三维交底',resourceName:queryParams.get('resourceName')||'未命名交底',fileName:queryParams.get('fileName')||'',sourceId:queryParams.get('sourceId')||''}:null;
 
 /* ============ 检测报告（质量管理 → 检测报告台账 挂接） ============ */
@@ -387,6 +1200,7 @@ try{
   const raw = queryParams.get('data');
   if(queryParams.get('bind')==='report' && raw) pendingReport = JSON.parse(raw);
 }catch(e){ pendingReport = null; }
+if(pendingReport)pendingReport.sourceId='report:'+pendingReport.sendCode;
 const REPORT_STATUS_CLS = {'合格':'ok','待检':'wait','不合格':'bad'};
 let reportCatOpen = new Set();    /* 展开的报告类别 */
 let reportCatInited = false;
@@ -424,11 +1238,11 @@ function reportUniqueByCategory(cat){
 /* 某份检测报告（按送检单号聚合）已挂接的全部构件名称（去重；清单字段与搜索复用） */
 function reportBoundNames(r){const key=reportKeyOf(r),names=[];reportRecordsAll().filter(x=>reportKeyOf(x)===key).forEach(x=>{const n=component(x.componentId)[1];if(n&&!names.includes(n))names.push(n)});return names}
 function renderReportList(){
-  const rows = reportRecordsAll(), groups = reportGrouped();
+  const rows = filtered(), groups = reportGrouped();
   /* 搜索时命中分组强制展开，并把全部类别置为已展开：清空搜索后条目完整可见（首次进入的默认折叠状态不变） */
   if(listQuery.trim())reportRecordsAll().forEach(r=>reportCatOpen.add(reportCategoryOf(r)));
   if(!reportCatInited && groups.length){ reportCatOpen = new Set([groups[0][0]]); reportCatInited = true; }
-  const tabs = types.filter(v=>active.has(v[0])).map(v=>'<button type="button" role="tab" aria-selected="'+(listType===v[0])+'" class="'+(listType===v[0]?'active':'')+'" data-list-tab="'+v[0]+'">'+v[1]+'<em>'+records.filter(r=>r.type===v[0]).length+'</em></button>').join('');
+  const tabs = types.filter(v=>active.has(v[0])).map(v=>'<button type="button" role="tab" aria-selected="'+(listType===v[0])+'" class="'+(listType===v[0]?'active':'')+'" data-list-tab="'+v[0]+'">'+v[1]+'<em>'+tabCount(v[0])+'</em></button>').join('');
   const body = groups.length ? '<div class="list-scroll report-tree">'+groups.map(([cat,items])=>{
     const searching=!!listQuery.trim();
     const open = searching||reportCatOpen.has(cat);
@@ -447,7 +1261,7 @@ function renderReportList(){
         }).join('')+'</div>' : '')
       + '</div>';
   }).join('')+'</div>' : '<div class="list-scroll"><div class="list-empty">'+(listQuery?'未找到匹配的检测报告':'暂无已挂接检测报告')+'</div></div>';
-  q('#listMount').innerHTML='<aside class="list '+(listOpen?'':'collapsed')+'" aria-label="模型挂接清单"><div class="list-head"><span>模型挂接清单 <small>('+rows.length+')</small></span><button class="icon-btn" data-action="collapse" aria-label="收起清单" title="收起清单">×</button></div><div class="list-tabs" role="tablist">'+tabs+'</div>'+listSearchHtml()+body+'</aside>'+(!listOpen?'<button class="list-toggle" data-action="expand">检测报告清单</button>':'');
+  q('#listMount').innerHTML='<aside class="list '+(listOpen?'':'collapsed')+'" aria-label="模型挂接清单"><div class="list-head"><span>模型挂接清单 <small>('+countRows(rows)+')</small></span><button class="icon-btn" data-action="collapse" aria-label="收起清单" title="收起清单">×</button></div><div class="list-tabs" role="tablist">'+tabs+'</div>'+listSearchHtml()+body+'</aside>'+(!listOpen?'<button class="list-toggle" data-action="expand">检测报告清单</button>':'');
 }
 /* 点击某份检测报告 → 同一报告类别下的报告明细列表 */
 function reportPopupRows(rows, currentId){
@@ -457,20 +1271,12 @@ function reportPopupRows(rows, currentId){
   return {head,body};
 }
 function openReportTable(key){
-  const all = reportRecordsAll().filter(r=>reportKeyOf(r)===key);
-  if(!all.length) return;
-  const rec = all[0], cat = reportCategoryOf(rec);
-  const rows = reportUniqueByCategory(cat).map(g=>g.rec);
-  selectedId = rec.id;
-  q('#pageMount').innerHTML='';
-  q('#modalMount').innerHTML='';
-  const t = reportPopupRows(rows, rec.id);
-  q('#tableMount').innerHTML='<section class="table-popup" aria-label="检测报告列表"><div class="table-top"><span>检测报告 · '+esc(cat)+'（'+rows.length+'）</span><button data-action="close-table" class="icon-btn" aria-label="关闭表格">×</button></div><div class="table-scroll"><table class="report-table">'+t.head+'<tbody>'+t.body+'</tbody></table></div><div class="table-foot"><span>共 '+rows.length+' 条</span><button class="page-active">1 / 1</button></div></section>';
-  renderReportList();
+ const rec=reportRecordsAll().find(r=>reportKeyOf(r)===key);if(!rec)return;
+ selectedId=rec.id;detailId=rec.id;q('#tableMount').innerHTML='';renderReportList();renderReportPage();
 }
 /* 点模型标记 / 清单卡片：列出该构件关联的检测报告 */
 function openReportTableByComponent(componentId){
-  const rows = reportRecordsAll().filter(r=>r.componentId===componentId);
+  const rows = filtered().filter(r=>r.componentId===componentId);
   if(!rows.length) return;
   selectedId = rows[0].id;
   q('#pageMount').innerHTML='';
@@ -506,7 +1312,7 @@ function renderReportPage(){
 function normalizePendingPoints(raw){let points=[];try{points=Array.isArray(raw)?raw:JSON.parse(raw||'[]')}catch(e){}return Array.isArray(points)?points.slice(0,40).map((p,i)=>({no:String(p?.no||`测点${i+1}`).slice(0,30),value:String(p?.value||'').slice(0,40),unit:String(p?.unit||'').slice(0,20),result:String(p?.result||'').slice(0,20),standard:String(p?.standard||'').slice(0,60)})):[]}
 function readPendingMeasurements(){let raw=[];try{const value=JSON.parse(queryParams.get('measurements')||'[]');if(Array.isArray(value))raw=value.slice(0,60)}catch(e){}if(!raw.length)raw=[{measurementItem:queryParams.get('measurementItem')||'测量项',measurementPosition:queryParams.get('measurementPosition')||'测量部位',points:queryParams.get('points')||'[]',result:queryParams.get('result')||'',passRate:queryParams.get('passRate')||'',sourceId:queryParams.get('sourceId')||''}];return raw.map((row,i)=>({measurementItem:String(row?.measurementItem||'测量项').slice(0,100),measurementPosition:String(row?.measurementPosition||'测量部位').slice(0,160),points:normalizePendingPoints(row?.points),result:String(row?.result||'').slice(0,20),passRate:String(row?.passRate||'').slice(0,20),sourceId:String(row?.sourceId||queryParams.get('sourceId')||`measure-${i+1}`).slice(0,80)})).filter(row=>row.measurementItem||row.measurementPosition)}
 let pendingMeasurement=queryParams.get('bind')==='measure'?(()=>{const measurements=readPendingMeasurements(),first=measurements[0]||{};return{reportName:queryParams.get('reportName')||'测量报告',measurementTime:queryParams.get('measurementTime')||'',measurements,measurementItem:first.measurementItem||'测量项',measurementPosition:first.measurementPosition||'测量部位',points:first.points||[],result:first.result||'',passRate:first.passRate||'',sourceId:first.sourceId||''}})():null;
-const componentOptions=[['C-A1','1号楼 · 14层 · 柱 KZ-01',33,39],['C-A3','1号楼 · 14层 · 柱 KZ-02',36,43],['C-A4','1号楼 · 14层 · 柱 KZ-03',39,47],['C-A2','1号楼 · 14层 · 楼板 B-01',42,53],['C-A5','1号楼 · 14层 · 梁 KL-05',46,48],['C-A6','1号楼 · 13层 · 梁 KL-03',49,44],['C-B1','2号楼 · 13层 · 梁 L-12',59,46],['C-B3','2号楼 · 13层 · 柱 KZ-08',62,43],['C-B2','2号楼 · 12层 · 外墙 W-18',66,58],['C-B4','2号楼 · 12层 · 外墙 W-19',69,55],['C-B5','2号楼 · 12层 · 楼板 B-08',63,61],['C-T1','塔吊 TC-02',72,39]];
+const componentOptions=XABimStore.components.map(c=>c.slice());
 const modelGroups=[{name:'建筑',models:['XA000_ZMXA_A_建筑单体主文件-01地块-地上.rvt','中煤雄安科创园项目-场布-20260820.rvt','kechuangzhongxinjiegou3 - 建筑 - 水电暖通01-智慧工.rvt','XA000_ZMXA_A_建筑单体主文件-01地块-地下.rvt']},{name:'其他',models:['雄安科创园景观与室外工程.rvt']}];
 const records=[
  {id:1,type:'quality',title:'模板支撑连接件松动',componentId:'C-A1',x:33,y:39,checkTime:'2026-09-22 09:01',checkType:'项目自检',checker:'王会彬',area:'施工区',position:'十四层',category:'主体结构工程 / 模板工程',level:'一般',result:'不合格',description:'模板支撑连接件未按专项方案拧紧，局部存在松动。',requirement:'按方案复紧连接件，并对同区域支撑体系全面排查。',deadline:'2026-09-23',unit:'雄安科创园项目部',assignee:'徐志成',reviewer:'王会彬',status:'待整改'},
@@ -557,7 +1363,7 @@ records.push(
 );
 function annotationDisplayStatus(r){if(r.issueRequired===false)return'无需整改';const b=r.baseStatus||r.status||'待整改';return b==='待整改逾期'?'待整改':b}/* ================= 结构 / 专业 筛选树 ================= */
 
-const MAJOR_OF={'C-A1':'土建','C-A2':'土建','C-A3':'土建','C-A4':'土建','C-A5':'土建','C-A6':'土建','C-B1':'土建','C-B2':'幕墙','C-B3':'土建','C-B4':'幕墙','C-B5':'土建','C-T1':'施工机械'};
+const MAJOR_OF=Object.fromEntries(componentOptions.map(c=>[c[0],c[0]==='C-T1'?'施工机械':/外墙/.test(c[1])?'幕墙':'土建']));
 const MAJOR_LIST=['土建','幕墙','施工机械'];
 let structSel=new Set(),majorSel=new Set(),fpCollapsed=new Set(),filterPanelOpen=false;
 function structTree(){
@@ -655,11 +1461,11 @@ function boardTypeColor(t){return(BOARD_TYPES.find(x=>x[0]===t)||[0,0,0,'#7f95ab
 
 function refreshAnnotationStatus(){records.forEach(r=>{if(r.type!=='annotation')return;if(!r.baseStatus)r.baseStatus=r.status;r.status=annotationDisplayStatus(r)})}
 let boardFilter=null;
-const briefingKinds=['安全交底','质量交底','施工工艺交底','技术质量交底'];
+const briefingKinds=['安全交底','三维交底','施工工艺交底','技术质量交底'];
 function briefingKind(r){return r.subtype==='技术交底'?'技术质量交底':r.subtype}
 function uniqueBoard(rows){return [...new Map(rows.map(r=>[r.type+'|'+(r.sourceId||r.code||r.id),r])).values()]}
 function boardOpen(r){return !['已复查','无需整改','合格'].includes(r.status)}
-function boardLate(r){return boardOpen(r)&&r.deadline&&r.deadline<today()}
+function boardLate(r){return ['待整改','继续整改'].includes(XABimStore.status(r))&&XABimStore.overdueDays(r)>0}
 function boardAction(type,filter,label,value){return '<button class="dash-stat" data-dash-type="'+type+'" data-dash-filter="'+filter+'"><b>'+value+'</b><span>'+label+'</span></button>'}
 function issueBoard(type){const rows=uniqueBoard(records.filter(r=>r.type===type));return '<section class="dash-module"><h3>'+typeName(type)+'问题</h3><button class="dash-main" data-dash-type="'+type+'" data-dash-filter="open"><strong>'+rows.filter(boardOpen).length+'</strong><span>项未复查问题 ›</span></button><div class="dash-three">'+boardAction(type,'todo','待整改',rows.filter(r=>boardOpen(r)&&r.status!=='待复查').length)+boardAction(type,'review','待复查',rows.filter(r=>r.status==='待复查').length)+boardAction(type,'late','逾期',rows.filter(boardLate).length)+'</div></section>'}
 function boardStats(){return {total:records.length}}
@@ -674,27 +1480,49 @@ function boardRightHtml(){return boardDetailHtml()+keyComponentBoardHtml()}
 function boardShellHtml(){return '<div class="boards is-hidden">'+['left','right'].map((side,i)=>'<button class="board-handle handle-'+side+'" data-board-toggle="'+side+'" aria-expanded="false" aria-label="切换'+(i?'右':'左')+'侧看板"><span class="bh-chev">'+(i?'‹':'›')+'</span></button><aside class="board board-'+side+'" id="board'+(i?'Right':'Left')+'"><div class="board-body" id="board'+(i?'Right':'Left')+'Body"></div><div class="board-foot">'+(i?'当前模型已关联资料':'当前模型关联问题 · 点击指标查看')+'</div></aside>').join('')+'</div>'}
 function renderBoards(){const mount=q('#boardMount');if(!mount)return;if(!boardsBuilt){mount.innerHTML=boardShellHtml();boardsBuilt=true}const hidden=active.size>0||!!placing;mount.querySelector('.boards').classList.toggle('is-hidden',hidden);['left','right'].forEach((side,i)=>{const open=(i?boardRightOpen:boardLeftOpen)&&!hidden,handle=mount.querySelector('.handle-'+side);handle.classList.toggle('open',open);handle.setAttribute('aria-expanded',open);mount.querySelector('#board'+(i?'Right':'Left')).classList.toggle('open',open)});q('#boardLeftBody').innerHTML=boardStatsHtml();q('#boardRightBody').innerHTML=boardRightHtml()}
 function bindBoardEvents(){q('#boardMount').addEventListener('click',e=>{const toggle=e.target.closest('[data-board-toggle]');if(toggle){if(toggle.dataset.boardToggle==='left')boardLeftOpen=!boardLeftOpen;else boardRightOpen=!boardRightOpen;renderBoards();return}const item=e.target.closest('[data-dash-item]');if(item){const r=records.find(r=>r.id===+item.dataset.dashItem);boardFilter=null;active=new Set([r.type]);choose(r);render();return}const componentButton=e.target.closest('[data-dash-component]');if(componentButton){openKeyComponent(componentButton.dataset.dashComponent);return}const photo=e.target.closest('[data-dash-photo]');if(photo){if(photo.dataset.dashPhoto)openPanorama('compare',photo.dataset.dashPhoto);return}const button=e.target.closest('[data-dash-type]');if(!button)return;listType=button.dataset.dashType;boardFilter={type:listType,mode:button.dataset.dashFilter};active=new Set([listType]);listQuery='';statusFilter='all';filterOpen=false;listOpen=true;collapsedDates.clear();selectedId=null;resetFocus();render()})}
-function matchesBoardFilter(r){if(!boardFilter)return true;if(boardFilter.mode==='component')return ISSUE_COMPONENT_TYPES.includes(r.type)&&r.componentId===boardFilter.componentId;if(r.type!==boardFilter.type||boardFilter.mode==='all')return true;const m=boardFilter.mode;if(r.type==='briefing')return briefingKind(r)===m;if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');if(m==='open')return boardOpen(r);if(m==='todo')return boardOpen(r)&&r.status!=='待复查';if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true}
+function matchesBoardFilter(r){
+ if(!boardFilter)return true;
+ if(boardFilter.mode==='component')return ISSUE_COMPONENT_TYPES.includes(r.type)&&r.componentId===boardFilter.componentId;
+ if(r.type!==boardFilter.type)return false;
+ const m=boardFilter.mode;if(m==='all')return true;
+ if(r.type==='annotation')return XABimStore.status(r)===m;
+ if(r.type==='briefing')return briefingKind(r)===m;
+ if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');
+ if(m==='open')return boardOpen(r);if(m==='todo')return ['待整改','继续整改'].includes(XABimStore.status(r));
+ if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true;
+}
 function typeName(t){return types.find(x=>x[0]===t)?.[1]||t}function glyph(t){return types.find(x=>x[0]===t)?.[2]||'•'}function isIssue(r){return r.type==='quality'||r.type==='safety'||r.type==='annotation'}function hasBriefMedia(r){return r.subtype==='三维交底'||r.subtype==='施工工艺交底'}function briefMark(g){const v=g.variant;if(v==='三维交底')return['三维','3d'];if(v==='安全交底')return['安','safety'];if(v==='技术交底')return['技','tech'];return['工艺','craft']}function component(id){if(String(id).startsWith('PANO-')){const r=records.find(r=>r.componentId===id);if(r)return[id,r.title,r.x,r.y]}return componentOptions.find(x=>x[0]===id)||[id,id,50,50]}function briefLocation(r){return component(r.componentId)[1]}function fmtTime(s){return s?esc(s):'--'}function today(){return new Date().toLocaleDateString('sv-SE')}function toast(s){clearTimeout(toastTimer);q('#toastMount').innerHTML='<div class="toast">'+esc(s)+'</div>';toastTimer=setTimeout(()=>q('#toastMount').innerHTML='',3000)}
 function measurePointSummary(r,limit=3){const points=Array.isArray(r.points)?r.points:[];if(!points.length)return'暂无测点值';return points.slice(0,limit).map(p=>(p.no||'测点')+' '+p.value+(p.unit?' '+p.unit:'')).join('，')+(points.length>limit?'，+'+(points.length-limit)+'个':'')}
-function allSelected(){return records.filter(r=>active.has(r.type)&&compPasses(r.componentId)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id)}
+function matchesCurrentFilters(r){
+ if(!matchesBoardFilter(r))return false;
+ if(r.type!==listType)return true;
+ if(listQuery.trim()&&!listSearchText(r).includes(listQuery.trim().toLowerCase()))return false;
+ return statusFilter==='all'||(listType==='plan'?(r.category||'未分类')===statusFilter:r.status===statusFilter);
+}
+function countRows(rows){return rows.filter(r=>r.type!=='report').length+new Set(rows.filter(r=>r.type==='report').map(reportKeyOf)).size}
+function tabCount(type){return countRows(records.filter(r=>r.type===type&&compPasses(r.componentId)&&matchesCurrentFilters(r)))}
+function refreshFilteredView(){
+ if(focusComponent&&!filtered().some(r=>r.componentId===focusComponent)){selectedId=null;resetFocus()}
+ tablePage=1;renderMarkers();renderList();renderTable();
+}
+function allSelected(){return records.filter(r=>active.has(r.type)&&compPasses(r.componentId)&&matchesCurrentFilters(r)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id)}
 function currentListType(){if(!active.has(listType))listType=types.find(v=>active.has(v[0]))?.[0]||null;return listType}
 function visible(){const t=currentListType();return t?records.filter(r=>r.type===t&&compPasses(r.componentId)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id):[]}
 function listSearchPlaceholder(t=listType){return t==='briefing'?'搜索交底名称':t==='measure'?'搜索测量项名称':t==='plan'?'搜索文件名称':t==='panorama'?'搜索区域或照片名称':t==='report'?'搜索类型/编号/物资/构件':'搜索问题名称'}
 function listSearchText(r){const parts=[r.title,r.description,r.checkType,r.checkContent,r.category,r.subtype,r.resourceName,r.modelName,r.fileName,r.measurementItem,r.measurementPosition,r.reportName,r.regionName,r.owner,r.checker,briefLocation(r)];if(r.type==='report')parts.push(reportCategoryOf(r),r.sendCode,r.materialName,...reportBoundNames(r));return parts.filter(Boolean).join(' ').toLowerCase()}
 function listed(){const keyword=listQuery.trim().toLowerCase(),rows=visible().filter(matchesBoardFilter);return keyword?rows.filter(r=>listSearchText(r).includes(keyword)):rows}
 function boardFilterLabel(){if(!boardFilter||boardFilter.mode==='all')return'';if(boardFilter.mode==='component')return'构件：'+component(boardFilter.componentId)[1];return({open:'未复查',todo:'待整改',review:'待复查',late:'逾期',bad:'不合格测点'})[boardFilter.mode]||boardFilter.mode}
-function listSearchHtml(){const add=listType==='annotation'?'<button class="list-add" data-action="new-annotation" aria-label="新增批注">＋ 新增</button>':'';return (boardFilter&&boardFilter.mode!=='all'?'<button class="dash-reset" data-reset-board>当前：'+esc(boardFilterLabel())+'　× 清除筛选</button>':'')+'<div class="list-search"><span>⌕</span><input id="listSearch" value="'+esc(listQuery)+'" placeholder="'+esc(listSearchPlaceholder())+'" autocomplete="off" aria-label="'+esc(listSearchPlaceholder())+'"><button data-action="clear-list-search" aria-label="清空搜索" '+(listQuery?'':'hidden')+'>×</button><small>'+listed().length+'条</small>'+add+'</div>'}
+function listSearchHtml(){const add=listType==='annotation'?'<button class="list-add" data-action="new-annotation" aria-label="新增批注">＋ 新增</button>':'';return (boardFilter&&boardFilter.mode!=='all'?'<button class="dash-reset" data-reset-board>当前：'+esc(boardFilterLabel())+'　× 清除筛选</button>':'')+'<div class="list-search"><span>⌕</span><input id="listSearch" value="'+esc(listQuery)+'" placeholder="'+esc(listSearchPlaceholder())+'" autocomplete="off" aria-label="'+esc(listSearchPlaceholder())+'"><button data-action="clear-list-search" aria-label="清空搜索" '+(listQuery?'':'hidden')+'>×</button><small>'+countRows(filtered())+'条</small>'+add+'</div>'}
 function filtered(){return listed().filter(r=>{if(statusFilter==='all')return true;return listType==='plan'?(r.category||'未分类')===statusFilter:r.status===statusFilter})}
-function statusClass(s){if(['已复查','合格','已解决'].includes(s))return'good';if(['待整改','未解决','超差','继续整改','待复查'].includes(s)||String(s).includes('逾期'))return'bad';return''}function dateSummary(rows){const open=rows.filter(r=>!['已复查','合格','已解决'].includes(r.status)).length;return open===0?['已全部复查','good']:open===rows.length?['全部未复查','bad']:['存在未复查项','warn']}function planGroupLabel(rows){const kinds=[...new Set(rows.map(r=>r.category||'方案文件'))];return kinds.length===1?kinds[0]:'多种方案'}
+function statusClass(s){if(['已复查','合格','已解决'].includes(s))return'good';if(['待整改','未解决','超差','继续整改','待复查'].includes(s)||String(s).includes('逾期'))return'bad';return''}function dateSummary(rows){if(rows.every(r=>r.status==='无需整改'))return['无需整改','good'];const open=rows.filter(r=>!['已复查','无需整改','合格','已解决'].includes(r.status)).length;return open===0?['已全部复查','good']:open===rows.length?['全部未复查','bad']:['存在未复查项','warn']}function planGroupLabel(rows){const kinds=[...new Set(rows.map(r=>r.category||'方案文件'))];return kinds.length===1?kinds[0]:'多种方案'}
 function renderTabs(){q('#tabs').innerHTML=types.map(([t,n])=>'<button type="button" data-tab="'+t+'" aria-pressed="'+active.has(t)+'" class="'+(active.has(t)?'active':'')+'">'+(active.has(t)?'✓ ':'')+n+'</button>').join('')}
 function markerGroups(){const groups=[];allSelected().forEach(r=>{const variant=markerVariantOf(r);const key=r.componentId+'|'+r.type+'|'+variant;let g=groups.find(v=>v.key===key);if(!g){const c=component(r.componentId);g={key,id:r.componentId,type:r.type,variant,x:c[2],y:c[3],items:[]};groups.push(g)}g.items.push(r)});groups.forEach(g=>{const peers=groups.filter(v=>v.id===g.id),index=peers.indexOf(g);g.x+=(index-(peers.length-1)/2)*2.6});return groups}
 function renderMarkers(){q('#markers').innerHTML=markerGroups().map(g=>{const bm=g.type==='briefing'?briefMark(g):null,text=bm?bm[0]:glyph(g.type);return '<button class="marker '+g.type+' '+(bm?'brief-'+bm[1]+' ':'')+(focusComponent===g.id&&listType===g.type?'active':'')+(focusSnapshot&&focusComponent===g.id&&listType===g.type&&focusVariant===g.variant?' focus-marker':'')+'" style="left:'+g.x+'%;top:'+g.y+'%" data-marker="'+esc(g.id)+'" data-marker-type="'+g.type+'" data-marker-variant="'+esc(g.variant)+'" aria-label="'+esc(g.variant||typeName(g.type))+'，'+esc(component(g.id)[1])+'，'+g.items.length+'条挂接记录">'+text+(g.items.length>1?'<small>'+g.items.length+'</small>':'')+'</button>'}).join('')}
-function renderList(){if(currentListType()==='panorama'){renderPanoramaList();return}if(currentListType()==='report'){renderReportList();return}const mount=q('#listMount');if(!active.size){mount.innerHTML='';return}const total=allSelected().length,title='模型挂接清单';let html='<aside class="list '+(listOpen?'':'collapsed')+'" aria-label="'+esc(title)+'"><div class="list-head"><span>'+esc(title)+' <small>('+total+')</small></span><div class="list-head-actions">'+(['briefing','measure'].includes(listType)?'':'<button class="icon-btn" data-action="filter" aria-label="筛选" title="筛选">⌕</button>')+'<button class="icon-btn" data-action="collapse" aria-label="收起清单" title="收起清单">×</button></div></div><div class="list-tabs" role="tablist">'+types.filter(v=>active.has(v[0])).map(v=>'<button type="button" role="tab" aria-selected="'+(listType===v[0])+'" class="'+(listType===v[0]?'active':'')+'" data-list-tab="'+v[0]+'">'+v[1]+'<em>'+records.filter(r=>r.type===v[0]).length+'</em></button>').join('')+'</div>'+listSearchHtml();
+function renderList(){if(currentListType()==='panorama'){renderPanoramaList();return}if(currentListType()==='report'){renderReportList();return}const mount=q('#listMount');if(!active.size){mount.innerHTML='';return}const total=countRows(allSelected()),title='模型挂接清单';let html='<aside class="list '+(listOpen?'':'collapsed')+'" aria-label="'+esc(title)+'"><div class="list-head"><span>'+esc(title)+' <small>('+total+')</small></span><div class="list-head-actions">'+(['briefing','measure'].includes(listType)?'':'<button class="icon-btn" data-action="filter" aria-label="筛选" title="筛选">⌕</button>')+'<button class="icon-btn" data-action="collapse" aria-label="收起清单" title="收起清单">×</button></div></div><div class="list-tabs" role="tablist">'+types.filter(v=>active.has(v[0])).map(v=>'<button type="button" role="tab" aria-selected="'+(listType===v[0])+'" class="'+(listType===v[0]?'active':'')+'" data-list-tab="'+v[0]+'">'+v[1]+'<em>'+tabCount(v[0])+'</em></button>').join('')+'</div>'+listSearchHtml();
 if(listType==='briefing'){const briefingRows=listed();html+='<div class="briefing-list">'+(briefingRows.length?briefingRows.map(r=>'<button class="briefing-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><span class="kind">'+esc(r.subtype)+'</span><span class="name">'+esc(r.subtype==='三维交底'?(r.modelName||r.resourceName||r.title):(r.fileName||r.title))+'</span><span class="field-name">'+(r.subtype==='三维交底'?'模型名称':'文件名称')+'：'+esc(r.subtype==='三维交底'?(r.modelName||r.resourceName||r.title):(r.fileName||r.title))+'</span><span class="location">挂接构件：'+esc(briefLocation(r))+'</span></button>').join(''):'<div class="list-empty">'+(listQuery?'未找到匹配的交底':'暂无已挂接交底')+'</div>')+'</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;return}
 if(listType==='measure'){const measureRows=listed();html+='<div class="briefing-list">'+(measureRows.length?measureRows.map(r=>'<button class="briefing-card '+(selectedId===r.id?'selected':'')+'" data-item="'+r.id+'"><span class="kind" style="background:#1f9e81">实测实量</span><span class="name">'+esc(r.measurementItem||r.title)+'</span><span class="field-name">测量部位：'+esc(r.measurementPosition||briefLocation(r))+'</span><span class="location">'+(r.points?.length||0)+'个测点：'+esc(measurePointSummary(r,2))+'</span></button>').join(''):'<div class="list-empty">'+(listQuery?'未找到匹配的测量项':'暂无已挂接实测实量记录')+'</div>')+'</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;return}
 if(filterOpen){const isPlan=listType==='plan',options=isPlan?[...new Set(visible().map(r=>r.category||'未分类'))]:['无需整改','待整改','待复查','已复查','继续整改'],label=isPlan?'方案类型筛选':'状态筛选',allLabel=isPlan?'全部方案类型':'全部状态';html+='<div class="list-filter"><select id="statusFilter" aria-label="'+label+'"><option value="all">'+allLabel+'</option>'+options.map(option=>'<option value="'+esc(option)+'">'+esc(option)+'</option>').join('')+'</select></div>'}
-const rows=filtered(),dates=[...new Set(rows.map(r=>r.checkTime.slice(0,10)))];html+='<div class="list-scroll">';if(!rows.length)html+='<div class="list-empty">当前筛选下暂无挂接记录</div>';dates.forEach((date,index)=>{const day=rows.filter(r=>r.checkTime.startsWith(date));const group=listType==='plan'?[''+planGroupLabel(day),'plan']:dateSummary(day),summary=group[0],cls=group[1],isCollapsed=collapsedDates.has(date);html+='<section class="date-group"><button class="date-head" data-date="'+date+'" aria-expanded="'+!isCollapsed+'"><span class="date-label">'+date+' <small>'+day.length+'条</small></span><span class="date-status '+cls+'">'+summary+'</span><span class="date-chevron">'+(isCollapsed?'›':'⌄')+'</span></button>';if(!isCollapsed)day.forEach(r=>{const overdue=isIssue(r)&&r.deadline<today()&&r.status!=='已复查';html+=listCardHtml(r,selectedId===r.id,overdue)});html+='</section>'});html+='</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;if(q('#statusFilter'))q('#statusFilter').value=statusFilter}
+const rows=filtered(),dates=[...new Set(rows.map(r=>r.checkTime.slice(0,10)))];html+='<div class="list-scroll">';if(!rows.length)html+='<div class="list-empty">当前筛选下暂无挂接记录</div>';dates.forEach((date,index)=>{const day=rows.filter(r=>r.checkTime.startsWith(date));const group=listType==='plan'?[''+planGroupLabel(day),'plan']:dateSummary(day),summary=group[0],cls=group[1],isCollapsed=!listQuery.trim()&&statusFilter==='all'&&collapsedDates.has(date);html+='<section class="date-group"><button class="date-head" data-date="'+date+'" aria-expanded="'+!isCollapsed+'"><span class="date-label">'+date+' <small>'+day.length+'条</small></span><span class="date-status '+cls+'">'+summary+'</span><span class="date-chevron">'+(isCollapsed?'›':'⌄')+'</span></button>';if(!isCollapsed)day.forEach(r=>{const overdue=isIssue(r)&&XABimStore.overdueDays(r)>0;html+=listCardHtml(r,selectedId===r.id,overdue)});html+='</section>'});html+='</div></aside>'+(listOpen?'':'<button class="list-toggle" data-action="expand">展开清单</button>');mount.innerHTML=html;if(q('#statusFilter'))q('#statusFilter').value=statusFilter}
 /* ==== 构件标记聚焦（气泡聚焦）：进入 / 退出 ====
    结构确认：底图就是 #stage 自身的 background-image，#markers 已是 #stage 的子元素，二者共用同一个 transform，
    因此缩放/平移天然同时带动标记层（WEB 端不存在移动端“标记层在缩放层之外”的问题，无需再包 focusStage）；
@@ -730,9 +1558,9 @@ function focusOn(id,variant){
 /* 退出聚焦：唯一恢复入口（点弹窗 ×、点遮罩、Esc、切 TAB 等所有路径都汇到这里），
    scale/平移精确还原进入前快照（字符串级别还原，无快照则回到默认视图） */
 function resetFocus(){const stage=q('#stage');if(focusAlignTimer){clearTimeout(focusAlignTimer);focusAlignTimer=null}focusAlignTries=0;if(stage){stage.classList.remove('focus-mode');stage.style.transform=focusSnapshot?focusSnapshot.transform:''}focusSnapshot=null;focusVariant='';focusComponent=null;focusTx=0;focusTy=0;const scrim=q('#focusScrim');if(scrim)scrim.style.background='';q('#focus').innerHTML='';renderMarkers()}
-function tableRows(){if(listType==='panorama'||!focusComponent)return[];const selected=records.find(r=>r.id===selectedId);return visible().filter(r=>r.componentId===focusComponent&&(!selected||(isIssue(selected)?isIssue(r):r.type===selected.type))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')))}
-function renderTable(){const mount=q('#tableMount'),rows=tableRows();if(!focusComponent||!rows.length){mount.innerHTML='';return}const issue=rows.every(isIssue),measure=rows.every(r=>r.type==='measure'),briefOnly=rows.every(r=>r.type==='briefing'),planOnly=rows.every(r=>r.type==='plan'),start=(tablePage-1)*5,paged=rows.slice(start,start+5),pages=Math.max(1,Math.ceil(rows.length/5)),full=!listOpen;let head,body,title;
-if(measure){head='<colgroup><col style="width:42px"><col style="width:135px"><col style="width:150px"><col style="width:250px"><col style="width:245px"><col style="width:66px"><col style="width:70px"><col style="width:55px"></colgroup><thead><tr><th>序号</th><th>测量时间</th><th>测量项</th><th>测量部位</th><th>测点值</th><th>测点数</th><th>合格率</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>{const expanded=expandedMeasureRows.has(r.id),points=Array.isArray(r.points)?r.points:[];const detail=points.map(p=>'<div class="measure-point-item"><span>'+esc(p.no||'测点')+'</span><strong>'+esc(p.value)+' '+esc(p.unit||'')+'</strong><small>标准</small><small>'+esc(p.standard||'--')+'</small><small>判定</small><small class="'+(p.result==='合格'?'ok':'bad')+'">'+esc(p.result||'--')+'</small></div>').join('');return '<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td>'+esc(r.measurementTime||r.checkTime)+'</td><td>'+esc(r.measurementItem||r.title)+'</td><td title="'+esc(r.measurementPosition)+'">'+esc(r.measurementPosition)+'</td><td title="'+esc(measurePointSummary(r,99))+'">'+esc(measurePointSummary(r,3))+'</td><td>'+points.length+'</td><td>'+esc(r.passRate||'--')+'</td><td><button class="detail-link" data-measure-expand="'+r.id+'">'+(expanded?'收起':'展开')+'</button></td></tr>'+(expanded?'<tr class="measure-detail-row"><td colspan="8"><div class="measure-point-grid">'+detail+'</div></td></tr>':'')}).join('');title='实测实量记录'}else if(issue){const annoOnly=rows.every(r=>r.type==='annotation');head='<colgroup><col style="width:40px"><col style="width:82px"><col style="width:120px">'+(annoOnly?'':'<col style="width:150px"><col style="width:68px">')+'<col style="width:225px"><col style="width:82px"><col style="width:92px"><col style="width:72px"><col style="width:52px"></colgroup><thead><tr><th>序号</th><th>检查类型</th><th>检查时间</th>'+(annoOnly?'':'<th>问题分类</th><th>问题级别</th>')+'<th>问题描述</th><th>整改责任人</th><th>整改期限</th><th>状态</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>'<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td title="'+esc(r.checkType)+'">'+esc(r.checkType)+'</td><td title="'+esc(r.checkTime)+'">'+esc(r.checkTime)+'</td>'+(annoOnly?'':'<td title="'+esc(r.category)+'">'+esc(r.category)+'</td><td>'+esc(r.level)+'</td>')+'<td title="'+esc(r.description)+'">'+esc(r.description)+'</td><td>'+esc(r.assignee)+'</td><td>'+esc(r.deadline)+'</td><td>'+esc(r.status)+'</td><td><button class="detail-link" data-detail="'+r.id+'">详情</button></td></tr>').join('');title='关联问题'}else if(briefOnly){head='<colgroup><col style="width:52px"><col style="width:92px"><col style="width:150px"><col style="width:230px"><col style="width:130px"><col style="width:82px"><col style="width:104px"><col style="width:82px"><col style="width:76px"><col style="width:62px"></colgroup><thead><tr><th>序号</th><th>交底类型</th><th>交底编号</th><th>交底名称</th><th>交底部位</th><th>交底人</th><th>交底日期</th><th>接交人</th><th>状态</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>{const mediaOnly=hasBriefMedia(r),empty='<td></td>';return '<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td>'+esc(r.subtype||'交底')+'</td>'+(mediaOnly?empty+empty+empty+empty+empty+empty+empty:'<td title="'+esc(r.code||'')+'">'+esc(r.code||'--')+'</td><td title="'+esc(r.title)+'">'+esc(r.title)+'</td><td title="'+esc(r.part||'')+'">'+esc(r.part||briefLocation(r))+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td>'+esc(r.receiver||'--')+'</td><td>'+esc(r.status||'--')+'</td>')+'<td><button class="detail-link" data-detail="'+r.id+'">详情</button></td></tr>'}).join('');title='交底记录'}
+function tableRows(){if(listType==='panorama'||!focusComponent)return[];const selected=records.find(r=>r.id===selectedId);return filtered().filter(r=>r.componentId===focusComponent&&(!selected||(isIssue(selected)?isIssue(r):r.type===selected.type))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')))}
+function renderTable(){const mount=q('#tableMount');if(listType==='report'){mount.innerHTML='';if(focusComponent)openReportTableByComponent(focusComponent);return}const rows=tableRows();if(!focusComponent||!rows.length){mount.innerHTML='';return}const issue=rows.every(isIssue),measure=rows.every(r=>r.type==='measure'),briefOnly=rows.every(r=>r.type==='briefing'),planOnly=rows.every(r=>r.type==='plan'),start=(tablePage-1)*5,paged=rows.slice(start,start+5),pages=Math.max(1,Math.ceil(rows.length/5)),full=!listOpen;let head,body,title;
+if(measure){head='<colgroup><col style="width:42px"><col style="width:135px"><col style="width:150px"><col style="width:250px"><col style="width:245px"><col style="width:66px"><col style="width:70px"><col style="width:55px"></colgroup><thead><tr><th>序号</th><th>测量时间</th><th>测量项</th><th>测量部位</th><th>测点值</th><th>测点数</th><th>合格率</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>{const expanded=expandedMeasureRows.has(r.id),points=Array.isArray(r.points)?r.points:[];const detail=points.map(p=>'<div class="measure-point-item"><span>'+esc(p.no||'测点')+'</span><strong>'+esc(p.value)+' '+esc(p.unit||'')+'</strong><small>标准</small><small>'+esc(p.standard||'--')+'</small><small>判定</small><small class="'+(p.result==='合格'?'ok':p.result==='不合格'?'bad':'')+'">'+esc(p.result||'--')+'</small></div>').join('');return '<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td>'+esc(r.measurementTime||r.checkTime)+'</td><td>'+esc(r.measurementItem||r.title)+'</td><td title="'+esc(r.measurementPosition)+'">'+esc(r.measurementPosition)+'</td><td title="'+esc(measurePointSummary(r,99))+'">'+esc(measurePointSummary(r,3))+'</td><td>'+points.length+'</td><td>'+esc(r.passRate||'--')+'</td><td><button class="detail-link" data-measure-expand="'+r.id+'">'+(expanded?'收起':'展开')+'</button></td></tr>'+(expanded?'<tr class="measure-detail-row"><td colspan="8"><div class="measure-point-grid">'+detail+'</div></td></tr>':'')}).join('');title='实测实量记录'}else if(issue){const annoOnly=rows.every(r=>r.type==='annotation');head='<colgroup><col style="width:40px"><col style="width:82px"><col style="width:120px">'+(annoOnly?'':'<col style="width:150px"><col style="width:68px">')+'<col style="width:225px"><col style="width:82px"><col style="width:92px"><col style="width:72px"><col style="width:52px"></colgroup><thead><tr><th>序号</th><th>检查类型</th><th>检查时间</th>'+(annoOnly?'':'<th>问题分类</th><th>问题级别</th>')+'<th>问题描述</th><th>整改责任人</th><th>整改期限</th><th>状态</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>'<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td title="'+esc(r.checkType)+'">'+esc(r.checkType)+'</td><td title="'+esc(r.checkTime)+'">'+esc(r.checkTime)+'</td>'+(annoOnly?'':'<td title="'+esc(r.category)+'">'+esc(r.category)+'</td><td>'+esc(r.level)+'</td>')+'<td title="'+esc(r.description)+'">'+esc(r.description)+'</td><td>'+esc(r.assignee)+'</td><td>'+esc(r.deadline)+'</td><td>'+esc(r.status)+'</td><td><button class="detail-link" data-detail="'+r.id+'">详情</button></td></tr>').join('');title='关联问题'}else if(briefOnly){head='<colgroup><col style="width:52px"><col style="width:92px"><col style="width:150px"><col style="width:230px"><col style="width:130px"><col style="width:82px"><col style="width:104px"><col style="width:82px"><col style="width:76px"><col style="width:62px"></colgroup><thead><tr><th>序号</th><th>交底类型</th><th>交底编号</th><th>交底名称</th><th>交底部位</th><th>交底人</th><th>交底日期</th><th>接交人</th><th>状态</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>{const mediaOnly=hasBriefMedia(r),empty='<td></td>';return '<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td>'+esc(r.subtype||'交底')+'</td>'+(mediaOnly?empty+empty+empty+empty+empty+empty+empty:'<td title="'+esc(r.code||'')+'">'+esc(r.code||'--')+'</td><td title="'+esc(r.title)+'">'+esc(r.title)+'</td><td title="'+esc(r.part||'')+'">'+esc(r.part||briefLocation(r))+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td>'+esc(r.receiver||'--')+'</td><td>'+esc(r.status||'--')+'</td>')+'<td><button class="detail-link" data-detail="'+r.id+'">详情</button></td></tr>'}).join('');title='交底记录'}
  else if(planOnly){head='<colgroup><col style="width:150px"><col style="width:360px"><col style="width:150px"><col style="width:180px"></colgroup><thead><tr><th>方案类型</th><th>文件名称</th><th>上传人</th><th>上传时间</th></tr></thead>';body=paged.map(r=>{const name=r.fileName||r.title,category=r.category||'--';return '<tr class="'+(selectedId===r.id?'chosen':'')+'" data-detail="'+r.id+'" title="点击查看详情"><td title="'+esc(category)+'">'+esc(category)+'</td><td title="'+esc(name)+'">'+esc(name)+'</td><td>'+esc(r.uploader||'--')+'</td><td>'+esc(r.uploadTime||'--')+'</td></tr>'}).join('');title='方案文件'}
 else{head='<colgroup><col style="width:52px"><col style="width:65px"><col style="width:260px"><col style="width:210px"><col style="width:90px"><col style="width:135px"><col style="width:70px"></colgroup><thead><tr><th>序号</th><th>类型</th><th>名称</th><th>关联部位</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>';body=paged.map((r,i)=>'<tr class="'+(selectedId===r.id?'chosen':'')+'"><td>'+(start+i+1)+'</td><td>'+glyph(r.type)+'</td><td title="'+esc(r.title)+'">'+esc(r.title)+'</td><td>'+esc(briefLocation(r))+'</td><td>'+esc(r.status)+'</td><td>'+esc(r.checkTime)+'</td><td><button class="detail-link" data-detail="'+r.id+'">详情</button></td></tr>').join('');title='挂接记录'}
 mount.innerHTML='<section class="table-popup '+(full?'full-width':'')+'" aria-label="构件关联记录表"><div class="table-top"><span>'+esc(component(focusComponent)[1])+' · '+title+'（'+rows.length+'）</span><button data-action="close-table" aria-label="关闭表格">×</button></div><div class="table-scroll"><table class="issue-table">'+head+'<tbody>'+body+'</tbody></table></div><div class="table-foot"><span>共 '+rows.length+' 条</span><button data-page="prev" '+(tablePage<=1?'disabled':'')+'>上一页</button><button class="page-active">'+tablePage+' / '+pages+'</button><button data-page="next" '+(tablePage>=pages?'disabled':'')+'>下一页</button></div></section>'}
@@ -740,7 +1568,7 @@ function selectedComponentRows(){return [...selectedComponents].map(id=>componen
 function pendingWork(){return pendingBriefing?{type:'briefing',data:pendingBriefing}:pendingMeasurement?{type:'measure',data:pendingMeasurement}:pendingReport?{type:'report',data:pendingReport}:null}
 function clearPending(){pendingBriefing=null;pendingMeasurement=null;pendingReport=null}
 function measurementRows(pending){const rows=Array.isArray(pending?.measurements)&&pending.measurements.length?pending.measurements:[pending];return rows.filter(Boolean)}
-function initialBindingRows(){const work=pendingWork();if(!work)return[];if(work.type==='measure'){const sourceIds=new Set(measurementRows(work.data).map(row=>row.sourceId).filter(Boolean));return records.filter(r=>r.type==='measure'&&sourceIds.has(r.sourceId))}return records.filter(r=>r.type===work.type&&r.sourceId===work.data.sourceId)}
+function initialBindingRows(){const work=pendingWork();if(!work)return[];if(work.type==='measure'){const sourceIds=new Set(measurementRows(work.data).map(row=>row.sourceId).filter(Boolean));return records.filter(r=>r.type==='measure'&&sourceIds.has(r.sourceId))}return records.filter(r=>r.type===work.type&&r.sourceId===work.data.sourceId&&(work.type!=='briefing'||r.subtype===work.data.subtype))}
 function initialComponentIds(){const work=pendingWork();if(!work)return new Set();if(work.type==='measure'){const sourceIds=[...new Set(measurementRows(work.data).map(row=>row.sourceId).filter(Boolean))];return new Set(componentOptions.filter(c=>sourceIds.length&&sourceIds.every(sourceId=>records.some(r=>r.type==='measure'&&r.sourceId===sourceId&&r.componentId===c[0]))).map(c=>c[0]))}return new Set(initialBindingRows().map(r=>r.componentId))}
 function componentSearchRows(){const keyword=componentQuery.trim().toLowerCase();return componentOptions.filter(c=>!keyword||c[0].toLowerCase().includes(keyword)||c[1].toLowerCase().includes(keyword))}
 function locateBindingComponent(id){const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.48,available=w-380,targetX=available*.58,targetY=h*.4,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;focusComponent=id;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';renderBindingHighlights()}
@@ -755,13 +1583,15 @@ function openMeasurementTable(componentId){listType='measure';focusComponent=com
 function nearestComponent(x,y){return componentOptions.reduce((best,item)=>{const distance=Math.hypot(item[2]-x,item[3]-y);return !best||distance<best.distance?{item,distance}:best},null).item}
 function showModelSelection(){const work=pendingWork();if(!work)return;const body=modelGroups.map((group,index)=>'<section class="model-tree-group"><div class="model-tree-title"><span class="tree-caret">'+(index?'›':'▼')+'</span><span>'+esc(group.name)+'</span></div>'+(index?'':group.models.map(name=>'<label class="model-tree-item"><input type="radio" name="bimModel" value="'+esc(name)+'" '+(selectedModel===name?'checked':'')+'><span>'+esc(name)+'</span></label>').join(''))+'</section>').join('');modalMode=()=>{const checked=q('input[name="bimModel"]:checked');if(!checked){q('#formError').textContent='请选择一个BIM模型';return false}selectedModel=checked.value;selectedComponents.clear();componentQuery='';placing=work.type;listOpen=false;closeModal();renderList();renderPlacement();toast('模型已载入，可搜索或点选构件');return true};q('#modalMount').innerHTML='<div class="shade"><section class="modal model-select-modal" role="dialog" aria-modal="true" aria-label="载入模型"><div class="modal-head"><span>载入模型</span><button data-action="cancel-model-select" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button class="primary" data-action="save-modal">确定</button><button data-action="cancel-model-select">取消</button></div></section></div>'}
 function toggleBindingComponent(c){const bound=initialComponentIds();if(bound.has(c[0])){toast('该构件已挂接当前业务数据');return}if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else selectedComponents.add(c[0]);renderPlacement()}
-function saveBusinessBinding(){const work=pendingWork();if(!work||!selectedComponents.size)return;const pending=work.data,created=[];selectedComponentRows().forEach(c=>{if(work.type==='briefing'){const duplicate=records.some(r=>r.type==='briefing'&&r.sourceId===pending.sourceId&&r.componentId===c[0]);if(duplicate)return;const isModel=pending.subtype==='三维交底',item={id:nextId++,type:'briefing',subtype:pending.subtype,title:isModel?pending.resourceName:pending.fileName,resourceName:pending.resourceName,modelName:isModel?pending.resourceName:'',fileName:pending.fileName,sourceId:pending.sourceId,bimModel:selectedModel,description:'来自'+pending.subtype+'台账的构件挂接',componentId:c[0],x:c[2],y:c[3],checkTime:new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'};records.push(item);created.push(item);return}if(work.type==='report'){const duplicate=records.some(r=>r.type==='report'&&r.sourceId===pending.sourceId&&r.componentId===c[0]);if(duplicate)return;const item=Object.assign({},pending,{id:nextId++,type:'report',title:pending.sendCode+' · '+pending.materialName,reportCategory:reportCategoryOf(pending),sourceId:pending.sourceId,bimModel:selectedModel,description:'送检单号 '+pending.sendCode+' · 物资 '+pending.materialName,componentId:c[0],x:c[2],y:c[3],checkTime:pending.sendDate||new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'});records.push(item);created.push(item);return}measurementRows(pending).forEach(row=>{const duplicate=records.some(r=>r.type==='measure'&&r.sourceId===row.sourceId&&r.componentId===c[0]);if(duplicate)return;const points=Array.isArray(row.points)?row.points:[],item={id:nextId++,type:'measure',title:row.measurementItem+' · '+row.measurementPosition,reportName:pending.reportName,measurementTime:pending.measurementTime,measurementItem:row.measurementItem,measurementPosition:row.measurementPosition,points,passRate:row.passRate||'--',sourceId:row.sourceId,bimModel:selectedModel,description:'共 '+points.length+' 个测点',componentId:c[0],x:c[2],y:c[3],checkTime:pending.measurementTime||new Date().toLocaleString('sv-SE').slice(0,16),status:row.result||'--',owner:'测量员'};records.push(item);created.push(item)})});if(!created.length){toast('所选构件均已挂接该业务数据');return}const type=work.type;if(type==='report'&&parent!==window){try{parent.postMessage({channel:'xa-report-binding',action:'bind',sendCode:created[0].sendCode,components:[...new Set(created.map(row=>component(row.componentId)[1]))]},'*')}catch(e){}}const target=created[0],componentCount=new Set(created.map(row=>row.componentId)).size,measurementCount=new Set(created.map(row=>row.sourceId||row.id)).size;clearPending();placing=null;selectedComponents.clear();componentQuery='';active.add(type);listType=type;selectedId=target?.id||null;listOpen=true;render();if(target){focusOn(target.componentId);q('#tableMount').innerHTML='';if(type==='briefing'){if(hasBriefMedia(target))openBriefingPreview(target);else{detailId=target.id;renderDetailPage()}}else openMeasurementTable(target.componentId)}toast(type==='measure'?'已将 '+measurementCount+' 个测量部位挂接到 '+componentCount+' 个构件（共 '+created.length+' 条）':'已挂接 '+created.length+' 个构件')}
+async function saveBusinessBinding(){const work=pendingWork();if(!work||!selectedComponents.size||bindingSaving||!businessReady)return;if(work.type==='report'&&work.data.archived==='否'){toast('归档后可挂接 BIM 模型');return}const pending=work.data,created=[];selectedComponentRows().forEach(c=>{if(work.type==='briefing'){const duplicate=records.some(r=>r.type==='briefing'&&r.sourceId===pending.sourceId&&r.componentId===c[0]&&(work.type!=='briefing'||r.subtype===pending.subtype));if(duplicate)return;const isModel=pending.subtype==='三维交底',item={id:nextId++,type:'briefing',subtype:pending.subtype,title:isModel?pending.resourceName:pending.fileName,resourceName:pending.resourceName,modelName:isModel?pending.resourceName:'',fileName:pending.fileName,sourceId:pending.sourceId,bimModel:selectedModel,description:'来自'+pending.subtype+'台账的构件挂接',componentId:c[0],x:c[2],y:c[3],checkTime:new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'};created.push(item);return}if(work.type==='report'){const duplicate=records.some(r=>r.type==='report'&&r.sourceId===pending.sourceId&&r.componentId===c[0]&&(work.type!=='briefing'||r.subtype===pending.subtype));if(duplicate)return;const item=Object.assign({},pending,{id:nextId++,type:'report',title:pending.sendCode+' · '+pending.materialName,reportCategory:reportCategoryOf(pending),sourceId:pending.sourceId,bimModel:selectedModel,description:'送检单号 '+pending.sendCode+' · 物资 '+pending.materialName,componentId:c[0],x:c[2],y:c[3],checkTime:pending.sendDate||new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'});created.push(item);return}measurementRows(pending).forEach(row=>{const duplicate=records.some(r=>r.type==='measure'&&r.sourceId===row.sourceId&&r.componentId===c[0]);if(duplicate)return;const points=Array.isArray(row.points)?row.points:[],item={id:nextId++,type:'measure',title:row.measurementItem+' · '+row.measurementPosition,reportName:pending.reportName,measurementTime:pending.measurementTime,measurementItem:row.measurementItem,measurementPosition:row.measurementPosition,points,passRate:row.passRate||'--',sourceId:row.sourceId,bimModel:selectedModel,description:'共 '+points.length+' 个测点',componentId:c[0],x:c[2],y:c[3],checkTime:pending.measurementTime||new Date().toLocaleString('sv-SE').slice(0,16),status:row.result||'--',owner:'测量员'};created.push(item)})});if(!created.length){toast('所选构件均已挂接该业务数据');return}bindingSaving=true;const confirm=q('[data-action="confirm-binding"]');if(confirm)confirm.disabled=true;
+try{const state=await saveBindingRecords(created);applyBusinessState(state)}catch(error){toast(error.message||'挂接保存失败，请重试');return}finally{bindingSaving=false;if(confirm)confirm.disabled=false}
+const type=work.type;const target=records.find(r=>XABimStore.rowKey(r)===XABimStore.rowKey(created[0]))||created[0],componentCount=new Set(created.map(row=>row.componentId)).size,measurementCount=new Set(created.map(row=>row.sourceId||row.id)).size;clearPending();placing=null;selectedComponents.clear();componentQuery='';active.add(type);listType=type;selectedId=target?.id||null;listOpen=true;render();if(target){focusOn(target.componentId);q('#tableMount').innerHTML='';if(type==='briefing'){if(hasBriefMedia(target))openBriefingPreview(target);else{detailId=target.id;renderDetailPage()}}else if(type==='report'){listType='report';openReportTableByComponent(target.componentId)}else openMeasurementTable(target.componentId)}toast(type==='measure'?'已将 '+measurementCount+' 个测量部位挂接到 '+componentCount+' 个构件（共 '+created.length+' 条）':'已挂接 '+created.length+' 个构件')}
 function openGeneric(r){if(r.type==='briefing'){if(hasBriefMedia(r)){openBriefingPreview(r)}else{detailId=r.id;renderDetailPage()}return}if(r.type==='plan'){detailId=r.id;renderDetailPage();return}if(r.type==='measure'){openMeasurementTable(r.componentId);return}let body='<div class="page-kv"><label>关联部位：</label><span>'+esc(briefLocation(r))+'</span></div><div class="page-kv"><label>状态：</label><span>'+esc(r.status)+'</span></div><div class="page-kv"><label>时间：</label><span>'+esc(r.checkTime)+'</span></div><p>'+esc(r.description)+'</p>';showModal(r.title,body,()=>{closeModal();return true})}
 function kv(label,value){return '<div class="page-kv"><label>'+label+'：</label><span>'+esc(value||'--')+'</span></div>'}
 function planDetailHtml(r){const name=r.fileName||r.title||'未命名文件';return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(name)+'</strong><span class="page-state">'+esc(r.category||'方案')+'</span></div><section class="page-section"><h2>文件信息</h2><div class="page-grid">'+kv('文件名称',name)+kv('方案类型',r.category)+kv('上传人',r.uploader)+kv('上传时间',r.uploadTime)+'</div></section><section class="page-section"><h2>文件预览</h2><iframe class="file-preview" src="文件预览_嵌入页.html?name='+encodeURIComponent(name)+'&cat='+encodeURIComponent(r.category||'')+'&by='+encodeURIComponent(r.uploader||'')+'&time='+encodeURIComponent(r.uploadTime||'')+'" title="文件预览"></iframe></section></main>'}
 function briefViewerHtml(r){const isModel=r.subtype==='三维交底';return isModel?'<div class="brief-viewer"><div class="model-demo"><span></span><span></span><span></span></div><div class="brief-caption"><span>三维模型预览（原型）</span><span>旋转 · 缩放 · 剖切</span></div></div>':'<div class="brief-viewer"><div class="video-demo"><div class="play">▶</div><div class="timeline"></div></div><div class="brief-caption"><span>施工工艺动画预览（原型）</span><span>00:00 / 03:26</span></div></div>'}
 function briefingDetailHtml(r){return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(r.subtype||'交底')+'记录</strong><span class="page-state">'+esc(r.status||'已交底')+'</span></div>'+(hasBriefMedia(r)?'<section class="page-section"><h2>交底预览</h2>'+briefViewerHtml(r)+'</section>':'')+'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('工程名称',r.project||'雄安科创园项目部')+kv('交底编号',r.code)+kv('地块',r.plot)+kv('交底部位',r.part||briefLocation(r))+kv('交底日期',r.checkTime)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>交底内容</h2><div class="brief-content">'+esc(r.content||r.description||'--').replace(/\n/g,'<br>')+'</div></section><hr class="page-divider"><section class="page-section"><h2>签字栏</h2><div class="page-grid">'+kv('专业技术负责人',r.checker)+kv('交底人',r.checker)+kv('接交人',r.receiver)+'</div></section></main>'}
-function annotationOverdueDays(r){const s=annotationDisplayStatus(r);if(s==='无需整改'||!r.deadline)return 0;const end=s==='待整改'||s==='继续整改'?today():(r.rectifiedAt||r.reviewAt||'').slice(0,10);if(!end)return 0;const days=Math.round((Date.parse(end)-Date.parse(r.deadline.slice(0,10)))/86400000);return Number.isFinite(days)?Math.max(0,days):0}
+function annotationOverdueDays(r){return XABimStore.overdueDays(r)}
 function annotationHistoryOf(r){if(Array.isArray(r.workflowHistory)&&r.workflowHistory.length)return r.workflowHistory; if(!r.rectifiedAt&&!r.reviewAt)return [];const round=r.baseStatus==='继续整改'?Math.max(1,(r.round||2)-1):(r.round||1);return[{round,rectifiedAt:r.rectifiedAt,rectifyDescription:r.rectifyDescription,rectifyImages:r.rectifyImages||[],reviewAt:r.reviewAt,reviewResult:r.reviewResult,reviewDescription:r.reviewDescription,reviewImages:r.reviewImages||[]}]}
 function annotationImages(images){return Array.isArray(images)&&images.length?'<div class="anno-images">'+images.map(src=>'<img src="'+esc(src)+'" alt="整改复查附件">').join('')+'</div>':'<span class="page-muted">--</span>'}
 function annotationHistoryHtml(r){const history=annotationHistoryOf(r);if(!history.length)return '<p class="page-muted">尚未提交整改记录</p>';return history.map(x=>'<div class="anno-round"><div class="anno-round-head">第 '+esc(x.round||1)+' 轮整改与复查</div><div class="anno-round-body"><div class="page-grid">'+kv('实际整改日期',x.rectifiedAt)+kv('整改说明',x.rectifyDescription)+kv('复查结果',x.reviewResult||'待复查')+kv('复查说明',x.reviewDescription)+kv('复查时间',x.reviewAt)+'</div><p class="small-copy">整改照片</p>'+annotationImages(x.rectifyImages)+'<p class="small-copy">复查照片</p>'+annotationImages(x.reviewImages)+'</div></div>').join('')}
@@ -769,10 +1599,10 @@ function annotationFlowHtml(r){const s=annotationDisplayStatus(r),od=annotationO
 function annotationDetailHtml(r){const s=annotationDisplayStatus(r),od=annotationOverdueDays(r),issued=r.issueRequired!==false;let h='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>批注详情</strong><span class="page-state">'+esc(s)+(od?' · 超 '+od+' 天':'')+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题描述',r.description||r.title)+kv('关联构件',r.compName||briefLocation(r))+kv('批注人',r.checker)+kv('批注时间',r.checkTime)+kv('来源',r.source)+kv('是否需整改',issued?'是':'否')+'</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2><div class="page-grid">'+kv('整改状态',s)+(issued?kv('整改人',(r.assignee||'--')+(r.unit?'（'+r.unit+'）':''))+kv('整改期限',r.deadline)+kv('复查人',r.reviewer):kv('说明','未下发整改单，无需整改。'))+'</div>'+(issued?annotationHistoryHtml(r):'')+'</section><hr class="page-divider"><section class="page-section"><h2>流转记录</h2>'+annotationFlowHtml(r)+'</section></main>';return h}
 function renderDetailPage(){const mount=q('#pageMount'),r=records.find(x=>x.id===detailId);if(!r){mount.innerHTML='';return}if(r.type==='report'){renderReportPage();return}if(!isIssue(r)&&r.type!=='briefing'&&r.type!=='plan'){mount.innerHTML='';return}if(r.type==='annotation'){mount.innerHTML=annotationDetailHtml(r);return}if(r.type==='briefing'){mount.innerHTML=briefingDetailHtml(r);return}if(r.type==='plan'){mount.innerHTML=planDetailHtml(r);return}mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+typeName(r.type)+'检查/整改 · 问题详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题编号',(r.type==='quality'?'Q-':'S-')+String(r.id).padStart(4,'0'))+kv('检查类型',r.checkType)+kv('检查人',r.checker)+kv('检查时间',r.checkTime)+kv('检查内容',r.checkContent||r.checkType)+kv('区域',r.area)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr>'+(r.type==='annotation'?'':'<th>问题分类</th>')+'<th>问题描述</th>'+(r.type==='annotation'?'':'<th>问题级别</th>')+'<th>整改要求</th><th>整改期限</th></tr></thead><tbody><tr>'+(r.type==='annotation'?'':'<td>'+esc(r.category)+'</td>')+'<td>'+esc(r.description)+'</td>'+(r.type==='annotation'?'':'<td>'+esc(r.level)+'</td>')+'<td>'+esc(r.requirement)+'</td><td>'+esc(r.deadline)+'</td></tr></tbody></table><div class="page-grid" style="margin-top:16px">'+kv('检查结果',r.result)+kv('整改责任单位',r.unit)+kv('整改责任人',r.assignee)+'</div><p class="small-copy">现场附件</p><div class="attachment">现场照片（示意）</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2>'+(r.rectifiedAt?'<div class="page-grid">'+kv('实际整改时间',r.rectifiedAt)+kv('整改人',r.rectifier)+kv('整改描述',r.rectifyDescription)+'</div><p class="small-copy">整改附件</p><div class="attachment">整改照片（示意）</div>':'<p class="page-muted">待整改，暂无整改记录</p>')+'</section><hr class="page-divider"><section class="page-section"><h2>复查信息</h2>'+(r.reviewAt?'<div class="page-grid">'+kv('复查意见',r.reviewResult)+kv('复查时间',r.reviewAt)+kv('复查人',r.reviewer)+kv('复查描述',r.reviewDescription)+'</div><p class="small-copy">复查附件</p><div class="attachment">复查照片（示意）</div>':'<p class="page-muted">待复查，暂无复查记录</p>')+'</section></main>'}
 q('#tabs').addEventListener('click',e=>{boardFilter=null;const b=e.target.closest('[data-tab]');if(!b)return;const t=b.dataset.tab,removing=active.has(t);listQuery='';if(removing){active.delete(t);const work=pendingWork();if(work&&t===work.type){clearPending();placing=null}}else{active.add(t);listType=t}selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;if(active.size){currentListType();listOpen=true;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus()}else{listType=null;listOpen=false;resetFocus();boardLeftOpen=true;boardRightOpen=true}render()});
-q('#listMount').addEventListener('click',e=>{const rd=e.target.closest('[data-report-cat]');if(rd){const cat=rd.dataset.reportCat;if(reportCatOpen.has(cat))reportCatOpen.delete(cat);else reportCatOpen.add(cat);renderReportList();return}const ri=e.target.closest('[data-report-item]');if(ri){e.stopPropagation();openReportTable(ri.dataset.reportItem);return}if(e.target.closest('[data-reset-board]')){boardFilter=null;renderList();return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='collapse'){listOpen=false;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='expand'){listOpen=true;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='clear-list-search'){listQuery='';renderList();q('#listSearch')?.focus();return}if(action==='filter'){filterOpen=!filterOpen;renderList();return}const tab=e.target.closest('[data-list-tab]')?.dataset.listTab;if(tab){boardFilter=null;listType=tab;listQuery='';selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus();renderList();renderTable();return}const date=e.target.closest('[data-date]')?.dataset.date;if(date){if(collapsedDates.has(date))collapsedDates.delete(date);else collapsedDates.add(date);renderList();return}const id=Number(e.target.closest('[data-item]')?.dataset.item),r=records.find(v=>v.id===id);if(r){if(r.type==='briefing'&&hasBriefMedia(r)){listType='briefing';selectedId=r.id;listOpen=true;focusOn(r.componentId,markerVariantOf(r));renderList();q('#tableMount').innerHTML='';openBriefingPreview(r)}else if(r.type==='measure'){listType='measure';selectedId=r.id;listOpen=true;focusOn(r.componentId,markerVariantOf(r));renderList();q('#tableMount').innerHTML='';openMeasurementTable(r.componentId)}else choose(r)}});
-q('#listMount').addEventListener('change',e=>{if(e.target.id==='statusFilter'){statusFilter=e.target.value;selectedId=null;renderList()}});
-q('#listMount').addEventListener('input',e=>{if(e.target.id!=='listSearch')return;listQuery=e.target.value;renderList();const input=q('#listSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
-q('#markers').addEventListener('click',e=>{boardFilter=null;const marker=e.target.closest('[data-marker]');if(!marker)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;listType=type;listQuery='';statusFilter='all';filterOpen=false;const rows=records.filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;listOpen=true;focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;listOpen=true;focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
+q('#listMount').addEventListener('click',e=>{const rd=e.target.closest('[data-report-cat]');if(rd){const cat=rd.dataset.reportCat;if(reportCatOpen.has(cat))reportCatOpen.delete(cat);else reportCatOpen.add(cat);renderReportList();return}const ri=e.target.closest('[data-report-item]');if(ri){e.stopPropagation();openReportTable(ri.dataset.reportItem);return}if(e.target.closest('[data-reset-board]')){boardFilter=null;refreshFilteredView();return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='collapse'){listOpen=false;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='expand'){listOpen=true;renderList();renderTable();if(focusComponent)focusOn(focusComponent);return}if(action==='clear-list-search'){listQuery='';refreshFilteredView();q('#listSearch')?.focus();return}if(action==='filter'){filterOpen=!filterOpen;renderList();return}const tab=e.target.closest('[data-list-tab]')?.dataset.listTab;if(tab){if(boardFilter?.mode!=='component')boardFilter=null;listType=tab;listQuery='';selectedId=null;statusFilter='all';filterOpen=false;tablePage=1;const first=visible()[0]?.checkTime.slice(0,10);collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].filter(d=>d!==first));resetFocus();renderMarkers();renderList();renderTable();return}const date=e.target.closest('[data-date]')?.dataset.date;if(date){if(collapsedDates.has(date))collapsedDates.delete(date);else collapsedDates.add(date);renderList();return}const id=Number(e.target.closest('[data-item]')?.dataset.item),r=records.find(v=>v.id===id);if(r){if(r.type==='briefing'&&hasBriefMedia(r)){listType='briefing';selectedId=r.id;listOpen=true;focusOn(r.componentId,markerVariantOf(r));renderList();q('#tableMount').innerHTML='';openBriefingPreview(r)}else if(r.type==='measure'){listType='measure';selectedId=r.id;listOpen=true;focusOn(r.componentId,markerVariantOf(r));renderList();q('#tableMount').innerHTML='';openMeasurementTable(r.componentId)}else choose(r)}});
+q('#listMount').addEventListener('change',e=>{if(e.target.id==='statusFilter'){statusFilter=e.target.value;selectedId=null;refreshFilteredView()}});
+q('#listMount').addEventListener('input',e=>{if(e.target.id!=='listSearch')return;listQuery=e.target.value;refreshFilteredView();const input=q('#listSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
+q('#markers').addEventListener('click',e=>{if(boardFilter?.mode!=='component')boardFilter=null;const marker=e.target.closest('[data-marker]');if(!marker)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;listType=type;filterOpen=false;const rows=filtered().filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;listOpen=true;focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;listOpen=true;focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
 q('#stage').addEventListener('click',e=>{const work=pendingWork();if(!(work&&placing===work.type&&selectedModel))return;const rect=q('#stage').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100;toggleBindingComponent(nearestComponent(Math.max(4,Math.min(96,x)),Math.max(8,Math.min(90,y))))});
 q('#tableMount').addEventListener('click',e=>{const rp=e.target.closest('[data-report-page]');if(rp){detailId=+rp.dataset.reportPage;q('#tableMount').innerHTML='';renderReportPage();return}const a=e.target.closest('[data-action]')?.dataset.action;if(a==='close-table'){selectedId=null;expandedMeasureRows.clear();resetFocus();renderTable();renderList();return}const measureId=Number(e.target.closest('[data-measure-expand]')?.dataset.measureExpand);if(measureId){if(expandedMeasureRows.has(measureId))expandedMeasureRows.delete(measureId);else expandedMeasureRows.add(measureId);renderTable();return}const id=Number(e.target.closest('[data-detail]')?.dataset.detail);if(id){const r=records.find(x=>x.id===id);if(!r)return;selectedId=id;if(isIssue(r)){detailId=id;renderDetailPage()}else openGeneric(r);return}const page=e.target.closest('[data-page]')?.dataset.page;if(page){const max=Math.ceil(tableRows().length/5);tablePage=Math.max(1,Math.min(max,tablePage+(page==='next'?1:-1)));renderTable()}});
 q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-component]')?.dataset.removeComponent;if(remove){selectedComponents.delete(remove);renderPlacement();return}const locate=e.target.closest('[data-locate-component]')?.dataset.locateComponent;if(locate){locateBindingComponent(locate);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='clear-component-search'){componentQuery='';renderPlacement();q('#componentSearch')?.focus();return}if(action==='choose-model'){showModelSelection();return}if(action==='confirm-binding'){saveBusinessBinding();return}if(action==='cancel-place'){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render();toast('已取消本次挂接')}});
@@ -831,29 +1661,22 @@ syncPanoramaRecords();
 if(parent!==window){parent.postMessage({channel:'xa-panorama',action:'ready'},'*');setTimeout(bootPanorama,800)}else bootPanorama();
 
 /* 检测报告挂接示例数据（演示用，与 WEB 检测报告台账同源） */
-(function seedReportBindings(){
-  const rows=[
-    {sendCode:'SJ-20260730-0005',reportCategory:'螺纹钢',materialName:'螺纹钢',materialCode:'WL-LWG',spec:'HRB400E 20mm',heatNo:'--',qty:'--',part:'--',sendDate:'2026-07-06',sender:'王克远',inspector:'张恒毓',tester:'朱贺敏',org:'河北雄安唐银检验认证有限公司',sendType:'第三方检验',project:'雄安科创园项目部',requirement:'符合规范要求',planDate:'2026-07-30',status:'合格',defect:'--',advice:'--',creator:'陈书峡',createTime:'2026-07-30',reportFile:'Document_260730_105126_7.pdf',cs:['1号楼 · 14层 · 柱 KZ-01','1号楼 · 14层 · 柱 KZ-02']},
-    {sendCode:'SJ-20260730-0009',reportCategory:'螺纹钢',materialName:'螺纹钢',materialCode:'WL-LWG',spec:'HRB500E 22mm',heatNo:'A2509-22',qty:'60',part:'主体结构',sendDate:'2026-07-06',sender:'王克远',inspector:'张恒毓',tester:'朱贺敏',org:'河北雄安唐银检验认证有限公司',sendType:'第三方检验',project:'雄安科创园项目部',requirement:'符合规范要求',planDate:'2026-07-30',status:'合格',defect:'--',advice:'--',creator:'陈书峡',createTime:'2026-07-30',reportFile:'Document_260730_105233_2.pdf',cs:['1号楼 · 14层 · 梁 KL-05','1号楼 · 13层 · 梁 KL-03']},
-    {sendCode:'SJ-20260730-0013',reportCategory:'盘螺',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB500E 8mm',heatNo:'B2511-08',qty:'40',part:'主体结构',sendDate:'2026-07-06',sender:'王克远',inspector:'张恒毓',tester:'朱贺敏',org:'河北雄安唐银检验认证有限公司',sendType:'第三方检验',project:'雄安科创园项目部',requirement:'符合规范要求',planDate:'2026-07-30',status:'合格',defect:'--',advice:'--',creator:'陈书峡',createTime:'2026-07-30',reportFile:'Document_260730_105318_4.pdf',cs:['1号楼 · 14层 · 楼板 B-01']},
-    {sendCode:'SJ-20260730-0016',reportCategory:'碎石',materialName:'碎石',materialCode:'WL-GRAVEL',spec:'5-25mm',heatNo:'--',qty:'120',part:'基础',sendDate:'2026-07-14',sender:'王克远',inspector:'王会彬',tester:'朱贺敏',org:'河北雄安唐银检验认证有限公司',sendType:'第三方检验',project:'雄安科创园项目部',requirement:'符合规范要求',planDate:'2026-08-07',status:'合格',defect:'--',advice:'--',creator:'陈书峡',createTime:'2026-08-07',reportFile:'Document_260807_091422_1.pdf',cs:['2号楼 · 12层 · 外墙 W-18','2号楼 · 12层 · 外墙 W-19']},
-    {sendCode:'SJ-20260730-0019',reportCategory:'盘螺',materialName:'盘螺',materialCode:'WL-PL',spec:'HRB400E 10mm',heatNo:'B2518-10',qty:'38',part:'主体结构',sendDate:'2026-07-18',sender:'王克远',inspector:'王会彬',tester:'朱贺敏',org:'河北雄安唐银检验认证有限公司',sendType:'第三方检验',project:'雄安科创园项目部',requirement:'符合规范要求',planDate:'2026-08-11',status:'不合格',defect:'屈服强度低于 HRB400E 标准值',advice:'退场处理并重新取样复检',creator:'陈书峡',createTime:'2026-08-11',reportFile:'Document_260811_153007_9.pdf',cs:['1号楼 · 14层 · 柱 KZ-03','2号楼 · 13层 · 梁 L-12']}
-  ];
-  rows.forEach(s=>{
-    (s.cs||[]).forEach(name=>{
-      const comp=(typeof componentOptions!=='undefined'?componentOptions:[]).find(o=>o[1]===name);
-      if(!comp) return;
-      const sourceId='report:'+s.sendCode;
-      if(records.some(r=>r.type==='report'&&r.sourceId===sourceId&&r.componentId===comp[0])) return;
-      records.push(Object.assign({},s,{id:nextId++,type:'report',title:s.sendCode+' · '+s.materialName,sourceId:sourceId,
-        bimModel:'XA000_ZMXA_A_建筑单体主文件-01地块-地上.rvt',
-        description:'送检单号 '+s.sendCode+' · 物资 '+s.materialName,
-        componentId:comp[0],x:comp[2],y:comp[3],checkTime:s.sendDate,owner:'系统管理员'}));
-    });
-  });
-})();
+applyBusinessState(XABimStore.baseline());
+if(parent===window){try{applyBusinessState(XABimStore.load())}catch(error){businessReady=false;toast('挂接数据读取失败，请检查浏览器存储后重试')}}
 if(pendingWork()){const type=pendingWork().type;active=new Set([type]);listType=type;listOpen=true}
-collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].slice(1));render();if(pendingWork())showModelSelection();
+collapsedDates=new Set([...new Set(visible().map(r=>r.checkTime.slice(0,10)))].slice(1));render();
+if(pendingWork()&&businessReady)showModelSelection();
+window.addEventListener('message',e=>{
+ const d=e.data;if(e.source!==parent||d?.channel!=='xa-bim-data')return;
+ if(d.requestId&&bindingRequests.has(d.requestId)){
+  const request=bindingRequests.get(d.requestId);clearTimeout(request.timer);bindingRequests.delete(d.requestId);
+  if(d.error)request.reject(Error(d.error));else request.resolve(d.data);return;
+ }
+ if(d.action==='init'&&d.data){const first=!businessReady;businessReady=true;applyBusinessState(d.data);render();if(first&&pendingWork())showModelSelection()}
+ else if(d.error)toast(d.error);
+});
+if(parent!==window)parent.postMessage({channel:'xa-bim-data',action:'ready'},'*');
+else window.addEventListener('storage',e=>{if(e.key===XABimStore.key){try{applyBusinessState(XABimStore.load());render()}catch{toast('挂接数据读取失败')}}});
 
 /* ===== 左看板：进度计划与全景批注状态 ===== */
 var progressPlanRows=[
@@ -865,7 +1688,6 @@ var progressPlanRows=[
 function planBoardHtml(){const rows=progressPlanRows||[],total=rows.length,inProgress=rows.filter(r=>r.state==='进行中').length,done=rows.filter(r=>r.state==='已完成').length,dev=rows.filter(planHasVariance).length;return '<section class="dash-module dash-plan"><div class="dash-plan-head"><h3>进度计划</h3><button data-plan-open>查看计划</button></div><div class="dash-plan-summary"><strong>'+total+'</strong><span>计划任务</span></div><div class="dash-plan-kpis"><button type="button" data-plan-kpi="inProgress"><b>'+inProgress+'</b>进行中</button><button type="button" data-plan-kpi="done"><b>'+done+'</b>已完成</button><button type="button" data-plan-kpi="variance"><b>'+dev+'</b>偏差</button></div></section>'}
 function annotationStatusBoardHtml(){const rows=records.filter(r=>r.type==='annotation'),states=['无需整改','待整改','待复查','继续整改','已复查'],labels=states.map(s=>boardAction('annotation',s,s,rows.filter(r=>(r.status||'待整改')===s).length)).join('');return '<section class="dash-module dash-annotation"><h3>全景批注问题状态 <small>'+rows.length+'条</small></h3><button class="dash-main" data-dash-type="annotation" data-dash-filter="all"><strong>'+rows.length+'</strong><span>全景批注问题 ›</span></button><div class="dash-status-grid">'+labels+'</div></section>'}
 function boardStatsHtml(){return planBoardHtml()+issueBoard('quality')+issueBoard('safety')+annotationStatusBoardHtml()}
-function matchesBoardFilter(r){if(!boardFilter||r.type!==boardFilter.type||boardFilter.mode==='all')return true;const m=boardFilter.mode;if(r.type==='annotation')return(r.status||'待整改')===m;if(r.type==='briefing')return briefingKind(r)===m;if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');if(m==='open')return boardOpen(r);if(m==='todo')return boardOpen(r)&&r.status!=='待复查';if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true}
 const progressPlanHeads=['节点号','工序名称','工序级别','责任人','责任岗位','计划开始日期','计划完成日期','计划工期','实际开始日期','实际结束日期','实际工期','偏差天数','执行状态','完成率(%)'],progressPlanKeys=['node','name','level','owner','role','planStart','planEnd','planDays','actualStart','actualEnd','actualDays','variance','state','completion'];
 let progressPlanQuery='';
 function planVarianceDays(r){const v=String(r&&r.variance!=null?r.variance:'').trim();if(!v||v==='--')return null;const n=Number(v);return Number.isFinite(n)?n:null}

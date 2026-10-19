@@ -82,6 +82,798 @@
   <div id="formBody"></div>
 </main>
 
+<script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
+/* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
+(()=>{'use strict';
+const KEY='xa-bim-business-v2',LEGACY='xa_report_bim_bindings_v1';
+const components=[
+ ['C-A1','1号楼 · 14层 · 柱 KZ-01',33,39],['C-A3','1号楼 · 14层 · 柱 KZ-02',36,43],
+ ['C-A4','1号楼 · 14层 · 柱 KZ-03',39,47],['C-A2','1号楼 · 14层 · 楼板 B-01',42,53],
+ ['C-A5','1号楼 · 14层 · 梁 KL-05',46,48],['C-A6','1号楼 · 13层 · 梁 KL-03',49,44],
+ ['C-B1','2号楼 · 13层 · 梁 L-12',59,46],['C-B3','2号楼 · 13层 · 柱 KZ-08',62,43],
+ ['C-B2','2号楼 · 12层 · 外墙 W-18',66,58],['C-B4','2号楼 · 12层 · 外墙 W-19',69,55],
+ ['C-B5','2号楼 · 12层 · 楼板 B-08',63,61],['C-T1','塔吊 TC-02',72,39],
+ ['C-M1','1号楼 · 14层 · 剪力墙 Q-14',52,49],['C-M2','1号楼 · 14层 · 梁 KL-08',63,42],
+ ['C-M3','1号楼 · 14层 · 梁 KL-09',67,46],['C-M4','1号楼 · 14层 · 楼板 B-14',58,58],
+ ['C-M5','1号楼 · 14层 · 外墙 W-03',73,53]
+];
+const seedBindings={
+ 'SJ-20260730-0005':[components[0][1],components[1][1]],
+ 'SJ-20260730-0009':[components[4][1],components[5][1]],
+ 'SJ-20260730-0013':[components[3][1]],
+ 'SJ-20260730-0016':[components[8][1],components[9][1]],
+ 'SJ-20260730-0019':[components[2][1],components[6][1]]
+};
+/* REPORT_CATALOG */
+const catalog=[
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0005",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0009",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0007",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 25mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0006",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 16mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0013",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0008",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0004",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0014",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0015",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0016",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-14",
+  "planDate": "2026-08-07",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0017",
+  "materialName": "防水卷材",
+  "spec": "SBS II PY PE 4mm",
+  "sendDate": "2026-07-16",
+  "planDate": "2026-08-09",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0018",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 18mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "屈服强度低于 HRB400E 标准值",
+  "advice": "退场处理并重新取样复检",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0019",
+  "materialName": "盘螺",
+  "spec": "HRB400E 10mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "不合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0020",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-20",
+  "planDate": "2026-08-13",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0021",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 28mm",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0022",
+  "materialName": "砂",
+  "spec": "粗砂",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0023",
+  "materialName": "碎石",
+  "spec": "10-30mm",
+  "sendDate": "2026-07-24",
+  "planDate": "2026-08-17",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0010",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-18",
+  "planDate": "2026-07-12",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0011",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-06-22",
+  "planDate": "2026-07-16",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0012",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-06-26",
+  "planDate": "2026-07-20",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0001",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-28",
+  "planDate": "2026-07-22",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0002",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-06-30",
+  "planDate": "2026-07-24",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0003",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-02",
+  "planDate": "2026-07-26",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0024",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 25mm",
+  "sendDate": "2026-06-14",
+  "planDate": "2026-07-08",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0025",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-06-16",
+  "planDate": "2026-07-10",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0026",
+  "materialName": "碎石",
+  "spec": "5-16mm",
+  "sendDate": "2026-06-20",
+  "planDate": "2026-07-14",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0027",
+  "materialName": "防水卷材",
+  "spec": "SBS I PY PE 3mm",
+  "sendDate": "2026-06-24",
+  "planDate": "2026-07-18",
+  "status": "合格"
+ }
+];
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function read(key,fallback){const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}
+function normalizeBindings(raw){
+ const out={};
+ Object.entries(raw||{}).forEach(([key,values])=>{
+  const code=key.replace(/^(REPORT\||report:)/,'');
+  if(!Array.isArray(values))return;
+  out[code]=[...new Set([...(out[code]||[]),...values.filter(v=>typeof v==='string')])];
+ });
+ return out;
+}
+function sourceKey(r){return [r.type,r.type==='briefing'?r.subtype||'':'',r.type==='report'?'report:'+r.sendCode:r.sourceId||r.id].join('|')}
+function rowKey(r){return sourceKey(r)+'|'+r.componentId}
+function reportRows(bindings,rows,overrides={}){
+ const out=rows.filter(r=>r.type!=='report');
+ Object.entries(bindings).forEach(([code,names])=>{
+  const existing=rows.filter(r=>r.type==='report'&&r.sendCode===code);
+  const original=existing[0]||catalog.find(r=>r.sendCode===code);
+  if(!original)return;const data={...original,...overrides[code]};
+  names.forEach(name=>{const c=components.find(c=>c[0]===name||c[1]===name);if(!c)return;
+   const old=existing.find(r=>r.componentId===c[0]);
+   out.push({...data,...old,type:'report',sourceId:'report:'+code,componentId:c[0],compName:c[1],x:c[2],y:c[3],
+    title:code+' · '+data.materialName,checkTime:data.sendDate||'',bimModel:old?.bimModel||data.bimModel||'XA000_ZMXA_A_建筑单体主文件-01地块-地上.rvt'});
+  });
+ });
+ return out;
+}
+function baseline(){return{records:reportRows(seedBindings,[]),reportBindings:clone(seedBindings)}}
+function load(){
+ const state=read(KEY,{records:[],reportBindings:null});
+ const bindings={...clone(seedBindings),...normalizeBindings(state.reportBindings||read(LEGACY,{}))};
+ return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{}};
+}
+function save(rows,options={}){
+ const state=load(),incoming=(rows||[]).filter(r=>r&&['briefing','measure','report'].includes(r.type)&&r.sourceId&&r.componentId);
+ const replacing=new Set(options.replaceSources||[]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
+ incoming.forEach(r=>map.set(rowKey(r),clone(r)));
+ const bindings={...state.reportBindings};
+ incoming.filter(r=>r.type==='report').forEach(r=>{
+  if(!bindings[r.sendCode])bindings[r.sendCode]=[];
+  const c=components.find(c=>c[0]===r.componentId);
+  if(c&&!bindings[r.sendCode].includes(c[1]))bindings[r.sendCode].push(c[1]);
+ });
+ Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
+ const overrides={...state.reportOverrides,...options.reportOverrides};
+ const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides};
+ localStorage.setItem(KEY,JSON.stringify(next));
+ // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
+ try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
+ return next;
+}
+function status(r){return r.issueRequired===false?'无需整改':String(r.baseStatus||r.status||r.state||'待整改').replace('逾期','')}
+function overdueDays(r){
+ const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
+ const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
+ if(!end)return 0;const days=(Date.parse(end+'T00:00:00Z')-Date.parse(r.deadline+'T00:00:00Z'))/86400000;
+ return Number.isFinite(days)?Math.max(0,Math.round(days)):0;
+}
+function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
+function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
+function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,overdueDays,pointSummary};
+})();
+
+/* END BIM SHARED */</script>
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
@@ -118,10 +910,15 @@ function loadAnnos(){
   }catch(e){}
   return SEED.slice();
 }
-function saveAnnos(list){
-  try{ localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length})) }catch(e){}
-  try{ const ch=new BroadcastChannel('xa-annotation-sync'); ch.postMessage({type:'changed'}); ch.close(); }catch(e){}
-  if(window.parent!==window) window.parent.postMessage({channel:'xa-annotation',action:'update',data:list},'*');
+async function saveAnnos(list){
+  if(window.parent!==window){
+    await new Promise((resolve,reject)=>{
+      const requestId='annotation-'+Date.now()+'-'+Math.random().toString(36).slice(2),timer=setTimeout(()=>{window.removeEventListener('message',receive);reject(Error('保存未得到确认，请重试'))},6000);
+      function receive(e){const d=e.data;if(e.source!==parent||d?.channel!=='xa-annotation'||d.action!=='saved'||d.requestId!==requestId)return;clearTimeout(timer);window.removeEventListener('message',receive);if(d.error)reject(Error(d.error));else resolve()}
+      window.addEventListener('message',receive);parent.postMessage({channel:'xa-annotation',action:'update',requestId,data:list},'*');
+    });
+  }else localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length}));
+  try{const ch=new BroadcastChannel('xa-annotation-sync');ch.postMessage({type:'changed'});ch.close()}catch{}
 }
 let DATA=loadAnnos().map(r=>({...r}));
 
@@ -156,7 +953,7 @@ function historyHtml(r){
     +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(x.reviewAt||'--')+'</span></div>'
     +'</div></div>').join('');
 }
-function flowOverdueDays(r){const status=r.issueRequired===false?'无需整改':(r.baseStatus||r.status||'待整改').replace('逾期','');if(status==='无需整改'||!r.deadline)return 0;const end=status==='待整改'||status==='继续整改'?today():(r.rectifiedAt||r.reviewAt||'').slice(0,10);if(!end)return 0;const days=Math.round((Date.parse(end)-Date.parse(r.deadline.slice(0,10)))/86400000);return Number.isFinite(days)?Math.max(0,days):0}
+function flowOverdueDays(r){return XABimStore.overdueDays(r)}
 function flowHtml(r){const status=r.issueRequired===false?'无需整改':(r.baseStatus||r.status||'待整改').replace('逾期',''),od=flowOverdueDays(r),steps=[{title:'批注发起',meta:(r.checker||'--')+' · '+(r.checkTime||'--')+' · 来源：'+(r.source||'—'),on:true}];if(r.issueRequired===false)steps.push({title:'无需整改',meta:'仅记录问题，未指派整改人与期限',on:true});else{steps.push({title:'下发整改单',meta:'整改人：'+(r.assignee||'--')+' · 期限：'+(r.deadline||'--')+' · 复查人：'+(r.reviewer||'--'),on:true});historyOf(r).forEach(x=>{if(x.rectifiedAt)steps.push({title:'第 '+(x.round||1)+' 轮整改已提交',meta:(r.assignee||'--')+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});if(x.reviewAt)steps.push({title:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),meta:(r.reviewer||'--')+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'})});if(status==='待整改')steps.push({title:'等待整改',meta:(r.assignee||'--')+' 尚未提交第 '+(r.round||1)+' 轮整改结果'});if(status==='继续整改')steps.push({title:'等待重新整改',meta:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交'});if(status==='待复查')steps.push({title:'待复查',meta:'等待 '+(r.reviewer||'--')+' 提交复查结果'});if(status==='已复查')steps.push({title:'问题闭环',meta:'最终复查通过',on:true});if(od>0)steps.push({title:'已超期 '+od+' 天',meta:'超过整改期限 '+r.deadline+'，需督办',over:true})}return '<div class="sec-title">流转记录</div><div class="flow-steps">'+steps.map(x=>'<div class="flow-step '+(x.over?'over':x.on?'on':'')+'"><b>'+esc(x.title)+'</b><small>'+esc(x.meta)+'</small></div>').join('')+'</div>'}
 
 /* ===== 待办 / 已办 / 发起 ===== */
@@ -288,7 +1085,7 @@ function openForm(id,mode){
         +'<label><input type="radio" name="fResult" value="通过">通过</label>'
         +'<label><input type="radio" name="fResult" value="不通过">不通过</label>'
       +'</div></div>'
-      +'<div class="field"><label>复查说明</label><textarea id="fDesc" placeholder="选填，可填写复查情况或不通过原因"></textarea></div>'
+      +'<div class="field"><label>复查说明（不通过时必填）</label><textarea id="fDesc" placeholder="填写复查情况；不通过时请说明原因"></textarea></div>'
       +'<div class="err" id="fErr"></div>'
       +flowHtml(r)
       +'<div class="form-foot"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fSubmit">提交复查</button></div>';
@@ -314,35 +1111,36 @@ async function submitRectify(){
   try{
     const imgs=await readFiles($('#fImg'));
     const i=DATA.findIndex(x=>x.id===curId);
-    const old=DATA[i], round=old.round||1, history=historyOf(old), at=history.findIndex(x=>(x.round||1)===round);
+    const old=DATA[i], round=old.round||1, history=historyOf(old).map(x=>({...x})), at=history.findIndex(x=>(x.round||1)===round);
     const item={...(at>=0?history[at]:{}),round,rectifiedAt:date,rectifyDescription:desc,rectifyImages:imgs,reviewAt:'',reviewResult:'',reviewDescription:''};
     if(at>=0) history[at]=item; else history.push(item);
-    DATA[i]={...DATA[i],rectifiedAt:date,rectifyDescription:desc,rectifyImages:imgs,
+    const next=DATA.slice();next[i]={...DATA[i],rectifiedAt:date,rectifyDescription:desc,rectifyImages:imgs,
       baseStatus:'待复查',reviewAt:'',reviewResult:'',reviewDescription:'',reviewImages:[],workflowHistory:history};
-    saveAnnos(DATA);
+    await saveAnnos(next);DATA=next;
     alert('整改已提交，状态变为「待复查」');
     backToList();
-  }catch(e){ err.textContent='图片读取失败，请重试' }
+  }catch(e){ err.textContent=e.message||'保存失败，请重试' }
 }
 async function submitReview(){
   const err=$('#fErr'); err.textContent='';
   const picked=document.querySelector('input[name=fResult]:checked');
   const desc=$('#fDesc').value.trim();
   if(!picked){ err.textContent='请选择复查结果'; return }
+  if(picked.value==='不通过'&&!desc){err.textContent='请填写复查不通过的原因';$('#fDesc').focus();return}
   try{
     const i=DATA.findIndex(x=>x.id===curId);
     const pass=picked.value==='通过';
-    const old=DATA[i], round=old.round||1, history=historyOf(old), at=history.findIndex(x=>(x.round||1)===round);
+    const old=DATA[i], round=old.round||1, history=historyOf(old).map(x=>({...x})), at=history.findIndex(x=>(x.round||1)===round);
     const item={...(at>=0?history[at]:{}),round,reviewAt:nowStr(),reviewResult:picked.value,reviewDescription:desc};
     if(at>=0) history[at]=item; else history.push(item);
-    DATA[i]={...DATA[i],
+    const next=DATA.slice();next[i]={...DATA[i],
       reviewAt:item.reviewAt,reviewResult:picked.value,reviewDescription:desc,reviewImages:[],workflowHistory:history,
       baseStatus:pass?'已复查':'继续整改',
       round:pass?(DATA[i].round||1):(DATA[i].round||1)+1};
-    saveAnnos(DATA);
+    await saveAnnos(next);DATA=next;
     alert(pass?'复查通过，批注已闭环':'复查不通过，已退回继续整改');
     backToList();
-  }catch(e){ err.textContent='图片读取失败，请重试' }
+  }catch(e){ err.textContent=e.message||'保存失败，请重试' }
 }
 
 /* ===== 事件 ===== */
