@@ -1100,7 +1100,7 @@ const catalog=[
  }
 ];
 function clone(x){return JSON.parse(JSON.stringify(x))}
-function read(key,fallback){const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}
+function read(key,fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}catch(e){return clone(fallback)}}
 function normalizeBindings(raw){
  const out={};
  Object.entries(raw||{}).forEach(([key,values])=>{
@@ -1145,7 +1145,7 @@ function save(rows,options={}){
  Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
  const overrides={...state.reportOverrides,...options.reportOverrides};
  const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides};
- localStorage.setItem(KEY,JSON.stringify(next));
+ try{localStorage.setItem(KEY,JSON.stringify(next))}catch(e){}
  // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
