@@ -26,6 +26,7 @@
   .userbox{margin-left:auto;margin-right:16px;height:52px;min-width:560px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding:0 18px;box-shadow:0 2px 15px rgba(50,75,110,.04);gap:14px;color:#475568}
   .divider{width:1px;height:22px;background:#e4eaf2}
   .project-name{min-width:180px;text-align:center}
+  .project-ver{padding:1px 7px;border:1px solid #cfdcea;border-radius:3px;color:#5b7a99;font-size:12px;line-height:1.7}
   .round-user{width:29px;height:29px;border-radius:50%;background:#a9aaad;position:relative}
   .round-user:before{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#fff;left:9px;top:5px}
   .round-user:after{content:"";position:absolute;width:18px;height:9px;border-radius:12px 12px 6px 6px;background:#fff;left:5px;bottom:4px}
@@ -258,7 +259,7 @@
 </style>
 </head>
 <body>
-<div class="app" data-prd-version="2.5" data-updated="2026-10-08">
+<div class="app" data-prd-version="2.6" data-updated="2026-10-21">
   <div class="topbar">
     <div class="brand">雄安科创园智慧工地</div>
     <div class="topnav" id="topNav">
@@ -273,7 +274,7 @@
       <div class="item" data-module="bim">BIM应用</div>
     </div>
     <div class="userbox">
-      <span class="project-name">雄安科创园项目部　⌄</span>
+      <span class="project-ver" title="原型版本 v2.6">v2.6</span><span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><a class="device-ico screen-entry" id="bimScreenEntry" href="javascript:void(0)" title="进入BIM大屏" aria-label="进入BIM大屏">▱</a>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
@@ -311,7 +312,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261019-bim-corrections-1";
+const BUILD = "20261021-v2.6-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
