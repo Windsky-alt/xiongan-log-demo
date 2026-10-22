@@ -259,7 +259,7 @@
 </style>
 </head>
 <body>
-<div class="app" data-prd-version="2.7" data-updated="2026-10-22">
+<div class="app" data-prd-version="2.8" data-updated="2026-10-22">
   <div class="topbar">
     <div class="brand">雄安科创园智慧工地</div>
     <div class="topnav" id="topNav">
@@ -274,7 +274,7 @@
       <div class="item" data-module="bim">BIM应用</div>
     </div>
     <div class="userbox">
-      <span class="project-ver" title="原型版本 v2.7">v2.7</span><span class="project-name">雄安科创园项目部　⌄</span>
+      <span class="project-ver" title="原型版本 v2.8">v2.8</span><span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><a class="device-ico screen-entry" id="bimScreenEntry" href="javascript:void(0)" title="进入BIM大屏" aria-label="进入BIM大屏">▱</a>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
@@ -312,7 +312,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261022-v2.7-1";
+const BUILD = "20261022-v2.8-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4196,6 +4196,16 @@ function refreshAnnotationFrames(list){
     });
   }catch(e){}
 }
+/* 构件收藏：BIM 页在 sandbox iframe 内读不到 localStorage，收藏经父页持久化 */
+window.addEventListener('message',event=>{
+  const frame=$('#content iframe[title="BIM模型统一视图"]'),d=event.data;
+  if(!frame||event.source!==frame.contentWindow||!d||d.channel!=='xa-bim-fav')return;
+  try{
+    if(d.action==='load'){const raw=localStorage.getItem('xa-bim-favs-v1');event.source.postMessage({channel:'xa-bim-fav',action:'data',data:raw?JSON.parse(raw):[]},'*');}
+    else if(d.action==='save'){localStorage.setItem('xa-bim-favs-v1',JSON.stringify(Array.isArray(d.data)?d.data:[]));}
+  }catch(e){}
+});
+
 window.addEventListener('message',event=>{
   const frame=$('#content iframe[title="BIM模型统一视图"]'),d=event.data;
   if(!frame||event.source!==frame.contentWindow||d?.channel!=='xa-bim-data')return;
