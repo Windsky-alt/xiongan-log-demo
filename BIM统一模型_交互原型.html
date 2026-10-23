@@ -478,7 +478,7 @@
   <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="focusScrim" aria-hidden="true"></div><div id="markers"></div><div id="focus"></div><span class="toolbar-icon-mask mask-helmet" aria-hidden="true"></span><span class="toolbar-icon-mask mask-tools" aria-hidden="true"></span><span class="toolbar-icon-mask mask-cloud" aria-hidden="true"></span><button type="button" class="stage-hotspot" id="treeHotspot" title="结构 / 专业筛选" aria-label="结构 / 专业筛选"></button></div></div>
   <div class="tabs" id="tabs" role="group" aria-label="BIM业务标签"></div>
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
-  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.8</span></div>
+  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.9</span></div>
 </div>
 <script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
 /* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
@@ -1431,7 +1431,7 @@ function openReportTableByComponent(componentId){
   renderReportList();
 }
 function renderReportPage(){
-  const mount=q('#pageMount'), r=records.find(x=>x.id===detailId);
+  const mount=q('#pageMount'), r=reportDetailOverride||records.find(x=>x.id===detailId);
   if(!r||r.type!=='report'){ mount.innerHTML=''; return; }
   const bound = reportRecordsAll().filter(x=>reportKeyOf(x)===reportKeyOf(r)).map(x=>briefLocation(x));
   const name=[r.materialName,r.materialCode,r.spec].filter(Boolean).join('-');
@@ -1451,6 +1451,7 @@ function renderReportPage(){
   mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-report">← 返回检测报告</button><strong>检测报告详情</strong><span class="page-state">'+esc(r.status||'')+'</span></div>'
     +'<section class="page-section"><div class="page-grid report-grid">'+rows.map(x=>kv(x[0],x[1])).join('')+'</div></section>'
     +'<section class="page-section"><div class="report-file-row"><span class="report-file-label">送检报告</span><span class="report-file-box">▤ '+esc(r.reportFile||'--')+'</span></div></section>'
+    +'<section class="page-section"><h2>BIM 挂接</h2><div class="page-grid">'+kv('挂接构件',bound.length?bound.join('、')+'（'+bound.length+' 个）':'未挂接')+kv('归档状态',r.archived==='是'?'已归档':'未归档')+'</div>'+(!bound.length?'<div class="page-foot"><button class="primary" data-unbound-bind="'+esc(r.sendCode)+'">去挂接</button></div>':'')+'</section>'
     +'</main>';
 }
 function normalizePendingPoints(raw){let points=[];try{points=Array.isArray(raw)?raw:JSON.parse(raw||'[]')}catch(e){}return Array.isArray(points)?points.slice(0,40).map((p,i)=>({no:String(p?.no||`测点${i+1}`).slice(0,30),value:String(p?.value||'').slice(0,40),unit:String(p?.unit||'').slice(0,20),result:String(p?.result||'').slice(0,20),standard:String(p?.standard||'').slice(0,60)})):[]}
@@ -1712,7 +1713,7 @@ function matchesBoardFilter(r){
  if(m==='open')return boardOpen(r);if(m==='todo')return ['待整改','继续整改'].includes(XABimStore.status(r));
  if(m==='review')return r.status==='待复查';if(m==='late')return boardLate(r);return true;
 }
-function typeName(t){return types.find(x=>x[0]===t)?.[1]||t}function glyph(t){return types.find(x=>x[0]===t)?.[2]||'•'}function isIssue(r){return r.type==='quality'||r.type==='safety'||r.type==='annotation'}function hasBriefMedia(r){return r.subtype==='三维交底'||r.subtype==='施工工艺交底'}function briefMark(g){const v=g.variant;if(v==='三维交底')return['三维','3d'];if(v==='安全交底')return['安','safety'];if(v==='技术交底')return['技','tech'];return['工艺','craft']}function component(id){if(String(id).startsWith('PANO-')){const r=records.find(r=>r.componentId===id);if(r)return[id,r.title,r.x,r.y]}return componentOptions.find(x=>x[0]===id)||[id,id,50,50]}function briefLocation(r){return component(r.componentId)[1]}function fmtTime(s){return s?esc(s):'--'}function today(){return new Date().toLocaleDateString('sv-SE')}function toast(s){clearTimeout(toastTimer);q('#toastMount').innerHTML='<div class="toast">'+esc(s)+'</div>';toastTimer=setTimeout(()=>q('#toastMount').innerHTML='',3000)}
+function typeName(t){return types.find(x=>x[0]===t)?.[1]||t}function glyph(t){return types.find(x=>x[0]===t)?.[2]||'•'}function isIssue(r){return r.type==='quality'||r.type==='safety'||r.type==='annotation'}function hasBriefMedia(r){return r.subtype==='三维交底'||r.subtype==='施工工艺交底'}function briefMark(g){const v=g.variant;if(v==='三维交底')return['三维','3d'];if(v==='安全交底')return['安','safety'];if(v==='技术交底')return['技','tech'];return['工艺','craft']}function component(id){if(String(id).startsWith('PANO-')){const r=records.find(r=>r.componentId===id);if(r)return[id,r.title,r.x,r.y]}return componentOptions.find(x=>x[0]===id)||[id,id,50,50]}function briefLocation(r){return r&&r.componentId?component(r.componentId)[1]:'未挂接'}function fmtTime(s){return s?esc(s):'--'}function today(){return new Date().toLocaleDateString('sv-SE')}function toast(s){clearTimeout(toastTimer);q('#toastMount').innerHTML='<div class="toast">'+esc(s)+'</div>';toastTimer=setTimeout(()=>q('#toastMount').innerHTML='',3000)}
 function measurePointSummary(r,limit=3){const points=Array.isArray(r.points)?r.points:[];if(!points.length)return'暂无测点值';return points.slice(0,limit).map(p=>(p.no||'测点')+' '+p.value+(p.unit?' '+p.unit:'')).join('，')+(points.length>limit?'，+'+(points.length-limit)+'个':'')}
 function matchesCurrentFilters(r){
  if(r.type===listType)return matchesBusinessSearch(r,listType)&&matchesBoardFilter(r);
@@ -1744,7 +1745,7 @@ function captureState(){
 }
 function restoreState(){
   const st=returnState;if(!st)return;returnState=null;
-  detailId=null;q('#pageMount').innerHTML='';
+  detailId=null;reportDetailOverride=null;q('#pageMount').innerHTML='';
   listType=st.listType;listQuery=st.listQuery;statusFilter=st.statusFilter;listOpen=st.listOpen;
   if(st.searchState){Object.keys(businessSearchState).forEach(k=>delete businessSearchState[k]);Object.assign(businessSearchState,st.searchState)}
   filterOpen=!!st.filterOpen;bindView=st.bindView||'bound';reportView=st.reportView||'bound';
@@ -1773,10 +1774,10 @@ function openDetailById(id){
   if(r.type==='briefing'&&hasBriefMedia(r))q('#modalMount .modal')?.setAttribute('data-return-to-list','');
 }
 /* 业务数据条数：质量/安全=整改单数（一单多问题算 1 条）；其余=记录条数 */
-function billCountOf(rows){const bills=new Set();let loose=0;rows.forEach(r=>{const b=billOf(r);if(b)bills.add(b.code);else loose++});return bills.size+loose}
+function billCountOf(rows){const bills=new Set();let loose=0;rows.forEach(r=>{const b=billOf(r);if(b){bills.add(b.code);return}if((r.type==='quality'||r.type==='safety')&&r.code&&!r.description){bills.add(r.code);return}loose++});return bills.size+loose}
 function businessCount(type,rows){if(type==='quality'||type==='safety')return billCountOf(rows);return countRows(rows)}
 function countRows(rows){return rows.filter(r=>r.type!=='report').length+new Set(rows.filter(r=>r.type==='report').map(reportKeyOf)).size}
-function tabCount(type){return businessCount(type,records.filter(r=>r.type===type&&compPasses(r.componentId)&&matchesCurrentFilters(r)))}
+function tabCount(type){const rows=records.filter(r=>r.type===type&&compPasses(r.componentId)&&matchesCurrentFilters(r));if(type==='quality'||type==='safety')rows.push(...RECTIFY_BILLS.filter(b=>b.type===type&&b.componentId&&!billProblems(b).length&&compPasses(b.componentId)));return businessCount(type,rows)}
 function refreshFilteredView(){
  if(focusComponent&&!filtered().some(r=>r.componentId===focusComponent)){selectedId=null;resetFocus()}
   tablePage=1;renderMarkers();renderList();
@@ -1838,11 +1839,11 @@ function businessFieldValue(r,key,t=r.type){
  if(key==='archived')return r.archived==='是'?'已归档':r.archived==='否'?'未归档':'';
  return '';
 }
-function listSearchPlaceholder(t=listType){return ({quality:'搜索问题描述、分类或构件名称',safety:'搜索问题描述、分类或挂接位置',briefing:'搜索交底／模型／文件名称或构件',measure:'搜索测量项、测量部位或构件',panorama:'搜索拍摄点位、照片名称或挂接位置',annotation:'搜索问题描述或构件名称',plan:'搜索文件名称或构件名称',report:'搜索送检单号、物资、规格或构件'})[t]||'搜索记录'}
+function listSearchPlaceholder(t=listType){return ({quality:'搜索整改单编号、问题描述或分类',safety:'搜索整改单编号、问题描述或分类',briefing:'搜索交底／模型／文件名称或构件',measure:'搜索测量项、测量部位或构件',panorama:'搜索拍摄点位、照片名称或挂接位置',annotation:'搜索问题描述或构件名称',plan:'搜索文件名称或构件名称',report:'搜索送检单号、物资、规格或构件'})[t]||'搜索记录'}
 function listSearchText(r,t=r.type){
  const binding=businessBindingText(r);let parts=[];
- if(t==='quality'||t==='safety')parts=[r.description||r.desc||(!r.code?r.title:''),r.category||r.issueCategory,binding];
- else if(t==='briefing')parts=[r.title,r.modelName,r.resourceName,r.fileName,binding];
+ if(t==='quality'||t==='safety')parts=[r.rectifyCode,r.code,r.description||r.desc||(!r.code?r.title:''),r.category||r.issueCategory,binding,];
+ else if(t==='briefing')parts=[r.title,r.modelName,r.resourceName,r.fileName,r.code,binding];
  else if(t==='measure')parts=[r.measurementItem||r.title,r.measurementPosition,binding];
  else if(t==='panorama')parts=[r.pointName,r.name,r.bindingText];
  else if(t==='annotation')parts=[r.description||r.title,binding];
@@ -2063,7 +2064,8 @@ let bindView='bound';
 let pendingUnbound=null;
 function unboundItems(t){
   if(t==='panorama'){
-    return panoramaData.photos.filter(f=>!f.bound).map(f=>{const p=panoramaData.points.find(x=>x.id===f.point)||{};return{key:f.id,kind:'photo',photoId:f.id,pointId:f.point,title:f.name,rows:[['拍摄点位',p.name],['拍摄时间',String(f.time||'').replace('T',' ')],['拍摄人',f.author]]}});
+    const kw0=String(listQuery||'').trim().toLowerCase();
+    return panoramaData.photos.filter(f=>!f.bound).map(f=>{const p=panoramaData.points.find(x=>x.id===f.point)||{};return{key:f.id,kind:'photo',photoId:f.id,pointId:f.point,title:f.name,rows:[['拍摄点位',p.name],['拍摄时间',String(f.time||'').replace('T',' ')],['拍摄人',f.author]]}}).filter(it=>!kw0||((it.title||'')+' '+(it.rows||[]).map(r=>r[1]).join(' ')).toLowerCase().includes(kw0));
   }
   const list=(UNBOUND_LEDGER[t]||[]);
   const out=[];
@@ -2073,7 +2075,7 @@ function unboundItems(t){
       out.push({key:x.code,kind:'bill',src:x,title:x.code,rows:[['检查类型',x.checkType],['检查人',x.checker],['检查时间',x.checkTime],['整改人',x.assignee]]});
     }else if(t==='briefing'){
       if(x.bound||x.componentId)return;
-      out.push({key:x.code,kind:'briefing',src:x,title:x.title,rows:[['交底类型',x.subtype],['交底编号',x.code],['交底部位',x.part],['交底日期',x.checkTime]]});
+      out.push({key:x.code,kind:'briefing',src:x,title:x.title,rows:[['交底类型',x.subtype]].concat((x.subtype==='三维交底'||x.subtype==='施工工艺交底')?[]:[['交底编号',x.code]]).concat([['交底部位',x.part],['交底日期',x.checkTime]])});
     }else if(t==='plan'){
       if(x.bound||x.componentId)return;
       out.push({key:x.fileName,kind:'plan',src:x,title:x.fileName,rows:[['方案类型',x.category],['上传人',x.uploader],['上传时间',x.uploadTime]]});
@@ -2085,7 +2087,8 @@ function unboundItems(t){
       out.push({key:x.measurementTime+x.measurementItem,kind:'measure',src:x,title:x.measurementItem,rows:[['测量部位',x.measurementPosition],['测量时间',x.measurementTime],['测点数',(x.points||[]).length],['合格率',x.passRate]]});
     }
   });
-  return out;
+  const kw=String(listQuery||'').trim().toLowerCase();
+  return kw?out.filter(it=>((it.title||'')+' '+(it.rows||[]).map(r=>r[1]).join(' ')).toLowerCase().includes(kw)):out;
 }
 function unboundCount(t){return t==='report'?(XABimStore.reportCatalog().length-new Set(reportRecordsAll().map(reportKeyOf)).size):unboundItems(t).length}
 function segHtml(t){
@@ -2096,7 +2099,7 @@ function segHtml(t){
 function unboundRowHtml(it,t){
   const rows=(it.rows||[]).filter(r=>r[1]!==undefined&&r[1]!==null&&r[1]!=='').map(r=>recLine(r[0],r[1])).join('');
   return '<div class="rec-card unbound-card"><div class="rec-fields">'+recLine(t==='annotation'?'问题描述':'名称',it.title)+rows+'</div>'
-    +'<div class="rec-actions"><button type="button" data-unbound-bind-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">去挂接</button></div></div>';
+    +'<div class="rec-actions"><button type="button" data-unbound-detail-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">详情</button><button type="button" data-unbound-bind-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">去挂接</button></div></div>';
 }
 function unboundListHtml(t){
   const items=matchingUnboundItems(t);
@@ -2125,7 +2128,7 @@ function applyUnboundBind(tab,key,kind,componentId,force){
   }else if(kind==='plan'){
     const s=(UNBOUND_LEDGER.plan||[]).find(x=>x.fileName===key);if(s){s.bound=true;push({type:'plan',category:s.category,title:s.fileName,fileName:s.fileName,uploader:s.uploader,uploadTime:s.uploadTime,checkTime:s.uploadTime})}
   }else if(kind==='annotation'){
-    const s=(UNBOUND_LEDGER.annotation||[]).find(x=>x.checkTime===key);if(s){s.bound=true;push({type:'annotation',title:s.description.slice(0,20),description:s.description,checker:s.checker,level:s.level,category:'现场批注',checkType:'现场批注',status:'待整改',issueRequired:true,requirement:'按方案整改并复查',compName:c[1],position:c[1],result:'不合格',source:'BIM模型'})}
+    const s=(UNBOUND_LEDGER.annotation||[]).find(x=>x.checkTime===key);if(s){s.bound=true;push({type:'annotation',title:s.description.slice(0,20),description:s.description,checker:s.checker,level:s.level,checkTime:s.checkTime,category:'现场批注',checkType:'现场批注',issueRequired:false,compName:c[1],position:c[1],source:'BIM模型'})}
   }else if(kind==='measure'){
     const s=(UNBOUND_LEDGER.measure||[]).find(x=>x.measurementTime+x.measurementItem===key);if(s){s.bound=true;push({type:'measure',title:s.measurementItem+' · '+s.measurementPosition,measurementItem:s.measurementItem,measurementPosition:s.measurementPosition,measurementTime:s.measurementTime,points:s.points,passRate:s.passRate,description:'共'+(s.points||[]).length+'个测点',checkTime:s.measurementTime})}
   }else if(kind==='photo'){
@@ -2196,7 +2199,7 @@ function billHeadHtml(b,shown,forceOpen){
       +'</div></div>').join('');
   return '<section class="tree-node"><div class="tree-head">'
     +'<button type="button" class="tree-caret" data-group="'+esc(key)+'" aria-expanded="'+open+'" aria-label="展开/收起整改单问题">'+(open?'▾':'▸')+'</button>'
-    +'<button type="button" class="tree-title" data-locate-bill="'+esc(b.code)+'" title="定位该整改单挂接范围">'+esc((b.checkType?b.checkType+' · ':'')+(b.type==='safety'?'安全整改单':'质量整改单'))+'</button>'
+    +'<button type="button" class="tree-title" data-locate-bill="'+esc(b.code)+'" title="定位该整改单挂接范围">'+esc(b.code)+'</button>'
     +'<em>'+kids.length+' 个问题'+(od?' · 已逾期':'')+'</em></div>'
     +'<div class="tree-sub bill-fields">'
     +'<div class="rec-line"><span>整改状态</span><em class="status-chip '+statusClass(billStatus(b))+'">'+esc(billStatus(b))+'</em>'+(od?'<small class="overdue">已逾期</small>':'')+'</div>'
@@ -2228,22 +2231,71 @@ function locateBillByCode(code){
   toast('已定位整改单 '+code);
 }
 function billDetailHtml(b){
-  /* 沿用原「问题详情」页版式：基本信息 / 问题信息表 / 整改信息。
-     整改单包含多个问题时，问题信息表内一行一个问题。 */
   const ps=billProblems(b),od=billOverdue(b),tn=b.type==='safety'?'安全':'质量';
+  const pick=(k)=>{const p=ps.find(x=>x[k]!==undefined&&x[k]!==null&&x[k]!=='');return p?p[k]:''};
   const rows=ps.map(r=>'<tr><td>'+esc(listValue(r.category||r.issueCategory))+'</td><td>'+esc(r.description||r.title)+'</td><td>'+esc(listValue(r.level))+'</td><td>'+esc(listValue(r.requirement))+'</td><td>'+esc(listValue(r.deadline))+'</td></tr>').join('');
+  const result=pick('result'),area=pick('area'),pos=pick('position'),unit=pick('unit');
+  const photoCount=ps.reduce((n,r)=>n+(Number(r.sitePhotos)||0),0);
+  const rectified=pick('rectifiedAt'),rectifier=pick('rectifier'),rectifyDesc=pick('rectifyDescription');
+  const reviewAt=pick('reviewAt'),reviewResult=pick('reviewResult'),reviewDesc=pick('reviewDescription'),reviewer=pick('reviewer');
+  const flow=[];
+  if(b.checkTime)flow.push(['检查',b.checkTime,esc(b.checkType||'检查')+' · '+esc(b.checker||'--')]);
+  if(rectified)flow.push(['整改',rectified,esc(rectifier||'--')+(rectifyDesc?' · '+esc(rectifyDesc):'')]);
+  if(reviewAt)flow.push(['复查',reviewAt,esc(reviewResult||'--')+(reviewDesc?' · '+esc(reviewDesc):'')]);
   return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+tn+'检查/整改 · 整改单详情</strong><span class="page-state">'+esc(billStatus(b))+(od?' · 已逾期':'')+'</span></div>'
     +'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'
-    +kv('整改单编号',b.code)+kv('检查类型',b.checkType)+kv('检查人',b.checker)+kv('检查时间',b.checkTime)+kv('关联构件',component(b.componentId)[1])
+    +kv('整改单编号',b.code)+kv('检查类型',b.checkType)+kv('检查人',b.checker)+kv('检查时间',b.checkTime)
+    +kv('区域',area)+kv('部位',pos)+kv('检查结果',result)+kv('整改责任单位',unit)
+    +kv('关联构件',b.componentId?component(b.componentId)[1]:'未挂接')
     +'</div></section>'
     +'<section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr><th>问题分类</th><th>问题描述</th><th>问题级别</th><th>整改要求</th><th>整改期限</th></tr></thead><tbody>'+rows+'</tbody></table></section>'
+    +(photoCount?'<section class="page-section"><h2>现场附件</h2><div class="page-grid">'+kv('现场照片',photoCount+' 张')+'</div></section>':'')
     +'<hr class="page-divider">'
     +'<section class="page-section"><h2>整改信息</h2><div class="page-grid">'
-    +kv('整改状态',billStatus(b))+kv('整改责任人',b.assignee)+kv('复查人',b.reviewer)+kv('整改期限',b.deadline)
-    +'</div></section></main>';
+    +kv('整改状态',billStatus(b))+kv('整改责任人',b.assignee)+kv('复查人',b.reviewer||reviewer)+kv('整改期限',b.deadline)
+    +(rectified?kv('实际整改时间',rectified):'')+(rectifier?kv('实际整改人',rectifier):'')+(rectifyDesc?kv('整改描述',rectifyDesc):'')
+    +'</div></section>'
+    +((reviewAt||reviewResult)?'<section class="page-section"><h2>复查信息</h2><div class="page-grid">'+kv('复查时间',reviewAt)+kv('复查结果',reviewResult)+kv('复查描述',reviewDesc)+'</div></section>':'')
+    +(flow.length?'<hr class="page-divider"><section class="page-section"><h2>流转记录</h2><table class="page-problem"><thead><tr><th>环节</th><th>时间</th><th>说明</th></tr></thead><tbody>'+flow.map(f=>'<tr><td>'+f[0]+'</td><td>'+esc(f[1])+'</td><td>'+f[2]+'</td></tr>').join('')+'</tbody></table></section>':'')
+    +'</main>';
 }function openBillDetail(code){
   const b=RECTIFY_BILLS.find(x=>x.code===code);if(!b)return;
   captureState();q('#pageMount').innerHTML=billDetailHtml(b);
+}
+/* ===== 详情统一：已挂接 / 未挂接 使用同一套详情页 ===== */
+let reportDetailOverride=null;
+function openReportDetailShared(code){
+  const sc=String(code||'').replace(/^(REPORT\||report:)/,'');
+  const real=records.find(r=>r.type==='report'&&r.sendCode===sc);
+  const cat=XABimStore.reportCatalog().find(x=>x.sendCode===sc);
+  const rec=real||(cat?Object.assign({},cat,{id:null,type:'report',reportCategory:reportCategoryOf(cat)}):null);
+  if(!rec)return;
+  captureState();
+  reportDetailOverride=rec;detailId=rec.id||null;
+  renderReportPage();
+}
+function unboundLedgerItem(tab,key){
+  return (UNBOUND_LEDGER[tab]||[]).find(x=>{
+    if(tab==='quality'||tab==='safety'||tab==='briefing')return x.code===key;
+    if(tab==='plan')return x.fileName===key;
+    if(tab==='annotation')return x.checkTime===key;
+    if(tab==='measure')return (x.measurementTime+x.measurementItem)===key;
+    return false;
+  });
+}
+/* 未挂接数据也用同一详情页渲染，字段与已挂接一致，只是没有挂接构件 */
+function openUnboundDetail(tab,key){
+  if(tab==='panorama'){openPanorama('compare',key);return}
+  const it=unboundLedgerItem(tab,key);if(!it)return;
+  captureState();
+  if(tab==='quality'||tab==='safety'){
+    q('#pageMount').innerHTML=billDetailHtml(Object.assign({},it,{type:tab,problemIds:[],componentId:''}));
+    return;
+  }
+  if(tab==='briefing'){q('#pageMount').innerHTML=briefingDetailHtml(Object.assign({type:'briefing'},it,{componentId:''}));return}
+  if(tab==='plan'){q('#pageMount').innerHTML=planDetailHtml(Object.assign({type:'plan'},it,{title:it.fileName,componentId:''}));return}
+  if(tab==='annotation'){q('#pageMount').innerHTML=annotationDetailHtml(Object.assign({type:'annotation'},it,{title:it.description,issueRequired:false,componentId:''}));return}
+  if(tab==='measure'){q('#pageMount').innerHTML=measureDetailHtml(Object.assign({type:'measure'},it,{title:it.measurementItem,componentId:''}));return}
 }
 function renderList(){
   if(currentListType()==='panorama'){renderPanoramaList();return}
@@ -2345,13 +2397,12 @@ async function saveBusinessBinding(){const work=pendingWork();if(!work||!selecte
 try{const state=await saveBindingRecords(created);applyBusinessState(state)}catch(error){toast(error.message||'挂接保存失败，请重试');return}finally{bindingSaving=false;if(confirm)confirm.disabled=false}
 const type=work.type;const target=records.find(r=>XABimStore.rowKey(r)===XABimStore.rowKey(created[0]))||created[0],componentCount=new Set(created.map(row=>row.componentId)).size,measurementCount=new Set(created.map(row=>row.sourceId||row.id)).size;clearPending();placing=null;selectedComponents.clear();componentQuery='';active.add(type);listType=type;selectedId=target?.id||null;listOpen=true;render();if(target){focusOn(target.componentId);q('#tableMount').innerHTML='';if(type==='briefing'){if(hasBriefMedia(target))openBriefingPreview(target);else{detailId=target.id;renderDetailPage()}}else if(type==='report'){listType='report';renderList()}else openMeasurementTable(target.componentId)}toast(type==='measure'?'已将 '+measurementCount+' 个测量部位挂接到 '+componentCount+' 个构件（共 '+created.length+' 条）':'已挂接 '+created.length+' 个构件')}
 function openGeneric(r){
-  if(r.type==='briefing'&&hasBriefMedia(r)){openBriefingPreview(r);return}
   detailId=r.id;renderDetailPage();
 }
 function kv(label,value){return '<div class="page-kv"><label>'+label+'：</label><span>'+esc(value||'--')+'</span></div>'}
 function planDetailHtml(r){const name=r.fileName||r.title||'未命名文件';return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(name)+'</strong><span class="page-state">'+esc(r.category||'方案')+'</span></div><section class="page-section"><h2>文件信息</h2><div class="page-grid">'+kv('文件名称',name)+kv('方案类型',r.category)+kv('上传人',r.uploader)+kv('上传时间',r.uploadTime)+'</div></section><section class="page-section"><h2>文件预览</h2><iframe class="file-preview" src="文件预览_嵌入页.html?name='+encodeURIComponent(name)+'&cat='+encodeURIComponent(r.category||'')+'&by='+encodeURIComponent(r.uploader||'')+'&time='+encodeURIComponent(r.uploadTime||'')+'" title="文件预览"></iframe></section></main>'}
 function briefViewerHtml(r){const isModel=r.subtype==='三维交底';return isModel?'<div class="brief-viewer"><div class="model-demo"><span></span><span></span><span></span></div><div class="brief-caption"><span>三维模型预览（原型）</span><span>旋转 · 缩放 · 剖切</span></div></div>':'<div class="brief-viewer"><div class="video-demo"><div class="play">▶</div><div class="timeline"></div></div><div class="brief-caption"><span>施工工艺动画预览（原型）</span><span>00:00 / 03:26</span></div></div>'}
-function briefingDetailHtml(r){return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(r.subtype||'交底')+'记录</strong><span class="page-state">'+esc(r.status||'已交底')+'</span></div>'+(hasBriefMedia(r)?'<section class="page-section"><h2>交底预览</h2>'+briefViewerHtml(r)+'</section>':'')+'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('工程名称',r.project||'雄安科创园项目部')+kv('交底编号',r.code)+kv('地块',r.plot)+kv('交底部位',r.part||briefLocation(r))+kv('交底日期',r.checkTime)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>交底内容</h2><div class="brief-content">'+esc(r.content||r.description||'--').replace(/\n/g,'<br>')+'</div></section><hr class="page-divider"><section class="page-section"><h2>签字栏</h2><div class="page-grid">'+kv('专业技术负责人',r.checker)+kv('交底人',r.checker)+kv('接交人',r.receiver)+'</div></section></main>'}
+function briefingDetailHtml(r){const media=hasBriefMedia(r),isModel=r.subtype==='三维交底';const head='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+esc(r.subtype||'交底')+'记录</strong><span class="page-state">'+esc(r.status||'已交底')+'</span></div>';const preview=media?'<section class="page-section"><h2>交底预览</h2>'+briefViewerHtml(r)+'</section>':'';const basic=media?'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('交底类型',r.subtype)+kv(isModel?'模型名称':'文件名称',(isModel?(r.modelName||r.resourceName):r.fileName)||r.title)+kv('挂接构件',r.componentId?briefLocation(r):'未挂接')+'</div></section>':'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('工程名称',r.project||'雄安科创园项目部')+kv('交底编号',r.code)+kv('地块',r.plot)+kv('交底部位',r.part||briefLocation(r))+kv('交底日期',r.checkTime)+kv('关联构件',r.componentId?briefLocation(r):'未挂接')+'</div></section>';const content=media?'':'<section class="page-section"><h2>交底内容</h2><div class="brief-content">'+esc(r.content||r.description||'--').replace(/\n/g,'<br>')+'</div></section>';const sign=media?'':'<hr class="page-divider"><section class="page-section"><h2>签字栏</h2><div class="page-grid">'+kv('专业技术负责人',r.checker)+kv('交底人',r.checker)+kv('接交人',r.receiver)+'</div></section>';return head+preview+basic+content+sign+'</main>'}
 function annotationOverdueDays(r){return XABimStore.overdueDays(r)}
 function annotationHistoryOf(r){if(Array.isArray(r.workflowHistory)&&r.workflowHistory.length)return r.workflowHistory; if(!r.rectifiedAt&&!r.reviewAt)return [];const round=r.baseStatus==='继续整改'?Math.max(1,(r.round||2)-1):(r.round||1);return[{round,rectifiedAt:r.rectifiedAt,rectifyDescription:r.rectifyDescription,rectifyImages:r.rectifyImages||[],reviewAt:r.reviewAt,reviewResult:r.reviewResult,reviewDescription:r.reviewDescription,reviewImages:r.reviewImages||[]}]}
 function annotationImages(images){return Array.isArray(images)&&images.length?'<div class="anno-images">'+images.map(src=>'<img src="'+esc(src)+'" alt="整改复查附件">').join('')+'</div>':'<span class="page-muted">--</span>'}
@@ -2386,9 +2437,10 @@ q('#listMount').addEventListener('click',e=>{
   const rv=e.target.closest('[data-report-view]');if(rv){reportView=rv.dataset.reportView;businessSearchFor().view=reportView;renderReportList();return}
   const bv=e.target.closest('[data-bind-view]');if(bv){bindView=bv.dataset.bindView;businessSearchFor().view=bindView;renderList();return}
   const ta=e.target.closest('[data-list-toggle-all]');if(ta){const tt=listType,tks=listGroupKeys();if(ta.dataset.listToggleAll==='expand')tks.forEach(k=>treeCollapsed.delete(tt+'|'+k));else tks.forEach(k=>treeCollapsed.add(tt+'|'+k));renderList();return}
+  const ud2=e.target.closest('[data-unbound-detail-tab]');if(ud2){e.stopPropagation();openUnboundDetail(listType,ud2.dataset.unboundDetailTab);return}
   const ub2=e.target.closest('[data-unbound-bind-tab]');if(ub2){e.stopPropagation();startUnboundBinding(listType,ub2.dataset.unboundBindTab);return}
   const ub=e.target.closest('[data-unbound-bind]');if(ub){e.stopPropagation();startUnboundReportBinding(ub.dataset.unboundBind);return}
-  const ud=e.target.closest('[data-unbound-detail]');if(ud){e.stopPropagation();openUnboundReportDetail(ud.dataset.unboundDetail);return}
+  const ud=e.target.closest('[data-unbound-detail]');if(ud){e.stopPropagation();openReportDetailShared(ud.dataset.unboundDetail);return}
   if(e.target.closest('[data-reset-board]')){boardFilter=null;refreshFilteredView();return}
   const act=e.target.closest('[data-action]')?.dataset.action;
   if(act==='collapse'){listOpen=false;renderList();if(focusComponent)focusOn(focusComponent);return}
@@ -2415,7 +2467,7 @@ q('#listMount').addEventListener('click',e=>{
   const rp=e.target.closest('[data-report-page]');
   if(rp){e.stopPropagation();openReportPageById(Number(rp.dataset.reportPage));return}
   const ri=e.target.closest('[data-report-item]');
-  if(ri){e.stopPropagation();captureState();openReportTable(ri.dataset.reportItem);return}
+  if(ri){e.stopPropagation();openReportDetailShared(ri.dataset.reportItem);return}
   const ph=e.target.closest('[data-pano-photo]');
   if(ph){e.stopPropagation();openPanorama('compare',ph.dataset.panoPhoto);return}
   const pt=e.target.closest('[data-locate-point]');
@@ -2479,7 +2531,7 @@ q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[da
 q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
 q('#placeMount').addEventListener('input',e=>{if(e.target.id!=='componentSearch')return;componentQuery=e.target.value;renderPlacement();const input=q('#componentSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
 q('#modalMount').addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(a==='cancel-model-select'){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}else renderPlacement();return}if(a==='close-modal'||(e.target.classList.contains('shade')&&!e.target.querySelector('.model-select-modal')))closeModal();if(a==='save-modal'&&modalMode)modalMode()});
-q('#pageMount').addEventListener('click',e=>{if(e.target.closest('[data-action="back-report"]')||e.target.closest('[data-action="back-bim"]')){restoreState();return}});bindBoardEvents();bindFilterEvents();
+q('#pageMount').addEventListener('click',e=>{const ub=e.target.closest('[data-unbound-bind]');if(ub){startUnboundReportBinding(ub.dataset.unboundBind);return}if(e.target.closest('[data-action="back-report"]')||e.target.closest('[data-action="back-bim"]')){reportDetailOverride=null;restoreState();return}});bindBoardEvents();bindFilterEvents();
 window.addEventListener('resize',()=>{if(pendingWork()&&placing)renderBindingHighlights();else if(focusComponent)focusOn(focusComponent)});window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(detailId){detailId=null;renderDetailPage()}else if(q('#modalMount').querySelector('.model-select-modal')){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}}else if(q('#modalMount').innerHTML)closeModal();else if(placing){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render()}else if(focusComponent){resetFocus();if(listType&&active.has(listType))listOpen=true;renderTable();renderList()}}});
 
 let panoramaData={"regions":[{"id":"R1","name":"东侧走廊","floor":"1号楼 · 3层","axes":["A","C","1","4"],"low":8.4,"high":12.6,"rect":{"x":180,"y":155,"w":420,"h":190},"model":"1号楼_建筑结构综合模型.rvt","version":"V3"},{"id":"R2","name":"设备机房","floor":"1号楼 · 地下1层","axes":["B","D","2","5"],"low":-4.2,"high":0,"rect":{"x":240,"y":220,"w":370,"h":200},"model":"1号楼_机电综合模型.rvt","version":"V2"}],"points":[{"id":"P01","region":"R1","name":"P01 · 走廊东端","x":385,"y":255,"height":1.6,"yaw":0},{"id":"P02","region":"R1","name":"P02 · 走廊西端","x":240,"y":285,"height":1.6,"yaw":180},{"id":"P03","region":"R2","name":"P03 · 机房入口","x":400,"y":310,"height":1.6,"yaw":35}],"photos":[{"id":"F1","name":"东侧走廊吊顶施工","point":"P01","time":"2026-09-23T10:30","author":"张恒毓","bound":true,"yaw":0,"pitch":0,"fov":80,"phase":2},{"id":"F2","name":"东侧走廊管线安装","point":"P01","time":"2026-09-18T09:15","author":"张恒毓","bound":true,"yaw":0,"pitch":0,"fov":80,"phase":1},{"id":"F3","name":"西端走廊现场记录","point":"P02","time":"2026-09-23T10:45","author":"赵晓龙","bound":true,"yaw":180,"pitch":0,"fov":80,"phase":2},{"id":"F4","name":"机房设备安装","point":"P03","time":"2026-09-22T14:20","author":"系统管理员","bound":true,"yaw":35,"pitch":0,"fov":80,"phase":1},{"id":"F5","name":"东侧走廊复拍","point":"P01","time":"2026-09-23T15:00","author":"系统管理员","bound":false,"yaw":0,"pitch":0,"fov":80,"phase":2}]};

@@ -97,6 +97,13 @@
   @keyframes pop{from{transform:translateY(10px) scale(.985);opacity:.3}to{transform:none;opacity:1}}
   .modal-hd{height:58px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid #edf1f5;font-size:17px;font-weight:700}
   .modal-close{margin-left:auto;color:#8b98a8;font-size:24px;font-weight:400;cursor:pointer}
+  .archive-dir-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;margin:10px 0}
+  .archive-dir{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid #e3eaf3;border-radius:6px;cursor:pointer;font-size:13px;color:#334a63;background:#fff}
+  .archive-dir:hover{border-color:#b9d3ef}
+  .archive-dir.active{border-color:#1688f8;background:#f1f7ff;color:#0f5fb5;font-weight:600}
+  .archive-dir input{accent-color:#1688f8}
+  .archive-dir-path{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .archive-dir-tip{font-size:12px;color:#8b98a8;margin-top:6px}
   .modal-bd{padding:20px 22px;max-height:calc(82vh - 120px);overflow:auto}
   .modal-ft{height:62px;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 22px;border-top:1px solid #edf1f5;background:#fafcff}
   .person-list{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;margin-bottom:16px}
@@ -259,7 +266,7 @@
 </style>
 </head>
 <body>
-<div class="app" data-prd-version="2.8" data-updated="2026-10-22">
+<div class="app" data-prd-version="2.9" data-updated="2026-10-22">
   <div class="topbar">
     <div class="brand">雄安科创园智慧工地</div>
     <div class="topnav" id="topNav">
@@ -274,7 +281,7 @@
       <div class="item" data-module="bim">BIM应用</div>
     </div>
     <div class="userbox">
-      <span class="project-ver" title="原型版本 v2.8">v2.8</span><span class="project-name">雄安科创园项目部　⌄</span>
+      <span class="project-ver" title="原型版本 v2.8">v2.9</span><span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><a class="device-ico screen-entry" id="bimScreenEntry" href="javascript:void(0)" title="进入BIM大屏" aria-label="进入BIM大屏">▱</a>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
@@ -312,7 +319,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261022-v2.8-1";
+const BUILD = "20261023-v2.9-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4757,7 +4764,7 @@ function renderReportDetailPage(){
   const bound = reportBindings[r.sendCode] || [];
   const rows = [
     ['送检单号',r.sendCode],['物资名称',reportDetailName(r)],
-    ['报告类别',reportCategoryOf(r)],['物资编码',r.materialCode],['规格型号',r.spec],
+    ['报告类别',reportCategoryOf(r)],['归档目录',r.archiveDir],['物资编码',r.materialCode],['规格型号',r.spec],
     ['炉批号',r.heatNo],['数量',r.qty],
     ['使用部位',r.part],['送检日期',r.sendDate],
     ['送检人名称',r.sender],['质检人',r.inspector],
@@ -4801,15 +4808,45 @@ function startReportBinding(code){
   toast("请在模型中点选或搜索构件完成挂接");
 }
 /* 「归档并挂接」：先置为已归档，再直接进入 BIM 挂接流程（复用 startReportBinding，一步到位） */
+function reportArchiveDirs(){ return rptCatLeaves(); }
 function archiveAndBind(code){
   const r = reportData.find(x=>x.sendCode===code);
   if(!r) return;
   if(r.archived==='是'){ startReportBinding(code); return; }
-  try{ XABimStore.save([], {reportOverrides:{[code]:{archived:'是'}}}) }
-  catch(error){ toast('归档保存失败，请检查浏览器存储后重试'); return; }
-  r.archived='是';
-  toast('已归档并进入挂接流程');
-  startReportBinding(code);
+  openArchiveDirPicker(r);
+}
+/* 归档并挂接：先选归档目录，确认后归档并跳转 BIM 模型挂接页 */
+function openArchiveDirPicker(r){
+  const dirs = reportArchiveDirs();
+  const current = String(r.archiveDir||'').trim() || reportCategoryPath(reportCategoryOf(r)).join(' / ');
+  const body = '<div class="notice">请选择该检测报告的归档目录。确认后将写入归档目录并跳转到 BIM 模型挂接页。</div>'
+    +'<div class="archive-dir-list">'+dirs.map(d=>{
+        const p = d.path.join(' / ');
+        const on = p===current || d.leaf===r.archiveDir;
+        return '<label class="archive-dir'+(on?' active':'')+'" data-archive-dir="'+esc(p)+'"><input type="radio" name="archiveDirPick" value="'+esc(p)+'"'+(on?' checked':'')+'><span class="archive-dir-path">'+esc(p)+'</span></label>';
+      }).join('')+'</div>'
+    +'<div class="archive-dir-tip">归档目录用于「报告归档」归类展示；确定后可在详情中查看归档目录。</div>';
+  openModal('选择归档目录', body, '<button class="ghost" id="archiveDirCancel">取消</button><button class="primary" id="archiveDirOk">确认并挂接</button>');
+  document.querySelectorAll('[data-archive-dir]').forEach(el=>{
+    el.onclick = () => {
+      document.querySelectorAll('[data-archive-dir]').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      const input = el.querySelector('input'); if(input) input.checked = true;
+    };
+  });
+  const cancel = $('#archiveDirCancel'); if(cancel) cancel.onclick = () => closeModal();
+  const okBtn = $('#archiveDirOk');
+  if(okBtn) okBtn.onclick = () => {
+    const picked = document.querySelector('input[name="archiveDirPick"]:checked');
+    const dir = picked ? picked.value : '';
+    if(!dir){ toast('请选择归档目录'); return; }
+    try{ XABimStore.save([], {reportOverrides:{[r.sendCode]:{archived:'是', archiveDir:dir}}}) }
+    catch(error){ toast('归档保存失败，请检查浏览器存储后重试'); return; }
+    r.archived = '是'; r.archiveDir = dir;
+    closeModal();
+    toast('已归档到 '+dir+'，进入挂接流程');
+    startReportBinding(r.sendCode);
+  };
 }
 
 function render(){
