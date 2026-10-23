@@ -149,19 +149,6 @@
 .report-status.wait{background:#fff4e0;color:#a86f19}
 .report-file{display:flex;align-items:center;gap:7px;margin-top:9px;padding:8px 10px;border-radius:7px;background:#f2f7fd;color:#2f72bd;font-size:11px;word-break:break-all}
 .report-file i{font-style:normal;font-size:13px}
-/* ——— 安全检查整改：BIM 轴网范围挂接表单 ——— */
-.axis-form{padding:2px 0 0}
-.axis-form-head{margin:2px 0 8px;color:#1687ff;font-weight:700;font-size:12px}
-.axis-field{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #eef3f9}
-.axis-field:last-of-type{border-bottom:0}
-.axis-field label{flex:none;width:103px;color:#7b8798;font-size:12px}
-.axis-field input{flex:1;min-width:0;height:38px;padding:0 11px;border:1px solid #dfe8f2;border-radius:7px;background:#f8fbff;color:#172033;font:inherit;font-size:13px;outline:0;box-sizing:border-box}
-.axis-field input:focus{border-color:#1687ff;background:#fff}
-.axis-field input[readonly]{background:#f1f5fa;color:#5a6b80}
-.axis-unit{flex:none;color:#9aa7b7;font-size:12px}
-.axis-range-note{margin-top:11px;padding:10px 11px;border-radius:7px;background:#f2f7fd;color:#5a6b80;font-size:11px;line-height:1.75}
-.axis-range-live{margin-top:5px;color:#188562}
-.axis-pick-hint{margin:11px 2px 0;color:#7b8798;font-size:11px;line-height:1.7}
 </style>
 
 <style>
@@ -177,7 +164,7 @@
 .tile-icon.bim-tile{background:linear-gradient(145deg,#2d3b47,#172430);box-shadow:0 7px 14px #10283d38}
 .tile-icon.bim-tile svg{width:34px;height:40px;fill:initial;stroke:none}
 </style>
-</head>
+<style>.safety-location{display:block;margin:9px 0;color:#e4f0fa;font-size:13px;font-weight:600}.safety-location b{color:#ffad9d}.safety-location input{box-sizing:border-box;display:block;width:100%;min-width:0;margin-top:6px;border:1px solid #c7d6e5;border-radius:6px;padding:10px;color:#263b52;background:white;font:inherit}.safety-location-hint{margin:6px 0 10px;color:#bad4e7;font-size:12px;line-height:1.5}.inspect-card footer button:disabled{opacity:.5;cursor:not-allowed}.bim-bind-panel{max-height:60%;overflow-y:auto}.component-search-tools label[hidden]{display:none}</style></head>
 <body>
 <div class="phone" id="phone">
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -368,7 +355,12 @@ function recordFields(r,type){
  if(type==='quality'||type==='safety')return[['检查类型',escapeHtml(r.checkType||'现场检查')],['检查时间',escapeHtml(r.time)],['问题分类',escapeHtml(r.category||r.meta)],['问题级别',escapeHtml(r.level||'--')],['问题描述',escapeHtml(r.desc||r.title)],['整改责任人',escapeHtml(r.assignee||r.person)],['整改期限',escapeHtml(r.deadline||'--')],['状态',escapeHtml(r.state)]];return[['检查类型',escapeHtml(r.checkType||'现场检查')],['检查时间',escapeHtml(r.time)],['问题描述',escapeHtml(r.desc||r.title)],['整改责任人',escapeHtml(r.assignee||r.person)],['整改期限',escapeHtml(r.deadline||'--')],['状态',escapeHtml(r.state)]];
 }
 function issueStatusClass(state){return state==='已复查'||state==='无需整改'?'done':state==='待复查'?'review':''}
-function issueListCard(r,index){const state=listType==='anno'?mobileAnnoStatus(r):r.state;return'<article class="record-card" data-record="'+index+'"><div class="record-top"><b>'+escapeHtml(r.desc||r.title)+'</b><span class="issue-status '+issueStatusClass(state)+'">'+escapeHtml(state)+'</span></div><div class="issue-list-meta"><span><em>挂接构件</em><b>'+escapeHtml(r.meta||'--')+'</b></span><span><em>整改期限</em><b>'+escapeHtml(r.deadline||'--')+'</b></span></div><span class="detail">查看详情 ›</span></article>'}
+function safetyProblemLocation(r){
+ const code=r.rectifyCode||r.code||(r.issueNo?mobileBillCode('safety',r):'');
+ const saved=code?XABimStore.load().records.find(x=>x.type==='safety'&&(x.rectifyCode||x.sourceId)===code):null;
+ return saved?.problemLocation||saved?.rectifySnapshot?.problemLocation||r.problemLocation||'';
+}
+function issueListCard(r,index){const state=listType==='anno'?mobileAnnoStatus(r):r.state;return'<article class="record-card" data-record="'+index+'"><div class="record-top"><b>'+escapeHtml(r.desc||r.title)+'</b><span class="issue-status '+issueStatusClass(state)+'">'+escapeHtml(state)+'</span></div><div class="issue-list-meta"><span><em>'+(listType==='safety'?'问题部位':'挂接构件')+'</em><b>'+escapeHtml(listType==='safety'?(safetyProblemLocation(r)||'未填写'):(r.meta||'--'))+'</b></span><span><em>整改期限</em><b>'+escapeHtml(r.deadline||'--')+'</b></span></div><span class="detail">查看详情 ›</span></article>'}
 function compactMeta(rows){return'<div class="compact-meta">'+rows.map(([label,value])=>'<span><em>'+escapeHtml(label)+'</em><b>'+escapeHtml(value||'--')+'</b></span>').join('')+'</div>'}
 function compactRecordCard(r,index,type){
  if(type==='quality'||type==='safety'||type==='anno')return issueListCard(r,index);
@@ -391,7 +383,7 @@ openDetail=function(r,type){
   $('#overlay').innerHTML='<section class="detail-page"><div class="detail-bar"><button id="detailBack">‹</button><b>实测实量详情</b></div><div class="detail-section"><h3>测量记录</h3>'+issueRows(summary)+'</div><div class="detail-section"><h3>逐点判定</h3>'+points.map(p=>'<div class="measure-point-detail"><b>'+escapeHtml(p.no)+'</b><span>'+escapeHtml(p.value+' '+p.unit)+'</span><small>标准：'+escapeHtml(p.standard)+'</small><em class="'+(p.result==='合格'?'pass':p.result==='不合格'?'fail':'')+'">'+escapeHtml(p.result)+'</em></div>').join('')+'</div></section>';
   $('#detailBack').onclick=()=>$('#overlay').innerHTML='';return;
  }
- const title=type==='safety'?'安全问题详情':'质量问题详情';const basic=[['问题编号',r.issueNo],['检查类型',r.checkType],['检查人',r.checker],['检查时间',r.time],['检查内容',r.checkContent||r.checkType],['区域',r.area],['关联构件',r.meta]];const issue=[['问题分类',r.category],['问题描述',r.desc],['问题级别',r.level],['整改要求',r.requirement],['整改期限',r.deadline],['检查结果',r.result],['整改责任单位',r.unit],['整改责任人',r.assignee]];const rectify=r.rectifiedAt?issueRows([['实际整改时间',r.rectifiedAt],['整改人',r.rectifier],['整改描述',r.rectifyDescription]])+issuePhotos(r.rectifyPhotos,'整改附件'):'<div class="issue-empty">待整改，暂无整改记录</div>';const review=r.reviewAt?issueRows([['复查意见',r.reviewResult],['复查时间',r.reviewAt],['复查人',r.reviewer],['复查描述',r.reviewDescription]])+issuePhotos(r.reviewPhotos,'复查附件'):'<div class="issue-empty">待复查，暂无复查记录</div>';$('#overlay').innerHTML='<section class="detail-page issue-detail-page"><div class="detail-bar"><button id="detailBack">‹</button><b>'+title+'</b><span class="issue-status '+issueStatusClass(r.state)+'">'+escapeHtml(r.state)+'</span></div><div class="detail-section"><h2 class="issue-detail-title">'+escapeHtml(r.desc||r.title)+'</h2><h3>基本信息</h3>'+issueRows(basic)+'</div><div class="detail-section"><h3>问题信息</h3>'+issueRows(issue)+'</div><div class="detail-section"><h3>现场附件</h3>'+issuePhotos(r.sitePhotos,'现场照片')+'</div><div class="detail-section"><h3>整改信息</h3>'+rectify+'</div><div class="detail-section"><h3>复查信息</h3>'+review+'</div></section>';$('#detailBack').onclick=()=>$('#overlay').innerHTML='';
+ const title=type==='safety'?'安全问题详情':'质量问题详情';const basic=[['问题编号',r.issueNo],['检查类型',r.checkType],['检查人',r.checker],['检查时间',r.time],['检查内容',r.checkContent||r.checkType],['区域',r.area],[type==='safety'?'问题部位':'关联构件',type==='safety'?(safetyProblemLocation(r)||'未填写'):r.meta]];const issue=[['问题分类',r.category],['问题描述',r.desc],['问题级别',r.level],['整改要求',r.requirement],['整改期限',r.deadline],['检查结果',r.result],['整改责任单位',r.unit],['整改责任人',r.assignee]];const rectify=r.rectifiedAt?issueRows([['实际整改时间',r.rectifiedAt],['整改人',r.rectifier],['整改描述',r.rectifyDescription]])+issuePhotos(r.rectifyPhotos,'整改附件'):'<div class="issue-empty">待整改，暂无整改记录</div>';const review=r.reviewAt?issueRows([['复查意见',r.reviewResult],['复查时间',r.reviewAt],['复查人',r.reviewer],['复查描述',r.reviewDescription]])+issuePhotos(r.reviewPhotos,'复查附件'):'<div class="issue-empty">待复查，暂无复查记录</div>';$('#overlay').innerHTML='<section class="detail-page issue-detail-page"><div class="detail-bar"><button id="detailBack">‹</button><b>'+title+'</b><span class="issue-status '+issueStatusClass(r.state)+'">'+escapeHtml(r.state)+'</span></div><div class="detail-section"><h2 class="issue-detail-title">'+escapeHtml(r.desc||r.title)+'</h2><h3>基本信息</h3>'+issueRows(basic)+'</div><div class="detail-section"><h3>问题信息</h3>'+issueRows(issue)+'</div><div class="detail-section"><h3>现场附件</h3>'+issuePhotos(r.sitePhotos,'现场照片')+'</div><div class="detail-section"><h3>整改信息</h3>'+rectify+'</div><div class="detail-section"><h3>复查信息</h3>'+review+'</div></section>';$('#detailBack').onclick=()=>$('#overlay').innerHTML='';
 };
 const originRenderTabs=baseRenderTabs,originRenderModel=baseRenderModel;
 function renderTabs(){originRenderTabs();const b=$('#treeBtn');if(b)b.classList.toggle('has-filter',filterActive())}
@@ -471,9 +463,8 @@ const inspectData={};
 const inspectState={type:'quality',tab:'待整改',query:''};
 let inspectBimBindings={};
 try{inspectBimBindings=JSON.parse(localStorage.getItem('xa_inspect_bim_bindings_v1')||'{}')}catch(e){inspectBimBindings={}}
-/* 安全检查整改的轴网范围挂接单独存储，避免与质量检查整改的「构件名数组」结构混用同一 key */
-let axisBimBindings={};
-try{axisBimBindings=JSON.parse(localStorage.getItem('xa_inspect_axis_bindings_v1')||'{}')}catch(e){axisBimBindings={}}
+// 整改单按编号保存；安全文字范围与参考构件共同存入共享挂接关系。
+let inspectProblemLocations={};
 
 function buildInspect(type){
   const meta=INSPECT_META[type],out=[];
@@ -499,24 +490,29 @@ function buildInspect(type){
   return out;
 }
 function inspectRecords(){
-  if(!inspectData[inspectState.type])inspectData[inspectState.type]=buildInspect(inspectState.type);
-  return inspectData[inspectState.type];
+  const type=inspectState.type;if(!inspectData[type])inspectData[type]=buildInspect(type);
+  const list=inspectData[type],state=XABimStore.load();
+  for(const row of state.records||[]){
+    if(row.bindingKind!=='bill'||row.type!==type)continue;
+    const snap=row.rectifySnapshot||{},code=row.rectifyCode||row.sourceId;let r=list.find(x=>x.code===code);
+    if(!r){r={...snap,type,code,time:snap.time||snap.checkTime||'',desc:snap.desc||snap.description||'',status:snap.status||'待整改'};list.unshift(r)}
+    if(row.problemLocation)r.problemLocation=row.problemLocation;
+  }
+  list.forEach(r=>Object.assign(r,state.inspectOverrides?.[r.code]||{}));
+  return list;
 }
 function inspectCounts(){
   const m={};INSPECT_STATUSES.forEach(s=>m[s]=0);
   inspectRecords().forEach(r=>{m[r.status]=(m[r.status]||0)+1});
   return m;
 }
-/* 挂接态按单据类型区分：safety → 轴网范围；quality → 构件数组（原有行为不变） */
-function inspectBindLabel(r){return r&&r.type==='safety'?'BIM轴网范围挂接':'BIM构件挂接'}
+function inspectBindLabel(r){return r?.type==='safety'?'BIM参考构件挂接':'BIM构件挂接'}
+function inspectLocationOf(r){return inspectProblemLocations[bindingKey(r,r.code,'inspect')]||r.problemLocation||''}
 function inspectBindState(r){
-  if(r&&r.type==='safety'){
-    const axis=axisBindingOf(r);
-    return{on:!!axis,text:axis?'已挂轴网范围：'+axisRangeText(axis):'未挂接轴网范围'};
-  }
-  const bound=inspectBimBindings[bindingKey(r,r.code,'inspect')]||[];
-  return{on:!!bound.length,text:bound.length?'已挂接 '+bound.length+' 个BIM构件：'+bound.join('、'):'未挂接BIM构件'};
+  const bound=inspectBimBindings[bindingKey(r,r.code,'inspect')]||[],safety=r.type==='safety';
+  return {on:!!bound.length,text:safety?(bound.length?'已挂接':'未挂接'):(bound.length?'已挂接 '+bound.length+' 个BIM构件：'+bound.join('、'):'未挂接BIM构件')};
 }
+
 function inspectCardHtml(r,idx){
   const st=inspectBindState(r);
   const revokable=r.status==='待整改'||r.status==='继续整改';
@@ -527,9 +523,10 @@ function inspectCardHtml(r,idx){
     +'<p>检查日期：<b>'+escapeHtml(r.time)+'</b></p>'
     +'<p>整改人：<b>'+escapeHtml(r.assignee)+'</b></p>'
     +'<p>问题描述：<b>'+escapeHtml(r.desc)+'</b></p>'
+    +(r.type==='safety'?'<p>问题部位：<b>'+escapeHtml(inspectLocationOf(r)||'未填写')+'</b></p>':'')
     +'<div class="inspect-bind'+(st.on?' bound':'')+'">'+escapeHtml(st.text)+'</div>'
     +'<footer><button class="ghost" data-inspect-detail="'+idx+'">详情</button>'
-    +'<span class="smallnote">挂接请到 WEB 端</span>'
+    +(st.on?'':'<button class="primary" data-inspect-bind="'+idx+'" '+(r.status==='已撤回'?'disabled title="已撤回整改单不允许挂接"':'')+'>'+(r.status==='已撤回'?'已撤回，不可挂接':'BIM模型挂接')+'</button>')
     +(revokable?'<button class="primary" data-inspect-revoke="'+idx+'">撤回</button>':'')
     +'</footer></article>';
 }
@@ -542,7 +539,7 @@ function renderInspect(){
   $('#inspectSearchClear').hidden=!inspectState.query;
   $$('[data-inspect-tab]').forEach(b=>b.onclick=()=>{inspectState.tab=b.dataset.inspectTab;renderInspect()});
   $$('[data-inspect-detail]').forEach(b=>b.onclick=()=>openInspectDetail(all[+b.dataset.inspectDetail]));
-  $$('[data-inspect-bind]').forEach(b=>b.onclick=()=>{const i=+b.dataset.inspectBind,r=all[i];chooseBindingModel(r,i,r.code,'inspect',r.type==='safety')});
+  $$('[data-inspect-bind]').forEach(b=>b.onclick=()=>{const i=+b.dataset.inspectBind,r=all[i];chooseBindingModel(r,i,r.code,'inspect')});
   $$('[data-inspect-revoke]').forEach(b=>b.onclick=()=>revokeInspect(all[+b.dataset.inspectRevoke]));
 }
 function openInspect(type){
@@ -560,13 +557,13 @@ function openInspectDetail(r){
   const st=inspectBindState(r);
   const rows=[['单据编号',r.code],['检查类型',r.checkType],['检查人',r.checker],['检查日期',r.time],
     ['整改人',r.assignee],['问题描述',r.desc],['整改状态',r.status],['是否逾期',r.overdue?'是':'否'],
-    [inspectBindLabel(r),st.on?st.text:'未挂接']];
+    ...(r.type==='safety'?[['问题部位',inspectLocationOf(r)||'未填写']]:[[inspectBindLabel(r),st.on?st.text:'未挂接']])];
   openSheet('整改单详情','<table class="brief-table"><tbody>'+rows.map(x=>'<tr><th>'+escapeHtml(x[0])+'</th><td>'+escapeHtml(x[1]||'--')+'</td></tr>').join('')+'</tbody></table>','<button data-close>关闭</button>');
 }
 function revokeInspect(r){
   if(!r)return;
   openSheet('撤回整改单','<p style="margin:0 0 7px">确定撤回「'+escapeHtml(r.code)+'」吗？</p><p style="margin:0;color:#7b8798;font-size:12px">撤回后该单据进入已撤回状态，不再计入待整改。</p>','<button data-close>取消</button><button class="primary" id="confirmRevoke">确认撤回</button>');
-  $('#confirmRevoke').onclick=()=>{r.status='已撤回';$('#overlay').innerHTML='';renderInspect();toast('已撤回 '+r.code)};
+  $('#confirmRevoke').onclick=()=>{try{XABimStore.save([],{inspectOverrides:{[r.code]:{status:'已撤回'}}})}catch{toast('撤回保存失败，请重试');return}r.status='已撤回';$('#overlay').innerHTML='';renderInspect();toast('已撤回 '+r.code)};
 }
 /* ================= 检测报告（数据来自物资送检） ================= */
 const reportRecords=XABimStore.reportCatalog();
@@ -641,109 +638,49 @@ const bindableComponents=XABimStore.components.map(c=>({id:c[0],name:c[1],pos:[c
 function bindingKey(record,position,kind){const k=bindingKindOf(kind);return k==='inspect'?'INSPECT|'+position:k==='report'?position:record.time+'|'+position}
 function groupRecordPositions(record){const map=new Map();record.items.forEach(x=>{if(!map.has(x[1]))map.set(x[1],[]);map.get(x[1]).push(x)});return [...map.entries()]}
 function renderLedgerDetail(record,index){measureScreen='ledgerDetail';setMeasureFrame('实测实量','','');const region=record.area.split(' · ').slice(0,2).join(' · ');$('#measureFlowContent').innerHTML='<div class="measure-card" style="display:flex;align-items:center"><b style="flex:1">区域</b><span>'+escapeHtml(region)+'</span></div>'+groupRecordPositions(record).map(([position,items],i)=>{const bound=measureBimBindings[bindingKey(record,position)]||[];return '<div class="position-group-title">分组'+(i+1)+'</div><button class="position-card" data-bind-position="'+escapeHtml(position)+'"><div class="position-top"><b>'+escapeHtml(position)+'</b><span class="bind-state '+(bound.length?'bound':'')+'">'+(bound.length?'已挂接 '+bound.length+' 个构件':'点击挂接 BIM')+'</span></div><div class="bound-components">BIM构件：'+(bound.length?bound.map(escapeHtml).join('、'):'--')+'</div><div class="item-chips">'+items.map(x=>'<span>'+escapeHtml(x[0])+'<br><small>'+escapeHtml(x[2])+'</small></span>').join('')+'</div></button>'}).join('');$$('[data-bind-position]').forEach(b=>b.onclick=()=>chooseBindingModel(record,index,b.dataset.bindPosition));$('#measureTopAction').onclick=null}
-/* ================= 安全检查整改：BIM 轴网范围挂接（对齐 Web 端《全景区域挂接_原型》的轴网机制） =================
-   仅 safety 使用：bindMode/mode='axes' + 轴网编号 + 上下标高 + 轴网间距（默认 6m，与 Web 端一致）。
-   quality/report/measure 仍走原构件挂接流程（chooseBindingModel 的第 5 个参数缺省即原行为）。 */
-let axisBindingContext=null;
-function axisBindingOf(r){if(!r)return null;const b=axisBimBindings[bindingKey(r,r.code,'inspect')];return b&&b.mode==='axes'?b:null}
-function axisElevationText(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(2):String(v==null?'':v)}
-function axisRangeText(b){
-  if(!b)return '';
-  const span=[b.hAxis,b.vAxis].filter(Boolean).join(' / ');
-  return (span?span+' · ':'')+'标高 '+axisElevationText(b.low)+'～'+axisElevationText(b.high)+'m'+(b.model?' · '+b.model:'');
+function isSafetyBinding(){return bimBindingContext?.kind==='inspect'&&bimBindingContext.record.type==='safety'}
+function toggleMobileBindingComponent(name,on){
+  const select=on===undefined?!selectedBimComponents.has(name):on;
+  if(isSafetyBinding()&&select)selectedBimComponents.clear();
+  if(select)selectedBimComponents.add(name);else selectedBimComponents.delete(name);
 }
-function normalizeAxisCode(v){return String(v==null?'':v).replace(/\s+/g,'').replace(/[~～\-—–－_]+/g,'～').replace(/^～+/,'').replace(/～+$/,'')}
-function axisSpanMeters(v,spacing){
-  const parts=String(v==null?'':v).split(/[~～\/]/).map(x=>x.trim()).filter(Boolean);
-  if(parts.length<2)return null;
-  const val=x=>/^-?\d+(\.\d+)?$/.test(x)?Number(x):(/^[A-Za-z]$/.test(x)?x.toUpperCase().charCodeAt(0)-64:null);
-  const a=val(parts[0]),b=val(parts[parts.length-1]);
-  if(a===null||b===null)return null;
-  const d=Math.abs(b-a);
-  return d>0?d*spacing:null;
-}
-function openAxisBindingForm(record,index,model){
-  const prev=axisBindingOf(record);
-  /* 轴网间距固定 6m（与 Web 端《全景区域挂接_原型》一致，只读）：历史记录里非 6 的 spacing 读取时统一按 6 处理 */
-  const b=prev&&prev.model===model?prev:{mode:'axes',model:model,hAxis:'',vAxis:'',low:'',high:'',spacing:6};
-  axisBindingContext={record,index,model:model||b.model,type:record.type,inspectType:inspectState.type};
-  const blank=v=>v==null||v==='';
-  const text=field=>'<div class="axis-field"><label>'+field[0]+'</label><input id="'+field[1]+'" value="'+escapeHtml(blank(field[2])?'':field[2])+'" '+(field[3]||'')+'></div>';
-  const num=(label,id,value,attrs)=>'<div class="axis-field"><label>'+label+'</label><input id="'+id+'" type="number" step="0.01" value="'+escapeHtml(blank(value)?'':value)+'" '+(attrs||'')+'><span class="axis-unit">米</span></div>';
-  const body='<div class="axis-form">'
-    +'<div class="axis-form-head">轴网范围（可辅助快速定位）</div>'
-    +text(['所属模型','axisModel',b.model||model,'readonly'])
-    +text(['轴网编号 · 横向','axisH',b.hAxis,'placeholder="如 A～C" autocomplete="off"'])
-    +text(['轴网编号 · 纵向','axisV',b.vAxis,'placeholder="如 1～3" autocomplete="off"'])
-    +num('下标高','axisLow',b.low,'placeholder="如 -0.05"')
-    +num('上标高','axisHigh',b.high,'placeholder="如 3.60"')
-    +text(['轴网间距','axisSpacing',6,'readonly'])
-    +'<div class="axis-range-note">上下标高确定区域高度；轴网范围将以长方体保存。<div class="axis-range-live" id="axisRangeLive"></div></div>'
-    +'</div>';
-  openSheet('BIM轴网范围挂接',body,'<button data-close>取消</button><button class="primary" id="saveAxisBind">保存挂接</button>');
-  const update=()=>{
-    const live=$('#axisRangeLive');if(!live)return;
-    const sp=6;
-    const h=axisSpanMeters($('#axisH').value,sp),v=axisSpanMeters($('#axisV').value,sp);
-    const lo=$('#axisLow').value,hi=$('#axisHigh').value,bits=[];
-    if(h&&v)bits.push('范围约 '+h.toFixed(1)+' × '+v.toFixed(1)+' m');
-    const hasLo=lo!==''&&Number.isFinite(Number(lo)),hasHi=hi!==''&&Number.isFinite(Number(hi));
-    if(hasLo&&hasHi){
-      if(Number(hi)>Number(lo))bits.push('高度 '+(Number(hi)-Number(lo)).toFixed(2)+' m');
-      else bits.push('上标高须大于下标高');
-    }
-    live.textContent='轴网间距 '+sp+'m · '+(bits.length?bits.join(' · '):'范围尺寸用于演示');
-  };
-  ['axisH','axisV','axisLow','axisHigh'].forEach(id=>{const el=$('#'+id);if(el)el.oninput=update});
-  const spacingField=$('#axisSpacing');
-  if(spacingField)spacingField.oninput=()=>{if(spacingField.value!=='6')spacingField.value='6';update()};
-  update();
-  $('#saveAxisBind').onclick=saveAxisBinding;
-}
-function saveAxisBinding(){
-  const ctx=axisBindingContext;if(!ctx){toast('挂接上下文已失效');return}
-  const hAxis=normalizeAxisCode($('#axisH').value),vAxis=normalizeAxisCode($('#axisV').value);
-  if(!hAxis){toast('请填写轴网编号 · 横向');return}
-  if(!vAxis){toast('请填写轴网编号 · 纵向');return}
-  const rawLow=$('#axisLow').value.trim(),rawHigh=$('#axisHigh').value.trim();
-  if(rawLow===''){toast('请填写下标高');return}
-  if(rawHigh===''){toast('请填写上标高');return}
-  const low=Number(rawLow),high=Number(rawHigh);
-  if(!Number.isFinite(low)){toast('下标高须为数字');return}
-  if(!Number.isFinite(high)){toast('上标高须为数字');return}
-  if(high<=low){toast('上标高须大于下标高');return}
-  /* 轴网间距固定 6m（只读字段），保存时一律写入 6 */
-  const next={...axisBimBindings,[bindingKey(ctx.record,ctx.record.code,'inspect')]:{mode:'axes',model:$('#axisModel').value,hAxis:hAxis,vAxis:vAxis,low:low,high:high,spacing:6}};
-  try{localStorage.setItem('xa_inspect_axis_bindings_v1',JSON.stringify(next))}catch(e){toast('轴网挂接保存失败，请检查浏览器存储后重试');return}
-  axisBimBindings=next;
-  const back={kind:'inspect',inspectType:ctx.inspectType||'safety'};
-  axisBindingContext=null;
-  $('#overlay').innerHTML='';
-  toast('整改单已挂接轴网范围：'+hAxis+' / '+vAxis);
-  bindingReturn(back);
-}
-function chooseBindingModel(record,index,position,kind,axesMode){
+
+function chooseBindingModel(record,index,position,kind){
+  if(kind==='inspect'&&(record.status==='已撤回'||XABimStore.load().inspectOverrides?.[record.code]?.status==='已撤回')){toast('已撤回整改单不允许挂接');return}
   if(kind==='report'&&record.archived!=='是'){toast('归档后可挂接 BIM 模型');return}
-  const prevModel=axesMode&&axisBindingOf(record)?axisBindingOf(record).model:'';
-  const modelOption=(label,file)=>'<label class="picker-option"><input type="radio" name="bindModel" value="'+file+'"'+((prevModel?prevModel===file:label==='建筑')?' checked':'')+'><span><b>'+label+'</b><br><small>'+file+'</small></span></label>';
-  openSheet('选择BIM模型','<div class="picker-list">'+modelOption('建筑','1号楼建筑模型.rvt')+modelOption('结构','1号楼结构模型.rvt')+modelOption('机电','1号楼机电模型.rvt')+'</div>'+(axesMode?'<p class="axis-pick-hint">载入后填写轴网编号与上下标高，为整改单生成轴网范围。</p>':''),'<button data-close>取消</button><button class="primary" id="enterBimBinding">'+(axesMode?'进入轴网范围':'进入挂接')+'</button>');
-  $('#enterBimBinding').onclick=()=>{const model=$('input[name="bindModel"]:checked').value;$('#overlay').innerHTML='';if(axesMode)openAxisBindingForm(record,index,model);else startBimBinding(record,index,position,model,kind)};
+  const modelOption=(label,file)=>'<label class="picker-option"><input type="radio" name="bindModel" value="'+file+'"'+(label==='建筑'?' checked':'')+'><span><b>'+label+'</b><br><small>'+file+'</small></span></label>';
+  openSheet('选择BIM模型','<div class="picker-list">'+modelOption('建筑','1号楼建筑模型.rvt')+modelOption('结构','1号楼结构模型.rvt')+modelOption('机电','1号楼机电模型.rvt')+'</div>','<button data-close>取消</button><button class="primary" id="enterBimBinding">进入挂接</button>');
+  $('#enterBimBinding').onclick=()=>{const model=$('input[name="bindModel"]:checked').value;$('#overlay').innerHTML='';startBimBinding(record,index,position,model,kind)};
 }
-function startBimBinding(record,index,position,model,kind){const k=bindingKindOf(kind);bimBindingContext={record,index,position,model,kind:k,inspectType:inspectState.type,reportQuery:reportQuery};selectedBimComponents=new Set(bindingBucket(k)[bindingKey(record,position,k)]||[]);componentSearchQuery='';showPage('modelPage');$('#modelPage').classList.add('binding-mode');$('#modelPageTitle').textContent='绑定BIM构件';$('#markerLayer').innerHTML='';$('#bimBindPanel').hidden=false;renderComponentHotspots();renderBimBindPanel()}
-function renderComponentHotspots(){$('#componentLayer').innerHTML=bindableComponents.map((c,i)=>'<button class="component-hotspot '+(selectedBimComponents.has(c.name)?'selected':'')+'" data-bind-component="'+i+'" style="left:'+c.pos[0]+'%;top:'+c.pos[1]+'%">'+c.name+'</button>').join('');$$('[data-bind-component]').forEach(b=>b.onclick=e=>{e.stopPropagation();const name=bindableComponents[+b.dataset.bindComponent].name;selectedBimComponents.has(name)?selectedBimComponents.delete(name):selectedBimComponents.add(name);renderComponentHotspots();renderBimBindPanel()})}
+function startBimBinding(record,index,position,model,kind){const k=bindingKindOf(kind);if(k==='inspect'&&(record.status==='已撤回'||XABimStore.load().inspectOverrides?.[record.code]?.status==='已撤回')){toast('已撤回整改单不允许挂接');return}bimBindingContext={record,index,position,model,kind:k,inspectType:inspectState.type,reportQuery:reportQuery,problemLocation:k==='inspect'?inspectLocationOf(record):''};selectedBimComponents=new Set(bindingBucket(k)[bindingKey(record,position,k)]||[]);if(isSafetyBinding())selectedBimComponents=new Set([...selectedBimComponents].slice(0,1));componentSearchQuery='';showPage('modelPage');$('#modelPage').classList.add('binding-mode');$('#modelPageTitle').textContent='绑定BIM构件';$('#markerLayer').innerHTML='';$('#bimBindPanel').hidden=false;renderComponentHotspots();renderBimBindPanel()}
+function renderComponentHotspots(){$('#componentLayer').innerHTML=bindableComponents.map((c,i)=>'<button class="component-hotspot '+(selectedBimComponents.has(c.name)?'selected':'')+'" data-bind-component="'+i+'" style="left:'+c.pos[0]+'%;top:'+c.pos[1]+'%">'+c.name+'</button>').join('');$$('[data-bind-component]').forEach(b=>b.onclick=e=>{e.stopPropagation();const name=bindableComponents[+b.dataset.bindComponent].name;toggleMobileBindingComponent(name);renderComponentHotspots();renderBimBindPanel()})}
 function mobileComponentSearchRows(){const keyword=componentSearchQuery.trim().toLowerCase();return bindableComponents.filter(c=>!keyword||c.name.toLowerCase().includes(keyword))}
-function renderMobileComponentSearch(){const rows=mobileComponentSearchRows(),mount=$('#componentSearchResults');if(!mount)return;mount.innerHTML=rows.length?rows.map((c,i)=>'<label class="component-search-result"><input type="checkbox" data-mobile-search-component="'+escapeHtml(c.name)+'" '+(selectedBimComponents.has(c.name)?'checked':'')+'><span>'+escapeHtml(c.name)+'</span></label>').join(''):'<div class="component-search-empty">未找到匹配构件</div>';const all=$('#mobileSelectAllComponents');if(all){all.checked=!!rows.length&&rows.every(c=>selectedBimComponents.has(c.name));all.disabled=!rows.length}const count=$('#mobileComponentSearchCount');if(count)count.textContent='已选 '+selectedBimComponents.size+' 个';$$('[data-mobile-search-component]').forEach(x=>x.onchange=()=>{x.checked?selectedBimComponents.add(x.dataset.mobileSearchComponent):selectedBimComponents.delete(x.dataset.mobileSearchComponent);renderComponentHotspots();renderBimBindPanel();renderMobileComponentSearch()})}
+function renderMobileComponentSearch(){const rows=mobileComponentSearchRows(),mount=$('#componentSearchResults');if(!mount)return;mount.innerHTML=rows.length?rows.map((c,i)=>'<label class="component-search-result"><input type="'+(isSafetyBinding()?'radio':'checkbox')+'" name="bindingComponent" data-mobile-search-component="'+escapeHtml(c.name)+'" '+(selectedBimComponents.has(c.name)?'checked':'')+'><span>'+escapeHtml(c.name)+'</span></label>').join(''):'<div class="component-search-empty">未找到匹配构件</div>';const all=$('#mobileSelectAllComponents');if(all){all.closest('label').hidden=isSafetyBinding();all.checked=!!rows.length&&rows.every(c=>selectedBimComponents.has(c.name));all.disabled=!rows.length}const count=$('#mobileComponentSearchCount');if(count)count.textContent='已选 '+selectedBimComponents.size+' 个';$$('[data-mobile-search-component]').forEach(x=>x.onchange=()=>{toggleMobileBindingComponent(x.dataset.mobileSearchComponent,x.checked);renderComponentHotspots();renderBimBindPanel();renderMobileComponentSearch()})}
 function openMobileComponentSearch(){componentSearchQuery='';openSheet('搜索选择构件','<div class="component-search-box"><span>⌕</span><input id="mobileComponentSearch" placeholder="输入构件名称或编号"><button id="clearMobileComponentSearch">×</button></div><div class="component-search-tools"><span>搜索结果</span><label><input id="mobileSelectAllComponents" type="checkbox"> 全选当前结果</label></div><div class="component-search-results" id="componentSearchResults"></div>','<button data-close>返回模型</button><button class="primary" id="finishComponentSearch"><span id="mobileComponentSearchCount">已选 '+selectedBimComponents.size+' 个</span> · 完成选择</button>');renderMobileComponentSearch();$('#mobileComponentSearch').oninput=e=>{componentSearchQuery=e.target.value;renderMobileComponentSearch()};$('#clearMobileComponentSearch').onclick=()=>{componentSearchQuery='';$('#mobileComponentSearch').value='';renderMobileComponentSearch();$('#mobileComponentSearch').focus()};$('#mobileSelectAllComponents').onchange=e=>{mobileComponentSearchRows().forEach(c=>e.target.checked?selectedBimComponents.add(c.name):selectedBimComponents.delete(c.name));renderComponentHotspots();renderBimBindPanel();renderMobileComponentSearch()};$('#finishComponentSearch').onclick=()=>$('#overlay').innerHTML=''}
-function renderBimBindPanel(){const c=bimBindingContext;$('#bimBindPanel').innerHTML='<div class="bind-context"><b>'+escapeHtml(c.position)+'</b><span>'+escapeHtml(c.model)+'</span></div><button class="bind-search-open" id="openComponentSearch">⌕ 搜索选择构件</button><div class="bind-selection">'+(selectedBimComponents.size?'已选择 '+selectedBimComponents.size+' 个：'+[...selectedBimComponents].map(escapeHtml).join('、'):'可搜索多选，也可直接点选模型构件')+'</div><div class="bind-actions"><button id="cancelBimBind">取消</button><button class="primary" id="confirmBimBind">确定挂接（'+selectedBimComponents.size+'）</button></div>';$('#openComponentSearch').onclick=openMobileComponentSearch;$('#cancelBimBind').onclick=exitBimBinding;$('#confirmBimBind').onclick=confirmBimBinding}
+function renderBimBindPanel(){
+ const c=bimBindingContext,safety=isSafetyBinding();
+ $('#bimBindPanel').innerHTML='<div class="bind-context"><b>'+escapeHtml(c.position)+'</b><span>'+escapeHtml(c.model)+'</span></div>'
+  +(safety?'<label class="safety-location">问题部位 <b>*</b><input id="mobileProblemLocation" maxlength="200" value="'+escapeHtml(c.problemLocation)+'" placeholder="请输入安全问题的准确部位或范围"></label><p class="safety-location-hint">请选择问题范围内的一个构件辅助定位，准确范围以“问题部位”为准。</p>':'')
+  +'<button class="bind-search-open" id="openComponentSearch">⌕ 搜索选择构件</button><div class="bind-selection">'+(selectedBimComponents.size?(safety?'定位参考构件：':'已选择 '+selectedBimComponents.size+' 个：')+[...selectedBimComponents].map(escapeHtml).join('、'):safety?'可点选模型或搜索名称，选择一个参考构件':'可搜索多选，也可直接点选模型构件')+'</div><div class="bind-actions"><button id="cancelBimBind">取消</button><button class="primary" id="confirmBimBind">确定挂接（'+selectedBimComponents.size+'）</button></div>';
+ if(safety)$('#mobileProblemLocation').oninput=e=>{c.problemLocation=e.target.value};
+ $('#openComponentSearch').onclick=openMobileComponentSearch;$('#cancelBimBind').onclick=exitBimBinding;$('#confirmBimBind').onclick=confirmBimBinding;
+}
+
 function confirmBimBinding(){
  if(!selectedBimComponents.size){toast('请至少选择一个构件');return}
- const c=bimBindingContext,k=bindingKindOf(c.kind),bucket=bindingBucket(k),key=bindingKey(c.record,c.position,k),names=[...selectedBimComponents];
+ const c=bimBindingContext;if(!c)return;const k=bindingKindOf(c.kind),bucket=bindingBucket(k),key=bindingKey(c.record,c.position,k),names=[...selectedBimComponents];
+ if(k==='inspect'&&(c.record.status==='已撤回'||XABimStore.load().inspectOverrides?.[c.record.code]?.status==='已撤回')){toast('已撤回整改单不允许挂接');return}
+ if(isSafetyBinding()&&(!String(c.problemLocation||'').trim()||names.length!==1)){toast(!String(c.problemLocation||'').trim()?'请填写问题部位':'请选择一个范围内的参考构件');return}
  if(k==='report'&&c.record.archived!=='是'){toast('归档后可挂接 BIM 模型');return}
  let previous;
  try{
   if(k==='report'){
    const rows=names.map(name=>{const comp=bindableComponents.find(x=>x.name===name);return{...c.record,type:'report',sourceId:'report:'+c.record.sendCode,componentId:comp.id,compName:name,bimModel:c.model}});
    const state=XABimStore.save(rows,{reportBindings:{[c.record.sendCode]:names}});reportBimBindings=state.reportBindings;syncMobileBusiness(state);
+  }else if(k==='inspect'){
+   const snapshot={...c.record,checkTime:c.record.time,problemLocation:String(c.problemLocation||'').trim()};
+   const rows=names.map(name=>{const comp=bindableComponents.find(x=>x.name===name);return{type:c.record.type,sourceId:c.record.code,rectifyCode:c.record.code,bindingKind:'bill',rectifySnapshot:snapshot,status:c.record.status,problemLocation:snapshot.problemLocation,componentId:comp.id,bimModel:c.model}});
+   syncMobileBusiness(XABimStore.save(rows));
   }else{
    previous=localStorage.getItem(bindingStorage(k));localStorage.setItem(bindingStorage(k),JSON.stringify({...bucket,[key]:names}));
    if(k==='measure'){
@@ -863,6 +800,10 @@ function syncMobileBusiness(state){
   if(!(state.records||[]).some(r=>r.type==='measure'&&sources.includes(r.sourceId)))continue;
   measureBimBindings[bindingKey(record,position)]=XABimStore.components.filter(c=>sources.every(source=>state.records.some(r=>r.type==='measure'&&r.sourceId===source&&r.componentId===c[0]))).map(c=>c[1]);
  }}
+ const billRows=(state.records||[]).filter(r=>r.bindingKind==='bill');
+ inspectProblemLocations={};
+ const codes=new Set(billRows.map(r=>r.rectifyCode||r.sourceId));
+ codes.forEach(code=>{const rows=billRows.filter(r=>(r.rectifyCode||r.sourceId)===code),key='INSPECT|'+code;inspectBimBindings[key]=[...new Set(rows.map(r=>bindableComponents.find(c=>c.id===r.componentId)?.name).filter(Boolean))];inspectProblemLocations[key]=rows[0].problemLocation||rows[0].rectifySnapshot?.problemLocation||''});
  for(const type of ['measure','brief'])records[type]=records[type].filter(r=>!r.savedBinding);
  records.report=[];
  for(const row of state.records||[]){
@@ -871,19 +812,18 @@ function syncMobileBusiness(state){
   records[type].push({...row,savedBinding:true,compName:comp[1],meta:comp[1],comp:comp[0],pos:comp.slice(2),person:row.owner||row.inspector||row.checker||'--',time:row.measurementTime||row.checkTime||row.sendDate||'',state:row.status||row.subtype||'--',pointDetails:row.points,points:row.points?.map(p=>[p.no,p.value+(p.unit?' '+p.unit:'')])});
  }
 }
-function refreshSavedBusiness(){try{syncMobileBusiness(XABimStore.load());if(activePage==='modelPage'&&!bimBindingContext){renderMarkers();renderRecords()}else if(activePage==='reportPage')renderReportList()}catch(error){console.warn('挂接数据读取失败',error)}}
+function refreshSavedBusiness(){try{syncMobileBusiness(XABimStore.load());if(activePage==='modelPage'&&!bimBindingContext){renderMarkers();renderRecords()}else if(activePage==='reportPage')renderReportList();else if(activePage==='inspectPage')renderInspect()}catch(error){console.warn('挂接数据读取失败',error)}}
 refreshSavedBusiness();
 window.addEventListener('storage',e=>{if(e.key===XABimStore.key)refreshSavedBusiness()});
 window.addEventListener('focus',refreshSavedBusiness);
 renderTabs();
 /* ===== 移动端轻父子分组（2026-10-22）：交底/方案/全景/质量/安全按父级分组，实测/批注平铺 ===== */
-const MOBILE_BILL_CODES={quality:{'模板支撑连接件未按专项方案拧紧':'ZLZGD2026092201','柱钢筋保护层厚度不足':'ZLZGD2026092201','外墙接缝检查':'ZLZGD2026092001','梁底模板拼缝偏大':'ZLZGD2026091901'},safety:{'临边防护栏杆设置不完整':'AQZGD2026092201','临时用电电缆拖地':'AQZGD2026092202','塔吊吊装警戒区不完整':'AQZGD2026092101'}};
+const MOBILE_BILL_CODES={quality:{'Q-0001':'ZLZGD2026092201','Q-0002':'ZLZGD2026092201','Q-0003':'ZLZGD2026092001','Q-0004':'ZLZGD2026091901'},safety:{'S-0005':'AQZGD2026092201','S-0006':'AQZGD2026092202','S-0007':'AQZGD2026092101'}};
 const mobileGroupCollapsed={};
 const mobileReportGroupCollapsed=new Set();
 const MOBILE_REPORT_CAT={'螺纹钢':'螺纹钢','盘螺':'盘螺','水泥':'水泥','砂':'砂','碎石':'碎石','防水卷材':'防水卷材'};
 function mobileReportCategory(r){const c=String((r&&r.reportCategory)||'').trim();if(c)return c;return MOBILE_REPORT_CAT[String((r&&r.materialName)||'').trim()]||'未分类'}
-const MOBILE_BILL_INDEX={quality:['ZLZGD2026092201','ZLZGD2026092201','ZLZGD2026092001','ZLZGD2026091901'],safety:['AQZGD2026092201','AQZGD2026092202','AQZGD2026092101']};
-function mobileBillCode(type,r){const m=MOBILE_BILL_CODES[type]||{},t=String(r.title||'');if(m[t])return m[t];for(const k of Object.keys(m)){if(t.indexOf(k)>=0||k.indexOf(t)>=0)return m[k]}const idx=(records[type]||[]).indexOf(r);const arr=MOBILE_BILL_INDEX[type]||[];return arr[idx]||''}
+function mobileBillCode(type,r){return r.rectifyCode||(MOBILE_BILL_CODES[type]||{})[r.issueNo]||''}
 function mobileIsGrouped(type){return ['quality','safety','brief','plan','pano'].indexOf(type)>=0}
 function mobileGroupKey(type,r){
   if(type==='quality'||type==='safety')return mobileBillCode(type,r)||'未关联整改单';
@@ -909,9 +849,10 @@ function mobileGroupHtml(rows,all,type){
 }
 renderRecords=function(){
   const box=$('#records'),all=listType?records[listType]:[],keyword=recordQuery.trim().toLowerCase();
-  const scoped=(keyword?all.filter(r=>recordMatches(r,keyword)):all).filter(passFilter);
+  const unique=rows=>listType==='report'?[...new Map(rows.map(r=>[r.sendCode,r])).values()]:rows;
+  const total=unique(all).length,scoped=unique((keyword?all.filter(r=>recordMatches(r,keyword)):all).filter(passFilter));
   box.className='records '+(recordState===2?'open':recordState===1?'peek':'');
-  $('#recordTitle').textContent=listType?(typeDefs[listType].name+'清单 · '+(keyword?scoped.length+'/'+all.length:all.length)+'条'+(filterActive()?' · 筛选后'+scoped.length+'条':'')):'业务清单';
+  $('#recordTitle').textContent=listType?(typeDefs[listType].name+'清单 · '+(keyword?scoped.length+'/'+total:total)+'条'+(filterActive()?' · 筛选后'+scoped.length+'条':'')):'业务清单';
   $('#toggleRecords').textContent=recordState===2?'收起':'展开';
   if(!listType){$('#recordBody').innerHTML='<div class="record-empty">请选择业务标签</div>';return}
   const search='<div class="record-search"><span>⌕</span><input id="recordSearch" value="'+escapeHtml(recordQuery)+'" placeholder="'+recordSearchPlaceholder(listType)+'" autocomplete="off"><button id="clearRecordSearch" aria-label="清空搜索" '+(recordQuery?'':'hidden')+'>×</button><small>'+scoped.length+'条</small></div>';

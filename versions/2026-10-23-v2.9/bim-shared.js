@@ -755,11 +755,20 @@ function baseline(){return{records:reportRows(seedBindings,[]),reportBindings:cl
 function load(){
  const state=read(KEY,{records:[],reportBindings:null});
  const bindings={...clone(seedBindings),...normalizeBindings(state.reportBindings||read(LEGACY,{}))};
- return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{}};
+ return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{},inspectOverrides:state.inspectOverrides||{}};
 }
 function save(rows,options={}){
- const state=load(),incoming=(rows||[]).filter(r=>r&&['briefing','measure','report'].includes(r.type)&&r.sourceId&&r.componentId);
- const replacing=new Set(options.replaceSources||[]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
+ const state=load(),incoming=(rows||[]).filter(r=>r&&['quality','safety','briefing','measure','report','plan','annotation'].includes(r.type)&&r.sourceId&&r.componentId);
+ const bills=incoming.filter(r=>r.bindingKind==='bill');
+ bills.forEach(r=>{
+  const code=r.rectifyCode||r.sourceId,current=state.inspectOverrides?.[code]||r.rectifySnapshot||r;
+  if(status(current)==='已撤回')throw Error('已撤回整改单不允许挂接');
+  if(r.type==='safety'){
+   if(!String(r.problemLocation||'').trim())throw Error('请填写问题部位');
+   if(new Set(bills.filter(x=>sourceKey(x)===sourceKey(r)).map(x=>x.componentId)).size!==1)throw Error('安全整改单请选择一个范围内的参考构件');
+  }
+ });
+ const replacing=new Set([...(options.replaceSources||[]),...bills.map(sourceKey)]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
  incoming.forEach(r=>map.set(rowKey(r),clone(r)));
  const bindings={...state.reportBindings};
  incoming.filter(r=>r.type==='report').forEach(r=>{
@@ -769,7 +778,7 @@ function save(rows,options={}){
  });
  Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
  const overrides={...state.reportOverrides,...options.reportOverrides};
- const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides};
+ const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides,inspectOverrides:{...state.inspectOverrides,...options.inspectOverrides}};
  localStorage.setItem(KEY,JSON.stringify(next));
  // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}

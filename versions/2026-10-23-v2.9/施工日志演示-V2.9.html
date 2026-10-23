@@ -266,7 +266,7 @@
 </style>
 </head>
 <body>
-<div class="app" data-prd-version="2.9" data-updated="2026-10-22">
+<div class="app" data-prd-version="2.9" data-updated="2026-10-23">
   <div class="topbar">
     <div class="brand">雄安科创园智慧工地</div>
     <div class="topnav" id="topNav">
@@ -319,7 +319,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261023-v2.9-1";
+const BUILD = "20261023-safety-location-3";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -4217,7 +4217,7 @@ window.addEventListener('message',event=>{
   const frame=$('#content iframe[title="BIM模型统一视图"]'),d=event.data;
   if(!frame||event.source!==frame.contentWindow||d?.channel!=='xa-bim-data')return;
   try{
-    const data=d.action==='save'?XABimStore.save(d.records):XABimStore.load();
+    const data=d.action==='save'?XABimStore.save(d.records,d.options||{}):XABimStore.load();
     reportBindings=data.reportBindings;
     event.source.postMessage({channel:'xa-bim-data',action:d.action==='save'?'saved':'init',requestId:d.requestId,data},'*');
   }catch(error){event.source.postMessage({channel:'xa-bim-data',action:'saved',requestId:d.requestId,error:'挂接保存或读取失败，请检查浏览器存储空间后重试'},'*')}

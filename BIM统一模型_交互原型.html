@@ -376,6 +376,8 @@
 /* 整改单父级字段区 */
 .tree-sub.bill-fields{display:flex;flex-direction:column;gap:2px;padding:4px 9px 7px 32px}
 .tree-sub.bill-fields .rec-line>span{width:56px}
+.tree-sub.bill-fields .rec-location>span{width:76px}
+.tree-sub.bill-fields .rec-location>strong{white-space:normal;overflow-wrap:anywhere}
 .tree-sub.bill-fields .rec-actions{margin-top:4px}
 .focus-pin .tree-node{border-bottom:1px solid #ffffff24}
 .focus-pin .tree-title{color:#fff;font-weight:700}
@@ -472,7 +474,7 @@
 .tabs .bim-tab-icon svg{width:23px;height:28px}
 @media(max-width:1050px){.tabs .bim-tab-icon,.tabs .bim-tab-icon svg{width:20px;height:24px}.tabs button{gap:3px}}
 </style>
-</head>
+<style>.bind-panel .safety-location{display:block;margin:0 12px 7px;font-size:13px;color:#d1e5f6}.safety-location b{color:#ffad9d}.safety-location input{box-sizing:border-box;width:100%;min-width:0;display:block;padding:9px;margin-top:6px;border:1px solid #678298;border-radius:4px;background:#20394d;color:white;font:inherit}.safety-location-hint{margin:0 12px 10px;color:#a9c9e4;font-size:12px;line-height:1.5}.bill-fields{cursor:pointer}.bill-problem{cursor:default}.rec-actions button:disabled{opacity:.5;cursor:not-allowed}.bind-check-all[hidden]{display:none}</style></head>
 <body>
 <div id="app">
   <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="focusScrim" aria-hidden="true"></div><div id="markers"></div><div id="focus"></div><span class="toolbar-icon-mask mask-helmet" aria-hidden="true"></span><span class="toolbar-icon-mask mask-tools" aria-hidden="true"></span><span class="toolbar-icon-mask mask-cloud" aria-hidden="true"></span><button type="button" class="stage-hotspot" id="treeHotspot" title="结构 / 专业筛选" aria-label="结构 / 专业筛选"></button></div></div>
@@ -1238,11 +1240,20 @@ function baseline(){return{records:reportRows(seedBindings,[]),reportBindings:cl
 function load(){
  const state=read(KEY,{records:[],reportBindings:null});
  const bindings={...clone(seedBindings),...normalizeBindings(state.reportBindings||read(LEGACY,{}))};
- return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{}};
+ return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{},inspectOverrides:state.inspectOverrides||{}};
 }
 function save(rows,options={}){
- const state=load(),incoming=(rows||[]).filter(r=>r&&['briefing','measure','report'].includes(r.type)&&r.sourceId&&r.componentId);
- const replacing=new Set(options.replaceSources||[]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
+ const state=load(),incoming=(rows||[]).filter(r=>r&&['quality','safety','briefing','measure','report','plan','annotation'].includes(r.type)&&r.sourceId&&r.componentId);
+ const bills=incoming.filter(r=>r.bindingKind==='bill');
+ bills.forEach(r=>{
+  const code=r.rectifyCode||r.sourceId,current=state.inspectOverrides?.[code]||r.rectifySnapshot||r;
+  if(status(current)==='已撤回')throw Error('已撤回整改单不允许挂接');
+  if(r.type==='safety'){
+   if(!String(r.problemLocation||'').trim())throw Error('请填写问题部位');
+   if(new Set(bills.filter(x=>sourceKey(x)===sourceKey(r)).map(x=>x.componentId)).size!==1)throw Error('安全整改单请选择一个范围内的参考构件');
+  }
+ });
+ const replacing=new Set([...(options.replaceSources||[]),...bills.map(sourceKey)]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
  incoming.forEach(r=>map.set(rowKey(r),clone(r)));
  const bindings={...state.reportBindings};
  incoming.filter(r=>r.type==='report').forEach(r=>{
@@ -1252,8 +1263,8 @@ function save(rows,options={}){
  });
  Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
  const overrides={...state.reportOverrides,...options.reportOverrides};
- const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides};
- try{localStorage.setItem(KEY,JSON.stringify(next))}catch(e){}
+ const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides,inspectOverrides:{...state.inspectOverrides,...options.inspectOverrides}};
+ localStorage.setItem(KEY,JSON.stringify(next));
  // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
@@ -1285,20 +1296,34 @@ const bindingRequests=new Map();
 function applyBusinessState(state){
   const reportCodes=new Set(Object.keys(state.reportBindings||{})),savedKeys=new Set((state.records||[]).map(XABimStore.rowKey));
   for(let i=records.length-1;i>=0;i--)if((records[i].type==='report'&&reportCodes.has(records[i].sendCode))||(records[i].storeManaged&&!savedKeys.has(XABimStore.rowKey(records[i]))))records.splice(i,1);
+  RECTIFY_BILLS.filter(b=>b.storeManaged).forEach(b=>RECTIFY_BILLS.splice(RECTIFY_BILLS.indexOf(b),1));
+  [...RECTIFY_BILLS,...Object.values(UNBOUND_LEDGER).flat()].forEach(b=>{if(b.code&&state.inspectOverrides?.[b.code])Object.assign(b,state.inspectOverrides[b.code])});
+  const savedBills=new Map();
   for(const row of state.records||[]){
+    if(row.ledgerTab&&row.ledgerKey!==undefined){
+      const src=(UNBOUND_LEDGER[row.ledgerTab]||[]).find(x=>String(ledgerItemKey(row.ledgerTab,x))===String(row.ledgerKey));
+      if(src){src.bound=true;src.componentId=row.componentId}
+    }
+    if(row.bindingKind==='bill'){
+      const code=row.rectifyCode||row.sourceId;
+      let bill=savedBills.get(code);
+      if(!bill){bill=RECTIFY_BILLS.find(b=>b.code===code);if(!bill){bill={...row.rectifySnapshot,code,type:row.type,problemIds:[],storeManaged:true};RECTIFY_BILLS.push(bill)}bill.componentIds=[];savedBills.set(code,bill)}
+      if(!bill.componentIds.includes(row.componentId))bill.componentIds.push(row.componentId);
+      bill.componentId=bill.componentIds[0];bill.bimModel=row.bimModel;bill.problemLocation=row.problemLocation||row.rectifySnapshot?.problemLocation||'';Object.assign(bill,state.inspectOverrides?.[code]||{});continue;
+    }
     const current=records.find(r=>XABimStore.rowKey(r)===XABimStore.rowKey(row));
     if(current){const id=current.id;Object.assign(current,row,{id,storeManaged:true});continue}
     while(records.some(r=>r.id===nextId))nextId++;
     records.push({...row,id:nextId++,storeManaged:true});
   }
 }
-function saveBindingRecords(rows){
-  if(parent===window)return Promise.resolve(XABimStore.save(rows));
+function saveBindingRecords(rows,options={}){
+  if(parent===window)return Promise.resolve(XABimStore.save(rows,options));
   return new Promise((resolve,reject)=>{
     const requestId='binding-'+Date.now()+'-'+(++bindingRequestSeq);
     const timer=setTimeout(()=>{bindingRequests.delete(requestId);reject(Error('保存未得到确认，请重试'))},6000);
     bindingRequests.set(requestId,{resolve,reject,timer});
-    parent.postMessage({channel:'xa-bim-data',action:'save',requestId,records:rows},'*');
+    parent.postMessage({channel:'xa-bim-data',action:'save',requestId,records:rows,options},'*');
   });
 }
 let pendingBriefing=queryParams.get('bind')==='briefing'?{subtype:queryParams.get('briefingType')||'三维交底',resourceName:queryParams.get('resourceName')||'未命名交底',fileName:queryParams.get('fileName')||'',sourceId:queryParams.get('sourceId')||''}:null;
@@ -1525,7 +1550,8 @@ function initRectifyBills(){
   });
 }
 function billProblems(b){return (b.problemIds||[]).map(id=>records.find(r=>r.id===id)).filter(Boolean)}
-function billOfComponent(componentId,type){return RECTIFY_BILLS.filter(b=>b.componentId===componentId&&(!type||b.type===type)&&billProblems(b).length)}
+function billComponentIds(b){return Array.isArray(b.componentIds)?b.componentIds:[b.componentId].filter(Boolean)}
+function billOfComponent(componentId,type){return RECTIFY_BILLS.filter(b=>billComponentIds(b).includes(componentId)&&(!type||b.type===type))}
 function billStatus(b){return XABimStore.status(b)}
 function billOverdue(b){return XABimStore.overdueDays(b)>0}
 initRectifyBills();
@@ -1777,14 +1803,14 @@ function openDetailById(id){
 function billCountOf(rows){const bills=new Set();let loose=0;rows.forEach(r=>{const b=billOf(r);if(b){bills.add(b.code);return}if((r.type==='quality'||r.type==='safety')&&r.code&&!r.description){bills.add(r.code);return}loose++});return bills.size+loose}
 function businessCount(type,rows){if(type==='quality'||type==='safety')return billCountOf(rows);return countRows(rows)}
 function countRows(rows){return rows.filter(r=>r.type!=='report').length+new Set(rows.filter(r=>r.type==='report').map(reportKeyOf)).size}
-function tabCount(type){const rows=records.filter(r=>r.type===type&&compPasses(r.componentId)&&matchesCurrentFilters(r));if(type==='quality'||type==='safety')rows.push(...RECTIFY_BILLS.filter(b=>b.type===type&&b.componentId&&!billProblems(b).length&&compPasses(b.componentId)));return businessCount(type,rows)}
+function tabCount(type){const rows=records.filter(r=>r.type===type&&(billOf(r)?billComponentIds(billOf(r)).some(compPasses):compPasses(r.componentId))&&matchesCurrentFilters(r));if(type==='quality'||type==='safety')rows.push(...RECTIFY_BILLS.filter(b=>b.type===type&&b.componentId&&!billProblems(b).length&&billComponentIds(b).some(compPasses)));return businessCount(type,rows)}
 function refreshFilteredView(){
  if(focusComponent&&!filtered().some(r=>r.componentId===focusComponent)){selectedId=null;resetFocus()}
   tablePage=1;renderMarkers();renderList();
 }
-function allSelected(){return records.filter(r=>active.has(r.type)&&compPasses(r.componentId)&&matchesCurrentFilters(r)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id)}
+function allSelected(){const extra=RECTIFY_BILLS.filter(b=>active.has(b.type)&&!billProblems(b).length).flatMap(b=>billComponentIds(b).map(id=>({...b,id:'BILL:'+b.code+':'+id,rectifyCode:b.code,componentId:id})));return records.flatMap(r=>{const b=billOf(r);return b?billComponentIds(b).map(id=>({...r,componentId:id})):r}).concat(extra).filter(r=>active.has(r.type)&&compPasses(r.componentId)&&matchesCurrentFilters(r)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id)}
 function currentListType(){if(!active.has(listType))listType=types.find(v=>active.has(v[0]))?.[0]||null;return listType}
-function visible(){const t=currentListType();return t?records.filter(r=>r.type===t&&compPasses(r.componentId)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id):[]}
+function visible(){const t=currentListType();return t?records.filter(r=>r.type===t&&(billOf(r)?billComponentIds(billOf(r)).some(compPasses):compPasses(r.componentId))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||''))||b.id-a.id):[]}
 /* 查询只读取已有字段。整单条件作用于父级，分类／级别条件作用于子问题。 */
 function businessSearchFor(t=listType){return businessSearchState[t]||(businessSearchState[t]={query:'',values:{},draft:{},open:false,error:''})}
 function businessSubject(r){return (r.type==='quality'||r.type==='safety')?(billOf(r)||r):r}
@@ -1801,6 +1827,7 @@ function businessOverdue(r){
  return XABimStore.overdueDays(s)>0?'已逾期':'未逾期';
 }
 function businessAxis(r){
+ if(r.type==='safety')return '';
  const s=businessSubject(r);let axis=s.axisBinding||s.binding;
  if(!axis&&s.code){try{axis=JSON.parse(localStorage.getItem('xa_inspect_axis_bindings_v1')||'{}')['INSPECT|'+s.code]}catch{}}
  if(!axis&&(s.hAxis||s.vAxis))axis=s;
@@ -1839,10 +1866,10 @@ function businessFieldValue(r,key,t=r.type){
  if(key==='archived')return r.archived==='是'?'已归档':r.archived==='否'?'未归档':'';
  return '';
 }
-function listSearchPlaceholder(t=listType){return ({quality:'搜索整改单编号、问题描述或分类',safety:'搜索整改单编号、问题描述或分类',briefing:'搜索交底／模型／文件名称或构件',measure:'搜索测量项、测量部位或构件',panorama:'搜索拍摄点位、照片名称或挂接位置',annotation:'搜索问题描述或构件名称',plan:'搜索文件名称或构件名称',report:'搜索送检单号、物资、规格或构件'})[t]||'搜索记录'}
+function listSearchPlaceholder(t=listType){return ({quality:'搜索整改单编号、问题描述或分类',safety:'搜索整改单编号、问题描述或问题部位',briefing:'搜索交底／模型／文件名称或构件',measure:'搜索测量项、测量部位或构件',panorama:'搜索拍摄点位、照片名称或挂接位置',annotation:'搜索问题描述或构件名称',plan:'搜索文件名称或构件名称',report:'搜索送检单号、物资、规格或构件'})[t]||'搜索记录'}
 function listSearchText(r,t=r.type){
  const binding=businessBindingText(r);let parts=[];
- if(t==='quality'||t==='safety')parts=[r.rectifyCode,r.code,r.description||r.desc||(!r.code?r.title:''),r.category||r.issueCategory,binding,];
+ if(t==='quality'||t==='safety')parts=[r.rectifyCode,r.code,r.description||r.desc||(!r.code?r.title:''),r.category||r.issueCategory,businessSubject(r).problemLocation,binding,];
  else if(t==='briefing')parts=[r.title,r.modelName,r.resourceName,r.fileName,r.code,binding];
  else if(t==='measure')parts=[r.measurementItem||r.title,r.measurementPosition,binding];
  else if(t==='panorama')parts=[r.pointName,r.name,r.bindingText];
@@ -1969,7 +1996,7 @@ function pinIds(){return new Set(pinRows().map(r=>r.id))}
 function recLine(label,value,tail){
   const val=listValue(value);
   if(val==='--'&&!tail)return '';
-  return '<div class="rec-line"><span>'+label+'</span><strong title="'+esc(val)+'">'+esc(val)+(tail||'')+'</strong></div>';
+  return '<div class="rec-line'+(['问题部位','定位参考构件'].includes(label)?' rec-location':'')+'"><span>'+label+'</span><strong title="'+esc(val)+'">'+esc(val)+(tail||'')+'</strong></div>';
 }
 function recStatusLine(r,label){
   const st=XABimStore.status(r),od=XABimStore.overdueDays(r)>0;
@@ -1984,7 +2011,7 @@ function recCard(r,body,extra){
 function issueCardBody(r){
   return recLine('检查类型',r.checkType||r.subtype)+recStatusLine(r)
     +recLine('检查人',r.checker)+recLine('检查日期',r.checkTime)
-    +recLine('整改人',r.assignee)+recLine('挂接构件',briefLocation(r))
+    +recLine('整改人',r.assignee)+(r.type==='safety'?recLine('问题部位',businessSubject(r).problemLocation||'未填写'):recLine('挂接构件',briefLocation(r)))
     +recLine('问题描述',r.description)+recLine('问题分类',r.category||r.issueCategory)
     +recLine('问题级别',r.level);
 }
@@ -2062,6 +2089,7 @@ const UNBOUND_LEDGER={
 };
 let bindView='bound';
 let pendingUnbound=null;
+function ledgerItemKey(t,x){return t==='quality'||t==='safety'||t==='briefing'?x.code:t==='plan'?x.fileName:t==='annotation'?x.checkTime:x.measurementTime+x.measurementItem}
 function unboundItems(t){
   if(t==='panorama'){
     const kw0=String(listQuery||'').trim().toLowerCase();
@@ -2099,7 +2127,7 @@ function segHtml(t){
 function unboundRowHtml(it,t){
   const rows=(it.rows||[]).filter(r=>r[1]!==undefined&&r[1]!==null&&r[1]!=='').map(r=>recLine(r[0],r[1])).join('');
   return '<div class="rec-card unbound-card"><div class="rec-fields">'+recLine(t==='annotation'?'问题描述':'名称',it.title)+rows+'</div>'
-    +'<div class="rec-actions"><button type="button" data-unbound-detail-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">详情</button><button type="button" data-unbound-bind-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">去挂接</button></div></div>';
+    +'<div class="rec-actions"><button type="button" data-unbound-detail-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'">详情</button><button type="button" data-unbound-bind-tab="'+esc(it.key)+'" data-unbound-kind="'+esc(it.kind)+'" '+(it.kind==='bill'&&billStatus(it.src)==='已撤回'?'disabled':'')+'>'+(it.kind==='bill'&&billStatus(it.src)==='已撤回'?'已撤回，不可挂接':'去挂接')+'</button></div></div>';
 }
 function unboundListHtml(t){
   const items=matchingUnboundItems(t);
@@ -2110,30 +2138,23 @@ function unboundListHtml(t){
 function startUnboundBinding(tab,key){
   const it=unboundItems(tab).find(x=>String(x.key)===String(key));
   if(!it)return;
+  if(it.kind==='bill'&&billStatus(it.src)==='已撤回'){toast('已撤回整改单不允许挂接');return}
+  if(tab==='panorama'){openPanorama('bind',it.photoId);return}
   const label=(it.title||'')+(it.kind==='bill'?' · 整改单':'');
-  pendingUnbound={tab:tab,key:it.key,kind:it.kind,src:it.src,label:label};
+  pendingUnbound={tab:tab,key:it.key,kind:it.kind,src:it.src,label:label,problemLocation:it.src?.problemLocation||''};
   placing='unbound';selectedComponents.clear();componentQuery='';selectedModel='';
   listOpen=false;renderList();showModelSelection();
 }
-function applyUnboundBind(tab,key,kind,componentId,force){
-  const c=component(componentId);
-  const stamp=new Date().toLocaleString('sv-SE').slice(0,16);
-  const push=o=>{records.push(Object.assign({id:(function(){let id=nextId++;while(records.some(r=>r.id===id))id++;return id})(),componentId:componentId,x:c[2],y:c[3],checkTime:o.checkTime||stamp,type:o.type},o))};
-  if(kind==='bill'){
-    let b=RECTIFY_BILLS.find(x=>x.code===key);
-    if(!b){const src=(UNBOUND_LEDGER.quality||[]).concat(UNBOUND_LEDGER.safety||[]).find(x=>x.code===key);if(src){b=Object.assign({},src,{type:(tab==='safety'?'safety':'quality'),problemIds:[],componentId:componentId,x:c[2],y:c[3]});RECTIFY_BILLS.push(b);src.bound=true}}
-    else{b.componentId=componentId;b.x=c[2];b.y=c[3]}
-  }else if(kind==='briefing'){
-    const s=(UNBOUND_LEDGER.briefing||[]).find(x=>x.code===key);if(s){s.bound=true;push({type:'briefing',subtype:s.subtype,title:s.title,fileName:s.fileName,code:s.code,checker:s.checker,part:s.part,componentId:componentId,checkTime:s.checkTime,description:'来自交底台账的构件挂接',owner:'系统管理员'})}
-  }else if(kind==='plan'){
-    const s=(UNBOUND_LEDGER.plan||[]).find(x=>x.fileName===key);if(s){s.bound=true;push({type:'plan',category:s.category,title:s.fileName,fileName:s.fileName,uploader:s.uploader,uploadTime:s.uploadTime,checkTime:s.uploadTime})}
-  }else if(kind==='annotation'){
-    const s=(UNBOUND_LEDGER.annotation||[]).find(x=>x.checkTime===key);if(s){s.bound=true;push({type:'annotation',title:s.description.slice(0,20),description:s.description,checker:s.checker,level:s.level,checkTime:s.checkTime,category:'现场批注',checkType:'现场批注',issueRequired:false,compName:c[1],position:c[1],source:'BIM模型'})}
-  }else if(kind==='measure'){
-    const s=(UNBOUND_LEDGER.measure||[]).find(x=>x.measurementTime+x.measurementItem===key);if(s){s.bound=true;push({type:'measure',title:s.measurementItem+' · '+s.measurementPosition,measurementItem:s.measurementItem,measurementPosition:s.measurementPosition,measurementTime:s.measurementTime,points:s.points,passRate:s.passRate,description:'共'+(s.points||[]).length+'个测点',checkTime:s.measurementTime})}
-  }else if(kind==='photo'){
-    const f=panoramaData.photos.find(x=>x.id===key);if(f){f.bound=true;syncPanoramaRecords()}
-  }
+function unboundBindingRows(p,comps){
+  const src=p.src;if(!src)return [];
+  return comps.map(c=>{
+    const base={...src,type:p.tab,sourceId:'ledger:'+p.tab+':'+p.key,ledgerTab:p.tab,ledgerKey:p.key,bimModel:selectedModel,componentId:c[0],x:c[2],y:c[3]};
+    if(p.kind==='bill')return {...base,sourceId:src.code,rectifyCode:src.code,bindingKind:'bill',rectifySnapshot:{...src,problemLocation:String(p.problemLocation||'').trim()},problemLocation:String(p.problemLocation||'').trim(),problemIds:[]};
+    if(p.kind==='briefing')return {...base,title:src.title};
+    if(p.kind==='plan')return {...base,title:src.fileName,checkTime:src.uploadTime};
+    if(p.kind==='annotation')return {...base,title:src.description.slice(0,20),category:'现场批注',checkType:'现场批注',issueRequired:src.issueRequired??false,compName:c[1],position:c[1],source:src.source||'BIM模型'};
+    return {...base,title:src.measurementItem+' · '+src.measurementPosition,description:'共'+(src.points||[]).length+'个测点',checkTime:src.measurementTime};
+  });
 }
 /* 一键展开/收起：按当前页签的分组键统一控制（与各页签树的 key 规则保持一致） */
 function listGroupKeys(){
@@ -2192,16 +2213,16 @@ function focusPinHtml(){
 /* 整改单（父级）→ 问题（子级）渲染 */
 function billHeadHtml(b,shown,forceOpen){
   const key='BILL:'+b.code, open=forceOpen||businessSearchActive()?true:treeIsOpen(listType,key), all=billProblems(b), od=billOverdue(b);
-  const fields=recLine('检查类型',b.checkType)+recLine('检查人',b.checker)+recLine('检查日期',b.checkTime)+recLine('整改人',b.assignee)+recLine('挂接构件',businessBindingText(b));
+  const fields=recLine('检查类型',b.checkType)+recLine('检查人',b.checker)+recLine('检查日期',b.checkTime)+recLine('整改人',b.assignee)+(b.type==='safety'?recLine('问题部位',b.problemLocation||'未填写'):recLine('挂接构件',businessBindingText(b)));
   const kids=shown||all;
-  const childHtml=kids.map(r=>'<div class="rec-card" data-locate-bill="'+esc(b.code)+'"><div class="rec-fields">'
+  const childHtml=kids.map(r=>'<div class="rec-card bill-problem"><div class="rec-fields">'
       +recLine('问题描述',r.description||r.title)+recLine('问题分类',r.category||r.issueCategory)+recLine('问题级别',r.level)
       +'</div></div>').join('');
-  return '<section class="tree-node"><div class="tree-head">'
+  return '<section class="tree-node"><div class="tree-head" data-locate-bill="'+esc(b.code)+'">'
     +'<button type="button" class="tree-caret" data-group="'+esc(key)+'" aria-expanded="'+open+'" aria-label="展开/收起整改单问题">'+(open?'▾':'▸')+'</button>'
     +'<button type="button" class="tree-title" data-locate-bill="'+esc(b.code)+'" title="定位该整改单挂接范围">'+esc(b.code)+'</button>'
     +'<em>'+kids.length+' 个问题'+(od?' · 已逾期':'')+'</em></div>'
-    +'<div class="tree-sub bill-fields">'
+    +'<div class="tree-sub bill-fields" data-locate-bill="'+esc(b.code)+'">'
     +'<div class="rec-line"><span>整改状态</span><em class="status-chip '+statusClass(billStatus(b))+'">'+esc(billStatus(b))+'</em>'+(od?'<small class="overdue">已逾期</small>':'')+'</div>'
     +fields
     +'<div class="rec-actions"><button type="button" data-bill-detail="'+esc(b.code)+'">详情</button></div>'
@@ -2222,12 +2243,12 @@ function rectifyBodyHtml(rows){
 }
 function matchingBills(rows){
  const codes=new Set(rows.map(r=>billOf(r)?.code).filter(Boolean));
- return RECTIFY_BILLS.filter(b=>b.type===listType&&b.componentId&&compPasses(b.componentId)&&(codes.has(b.code)||(!billProblems(b).length&&matchesBusinessSearch(b,listType)&&matchesBoardFilter(b))));
+ return RECTIFY_BILLS.filter(b=>b.type===listType&&billComponentIds(b).some(compPasses)&&(codes.has(b.code)||(!billProblems(b).length&&matchesBusinessSearch(b,listType)&&matchesBoardFilter(b))));
 }
 function locateBillByCode(code){
   const b=RECTIFY_BILLS.find(x=>x.code===code);if(!b)return;
   listType=b.type;listOpen=true;selectedId=null;
-  focusOn(b.componentId);renderList();
+  focusOn(billComponentIds(b).find(compPasses)||b.componentId);renderList();
   toast('已定位整改单 '+code);
 }
 function billDetailHtml(b){
@@ -2246,7 +2267,7 @@ function billDetailHtml(b){
     +'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'
     +kv('整改单编号',b.code)+kv('检查类型',b.checkType)+kv('检查人',b.checker)+kv('检查时间',b.checkTime)
     +kv('区域',area)+kv('部位',pos)+kv('检查结果',result)+kv('整改责任单位',unit)
-    +kv('关联构件',b.componentId?component(b.componentId)[1]:'未挂接')
+    +(b.type==='safety'?kv('问题部位',b.problemLocation||'未填写'):kv('关联构件',billComponentIds(b).map(id=>component(id)[1]).join('、')||'未挂接'))
     +'</div></section>'
     +'<section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr><th>问题分类</th><th>问题描述</th><th>问题级别</th><th>整改要求</th><th>整改期限</th></tr></thead><tbody>'+rows+'</tbody></table></section>'
     +(photoCount?'<section class="page-section"><h2>现场附件</h2><div class="page-grid">'+kv('现场照片',photoCount+' 张')+'</div></section>':'')
@@ -2365,6 +2386,14 @@ function exitComponentFocus(){
 function tableRows(){if(listType==='panorama'||!focusComponent)return[];const selected=records.find(r=>r.id===selectedId);return filtered().filter(r=>r.componentId===focusComponent&&(!selected||(isIssue(selected)?isIssue(r):r.type===selected.type))).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')))}
 /* v2.7：中间关联记录表已合入侧栏，保留入口以兼容旧调用 */
 function renderTable(){renderList()}
+function startBillBinding(code){
+ const b=RECTIFY_BILLS.find(x=>x.code===code);if(!b)return;
+ if(billStatus(b)==='已撤回'){toast('已撤回整改单不允许挂接');return}
+ pendingUnbound={tab:b.type,key:b.code,kind:'bill',src:b,label:b.code+' · 整改单',problemLocation:b.problemLocation||''};
+ placing='unbound';selectedComponents.clear();componentQuery='';selectedModel='';listOpen=false;renderList();showModelSelection();
+}
+function safetyBindingWork(){const w=pendingWork();return w?.type==='unbound'&&w.data.tab==='safety'&&w.data.kind==='bill'}
+function safetyLocationHtml(){if(!safetyBindingWork())return '';return '<label class="safety-location">问题部位 <b>*</b><input id="webProblemLocation" maxlength="200" value="'+esc(pendingUnbound.problemLocation||'')+'" placeholder="请输入安全问题的准确部位或范围"></label><p class="safety-location-hint">选取问题范围内的一个构件辅助定位，准确范围以“问题部位”为准。</p>'}
 function selectedComponentRows(){return [...selectedComponents].map(id=>component(id)).filter(Boolean)}
 function pendingWork(){return pendingBriefing?{type:'briefing',data:pendingBriefing}:pendingMeasurement?{type:'measure',data:pendingMeasurement}:pendingReport?{type:'report',data:pendingReport}:pendingUnbound?{type:'unbound',data:pendingUnbound}:null}
 function clearPending(){pendingBriefing=null;pendingMeasurement=null;pendingReport=null;pendingUnbound=null}
@@ -2374,7 +2403,7 @@ function initialComponentIds(){const work=pendingWork();if(!work)return new Set(
 function componentSearchRows(){const keyword=componentQuery.trim().toLowerCase();return componentOptions.filter(c=>!keyword||c[0].toLowerCase().includes(keyword)||c[1].toLowerCase().includes(keyword))}
 function locateBindingComponent(id){const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.48,available=w-380,targetX=available*.58,targetY=h*.4,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;focusComponent=id;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';renderBindingHighlights()}
 function renderBindingHighlights(){if(!(pendingWork()&&placing&&selectedModel)){q('#focus').innerHTML='';return}q('#focus').innerHTML=selectedComponentRows().map(c=>'<div class="component-pick" data-label="'+esc(c[1])+'" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>').join('')}
-function renderPlacement(){if(placing==='annotation'){renderAnnotationPicker();return}const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),measurements=work.type==='measure'?measurementRows(pending):[],sourceText=work.type==='unbound'?(pending.label||'未挂接台账数据'):work.type==='report'?('送检单号 '+pending.sendCode+' · '+pending.materialName+' · '+pending.spec):work.type==='briefing'?(pending.resourceName||pending.fileName):(measurements.length===1?(measurements[0].measurementItem+' · '+measurements[0].measurementPosition+' · '+(measurements[0].points?.length||0)+'个测点'):'已选 '+measurements.length+' 个测量部位 · 共 '+measurements.reduce((total,row)=>total+(row.points?.length||0),0)+' 个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="checkbox" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div><div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all"><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
+function renderPlacement(){if(placing==='annotation'){renderAnnotationPicker();return}const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),measurements=work.type==='measure'?measurementRows(pending):[],sourceText=work.type==='unbound'?(pending.label||'未挂接台账数据'):work.type==='report'?('送检单号 '+pending.sendCode+' · '+pending.materialName+' · '+pending.spec):work.type==='briefing'?(pending.resourceName||pending.fileName):(measurements.length===1?(measurements[0].measurementItem+' · '+measurements[0].measurementPosition+' · '+(measurements[0].points?.length||0)+'个测点'):'已选 '+measurements.length+' 个测量部位 · 共 '+measurements.reduce((total,row)=>total+(row.points?.length||0),0)+' 个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="'+(safetyBindingWork()?'radio':'checkbox')+'" name="referenceComponent" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div>'+safetyLocationHtml()+'<div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all" '+(safetyBindingWork()?'hidden':'')+'><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">'+(safetyBindingWork()?'点选模型或搜索名称选择一个参考构件；改选时替换原选择。':'勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。')+'</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
 function render(){refreshAnnotationStatus();renderTabs();renderMarkers();renderList();renderTable();renderPlacement();renderDetailPage();renderBoards();renderFilterPanel()}
 function choose(r,collapse){const keepList=collapse!==true;switchBusinessListType(r.type);selectedId=r.id;tablePage=1;listOpen=keepList;collapsedDates.delete(String(r.checkTime||'').slice(0,10));focusOn(r.componentId,markerVariantOf(r));renderList()}
 function showModal(title,body,onSave){modalMode=onSave;q('#modalMount').innerHTML='<div class="shade"><section class="modal" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="modal-head"><span>'+esc(title)+'</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button data-action="close-modal">取消</button><button class="primary" data-action="save-modal">确定</button></div></section></div>'}
@@ -2383,16 +2412,18 @@ function openBriefingPreview(r){const isModel=r.subtype==='三维交底',name=is
 function openMeasurementTable(componentId){listType='measure';focusComponent=componentId;q('#modalMount').innerHTML='';renderTable()}
 function nearestComponent(x,y){return componentOptions.reduce((best,item)=>{const distance=Math.hypot(item[2]-x,item[3]-y);return !best||distance<best.distance?{item,distance}:best},null).item}
 function showModelSelection(){const work=pendingWork();if(!work)return;const body=modelGroups.map((group,index)=>'<section class="model-tree-group"><div class="model-tree-title"><span class="tree-caret">'+(index?'›':'▼')+'</span><span>'+esc(group.name)+'</span></div>'+(index?'':group.models.map(name=>'<label class="model-tree-item"><input type="radio" name="bimModel" value="'+esc(name)+'" '+(selectedModel===name?'checked':'')+'><span>'+esc(name)+'</span></label>').join(''))+'</section>').join('');modalMode=()=>{const checked=q('input[name="bimModel"]:checked');if(!checked){q('#formError').textContent='请选择一个BIM模型';return false}selectedModel=checked.value;selectedComponents.clear();componentQuery='';placing=work.type;listOpen=false;closeModal();renderList();renderPlacement();toast('模型已载入，可搜索或点选构件');return true};q('#modalMount').innerHTML='<div class="shade"><section class="modal model-select-modal" role="dialog" aria-modal="true" aria-label="载入模型"><div class="modal-head"><span>载入模型</span><button data-action="cancel-model-select" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button class="primary" data-action="save-modal">确定</button><button data-action="cancel-model-select">取消</button></div></section></div>'}
-function toggleBindingComponent(c){const bound=initialComponentIds();if(bound.has(c[0])){toast('该构件已挂接当前业务数据');return}if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else selectedComponents.add(c[0]);renderPlacement()}
+function toggleBindingComponent(c){const bound=initialComponentIds();if(bound.has(c[0])){toast('该构件已挂接当前业务数据');return}if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else{if(safetyBindingWork())selectedComponents.clear();selectedComponents.add(c[0])}renderPlacement()}
 async function saveBusinessBinding(){const work=pendingWork();if(!work||!selectedComponents.size||bindingSaving||!businessReady)return;
   if(work.type==='unbound'){
     const p=work.data,comps=selectedComponentRows();if(!comps.length)return;
-    if(p.kind==='bill'||p.kind==='photo'){applyUnboundBind(p.tab,p.key,p.kind,comps[0][0],true)}
-    else{comps.forEach(c=>applyUnboundBind(p.tab,p.key,p.kind,c[0],true))}
-    const n=(p.kind==='bill'||p.kind==='photo')?1:comps.length;
+    if(p.kind==='bill'&&billStatus(p.src)==='已撤回'){toast('已撤回整改单不允许挂接');return}
+    if(safetyBindingWork()&&(!String(p.problemLocation||'').trim()||comps.length!==1)){toast(!String(p.problemLocation||'').trim()?'请填写问题部位':'请选择一个范围内的参考构件');return}
+    const rows=unboundBindingRows(p,comps);if(!rows.length)return;
+    bindingSaving=true;const button=q('[data-action="confirm-binding"]');if(button)button.disabled=true;
+    try{const state=await saveBindingRecords(rows);applyBusinessState(state)}catch(error){toast(error.message||'挂接保存失败，请重试');return}finally{bindingSaving=false;if(button)button.disabled=false}
     clearPending();placing=null;selectedComponents.clear();componentQuery='';selectedModel='';
-    bindView='bound';listType=p.tab;listOpen=true;render();renderList();
-    toast('已挂接 '+n+' 个构件');return;
+    bindView='bound';active.add(p.tab);listType=p.tab;listOpen=true;render();
+    toast('已挂接 '+comps.length+' 个构件');return;
   }if(work.type==='report'&&work.data.archived==='否'){toast('归档后可挂接 BIM 模型');return}const pending=work.data,created=[];selectedComponentRows().forEach(c=>{if(work.type==='briefing'){const duplicate=records.some(r=>r.type==='briefing'&&r.sourceId===pending.sourceId&&r.componentId===c[0]&&(work.type!=='briefing'||r.subtype===pending.subtype));if(duplicate)return;const isModel=pending.subtype==='三维交底',item={id:nextId++,type:'briefing',subtype:pending.subtype,title:isModel?pending.resourceName:pending.fileName,resourceName:pending.resourceName,modelName:isModel?pending.resourceName:'',fileName:pending.fileName,sourceId:pending.sourceId,bimModel:selectedModel,description:'来自'+pending.subtype+'台账的构件挂接',componentId:c[0],x:c[2],y:c[3],checkTime:new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'};created.push(item);return}if(work.type==='report'){const duplicate=records.some(r=>r.type==='report'&&r.sourceId===pending.sourceId&&r.componentId===c[0]&&(work.type!=='briefing'||r.subtype===pending.subtype));if(duplicate)return;const item=Object.assign({},pending,{id:nextId++,type:'report',title:pending.sendCode+' · '+pending.materialName,reportCategory:reportCategoryOf(pending),sourceId:pending.sourceId,bimModel:selectedModel,description:'送检单号 '+pending.sendCode+' · 物资 '+pending.materialName,componentId:c[0],x:c[2],y:c[3],checkTime:pending.sendDate||new Date().toLocaleString('sv-SE').slice(0,16),owner:'系统管理员'});created.push(item);return}measurementRows(pending).forEach(row=>{const duplicate=records.some(r=>r.type==='measure'&&r.sourceId===row.sourceId&&r.componentId===c[0]);if(duplicate)return;const points=Array.isArray(row.points)?row.points:[],item={id:nextId++,type:'measure',title:row.measurementItem+' · '+row.measurementPosition,reportName:pending.reportName,measurementTime:pending.measurementTime,measurementItem:row.measurementItem,measurementPosition:row.measurementPosition,points,passRate:row.passRate||'--',sourceId:row.sourceId,bimModel:selectedModel,description:'共 '+points.length+' 个测点',componentId:c[0],x:c[2],y:c[3],checkTime:pending.measurementTime||new Date().toLocaleString('sv-SE').slice(0,16),status:row.result||'--',owner:'测量员'};created.push(item)})});if(!created.length){toast('所选构件均已挂接该业务数据');return}bindingSaving=true;const confirm=q('[data-action="confirm-binding"]');if(confirm)confirm.disabled=true;
 try{const state=await saveBindingRecords(created);applyBusinessState(state)}catch(error){toast(error.message||'挂接保存失败，请重试');return}finally{bindingSaving=false;if(confirm)confirm.disabled=false}
 const type=work.type;const target=records.find(r=>XABimStore.rowKey(r)===XABimStore.rowKey(created[0]))||created[0],componentCount=new Set(created.map(row=>row.componentId)).size,measurementCount=new Set(created.map(row=>row.sourceId||row.id)).size;clearPending();placing=null;selectedComponents.clear();componentQuery='';active.add(type);listType=type;selectedId=target?.id||null;listOpen=true;render();if(target){focusOn(target.componentId);q('#tableMount').innerHTML='';if(type==='briefing'){if(hasBriefMedia(target))openBriefingPreview(target);else{detailId=target.id;renderDetailPage()}}else if(type==='report'){listType='report';renderList()}else openMeasurementTable(target.componentId)}toast(type==='measure'?'已将 '+measurementCount+' 个测量部位挂接到 '+componentCount+' 个构件（共 '+created.length+' 条）':'已挂接 '+created.length+' 个构件')}
@@ -2409,7 +2440,7 @@ function annotationImages(images){return Array.isArray(images)&&images.length?'<
 function annotationHistoryHtml(r){const history=annotationHistoryOf(r);if(!history.length)return '<p class="page-muted">尚未提交整改记录</p>';return history.map(x=>'<div class="anno-round"><div class="anno-round-head">第 '+esc(x.round||1)+' 轮整改与复查</div><div class="anno-round-body"><div class="page-grid">'+kv('实际整改日期',x.rectifiedAt)+kv('整改说明',x.rectifyDescription)+kv('复查结果',x.reviewResult||'待复查')+kv('复查说明',x.reviewDescription)+kv('复查时间',x.reviewAt)+'</div><p class="small-copy">整改照片</p>'+annotationImages(x.rectifyImages)+'<p class="small-copy">复查照片</p>'+annotationImages(x.reviewImages)+'</div></div>').join('')}
 function annotationFlowHtml(r){const s=annotationDisplayStatus(r),od=annotationOverdueDays(r),steps=[{t:'批注发起',m:(r.checker||'--')+' · '+(r.checkTime||'--')+' · 来源：'+(r.source||'—'),on:true}];if(r.issueRequired===false)steps.push({t:'无需整改',m:'仅记录问题，未指派整改人与期限',on:true});else{steps.push({t:'下发整改单',m:'整改人：'+(r.assignee||'--')+' · 期限：'+(r.deadline||'--')+' · 复查人：'+(r.reviewer||'--'),on:true});annotationHistoryOf(r).forEach(x=>{if(x.rectifiedAt)steps.push({t:'第 '+(x.round||1)+' 轮整改已提交',m:(r.assignee||'--')+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});if(x.reviewAt)steps.push({t:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),m:(r.reviewer||'--')+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'})});if(s==='待整改')steps.push({t:'等待整改',m:(r.assignee||'--')+' 尚未提交第 '+(r.round||1)+' 轮整改结果'});if(s==='继续整改')steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交'});if(s==='待复查')steps.push({t:'待复查',m:'等待 '+(r.reviewer||'--')+' 提交复查结果'});if(s==='已复查')steps.push({t:'问题闭环',m:'最终复查通过',on:true});if(od>0)steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',over:true})}return'<div class="anno-flow">'+steps.map(x=>'<div class="anno-flow-step '+(x.over?'over':x.on?'on':'')+'"><b>'+esc(x.t)+'</b><small>'+esc(x.m)+'</small></div>').join('')+'</div>'}
 function annotationDetailHtml(r){const s=annotationDisplayStatus(r),od=annotationOverdueDays(r),issued=r.issueRequired!==false;let h='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>批注详情</strong><span class="page-state">'+esc(s)+(od?' · 超 '+od+' 天':'')+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题描述',r.description||r.title)+kv('关联构件',r.compName||briefLocation(r))+kv('批注人',r.checker)+kv('批注时间',r.checkTime)+kv('来源',r.source)+kv('是否需整改',issued?'是':'否')+'</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2><div class="page-grid">'+kv('整改状态',s)+(issued?kv('整改人',(r.assignee||'--')+(r.unit?'（'+r.unit+'）':''))+kv('整改期限',r.deadline)+kv('复查人',r.reviewer):kv('说明','未下发整改单，无需整改。'))+'</div>'+(issued?annotationHistoryHtml(r):'')+'</section><hr class="page-divider"><section class="page-section"><h2>流转记录</h2>'+annotationFlowHtml(r)+'</section></main>';return h}
-function renderDetailPage(){const mount=q('#pageMount'),r=records.find(x=>x.id===detailId);if(!r){mount.innerHTML='';return}if(r.type==='report'){renderReportPage();return}if(!isIssue(r)&&r.type!=='briefing'&&r.type!=='plan'&&r.type!=='measure'){mount.innerHTML='';return}if(r.type==='annotation'){mount.innerHTML=annotationDetailHtml(r);return}if(r.type==='briefing'){mount.innerHTML=briefingDetailHtml(r);return}if(r.type==='plan'){mount.innerHTML=planDetailHtml(r);return}if(r.type==='measure'){mount.innerHTML=measureDetailHtml(r);return}mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+typeName(r.type)+'检查/整改 · 问题详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题编号',(r.type==='quality'?'Q-':'S-')+String(r.id).padStart(4,'0'))+kv('检查类型',r.checkType)+kv('检查人',r.checker)+kv('检查时间',r.checkTime)+kv('检查内容',r.checkContent||r.checkType)+kv('区域',r.area)+kv('关联构件',briefLocation(r))+'</div></section><section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr>'+(r.type==='annotation'?'':'<th>问题分类</th>')+'<th>问题描述</th>'+(r.type==='annotation'?'':'<th>问题级别</th>')+'<th>整改要求</th><th>整改期限</th></tr></thead><tbody><tr>'+(r.type==='annotation'?'':'<td>'+esc(r.category)+'</td>')+'<td>'+esc(r.description)+'</td>'+(r.type==='annotation'?'':'<td>'+esc(r.level)+'</td>')+'<td>'+esc(r.requirement)+'</td><td>'+esc(r.deadline)+'</td></tr></tbody></table><div class="page-grid" style="margin-top:16px">'+kv('检查结果',r.result)+kv('整改责任单位',r.unit)+kv('整改责任人',r.assignee)+'</div><p class="small-copy">现场附件</p><div class="attachment">现场照片（示意）</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2>'+(r.rectifiedAt?'<div class="page-grid">'+kv('实际整改时间',r.rectifiedAt)+kv('整改人',r.rectifier)+kv('整改描述',r.rectifyDescription)+'</div><p class="small-copy">整改附件</p><div class="attachment">整改照片（示意）</div>':'<p class="page-muted">待整改，暂无整改记录</p>')+'</section><hr class="page-divider"><section class="page-section"><h2>复查信息</h2>'+(r.reviewAt?'<div class="page-grid">'+kv('复查意见',r.reviewResult)+kv('复查时间',r.reviewAt)+kv('复查人',r.reviewer)+kv('复查描述',r.reviewDescription)+'</div><p class="small-copy">复查附件</p><div class="attachment">复查照片（示意）</div>':'<p class="page-muted">待复查，暂无复查记录</p>')+'</section></main>'}
+function renderDetailPage(){const mount=q('#pageMount'),r=records.find(x=>x.id===detailId);if(!r){mount.innerHTML='';return}if(r.type==='report'){renderReportPage();return}if(!isIssue(r)&&r.type!=='briefing'&&r.type!=='plan'&&r.type!=='measure'){mount.innerHTML='';return}if(r.type==='annotation'){mount.innerHTML=annotationDetailHtml(r);return}if(r.type==='briefing'){mount.innerHTML=briefingDetailHtml(r);return}if(r.type==='plan'){mount.innerHTML=planDetailHtml(r);return}if(r.type==='measure'){mount.innerHTML=measureDetailHtml(r);return}mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+typeName(r.type)+'检查/整改 · 问题详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题编号',(r.type==='quality'?'Q-':'S-')+String(r.id).padStart(4,'0'))+kv('检查类型',r.checkType)+kv('检查人',r.checker)+kv('检查时间',r.checkTime)+kv('检查内容',r.checkContent||r.checkType)+kv('区域',r.area)+(r.type==='safety'?kv('问题部位',businessSubject(r).problemLocation||'未填写'):kv('关联构件',briefLocation(r)))+'</div></section><section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr>'+(r.type==='annotation'?'':'<th>问题分类</th>')+'<th>问题描述</th>'+(r.type==='annotation'?'':'<th>问题级别</th>')+'<th>整改要求</th><th>整改期限</th></tr></thead><tbody><tr>'+(r.type==='annotation'?'':'<td>'+esc(r.category)+'</td>')+'<td>'+esc(r.description)+'</td>'+(r.type==='annotation'?'':'<td>'+esc(r.level)+'</td>')+'<td>'+esc(r.requirement)+'</td><td>'+esc(r.deadline)+'</td></tr></tbody></table><div class="page-grid" style="margin-top:16px">'+kv('检查结果',r.result)+kv('整改责任单位',r.unit)+kv('整改责任人',r.assignee)+'</div><p class="small-copy">现场附件</p><div class="attachment">现场照片（示意）</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2>'+(r.rectifiedAt?'<div class="page-grid">'+kv('实际整改时间',r.rectifiedAt)+kv('整改人',r.rectifier)+kv('整改描述',r.rectifyDescription)+'</div><p class="small-copy">整改附件</p><div class="attachment">整改照片（示意）</div>':'<p class="page-muted">待整改，暂无整改记录</p>')+'</section><hr class="page-divider"><section class="page-section"><h2>复查信息</h2>'+(r.reviewAt?'<div class="page-grid">'+kv('复查意见',r.reviewResult)+kv('复查时间',r.reviewAt)+kv('复查人',r.reviewer)+kv('复查描述',r.reviewDescription)+'</div><p class="small-copy">复查附件</p><div class="attachment">复查照片（示意）</div>':'<p class="page-muted">待复查，暂无复查记录</p>')+'</section></main>'}
 q('#tabs').addEventListener('click',e=>{
  const b=e.target.closest('[data-tab]');if(!b)return;rememberBusinessSearch();boardFilter=null;
  const t=b.dataset.tab,removing=active.has(t);
@@ -2458,10 +2489,10 @@ q('#listMount').addEventListener('click',e=>{
   if(grp){toggleTree(listType,grp.dataset.group);renderList();return}
   const gpo=e.target.closest('[data-group-pano]');
   if(gpo){toggleTree('panorama',gpo.dataset.groupPano);renderPanoramaList();return}
+  const bb=e.target.closest('[data-bill-bind]');if(bb){e.stopPropagation();startBillBinding(bb.dataset.billBind);return}
+  const bd=e.target.closest('[data-bill-detail]');if(bd){e.stopPropagation();openBillDetail(bd.dataset.billDetail);return}
   const lb=e.target.closest('[data-locate-bill]');
   if(lb){locateBillByCode(lb.dataset.locateBill);return}
-  const bd=e.target.closest('[data-bill-detail]');
-  if(bd){e.stopPropagation();openBillDetail(bd.dataset.billDetail);return}
   const det=e.target.closest('[data-detail]');
   if(det){e.stopPropagation();openDetailById(Number(det.dataset.detail));return}
   const rp=e.target.closest('[data-report-page]');
@@ -2482,7 +2513,7 @@ q('#listMount').addEventListener('change',e=>{
 });
 q('#listMount').addEventListener('input',e=>{if(e.target.id!=='listSearch')return;const cursor=e.target.selectionStart;listQuery=e.target.value;businessSearchFor().query=listQuery;refreshFilteredView();const input=q('#listSearch');if(input){input.focus();input.setSelectionRange(cursor,cursor)}});
 q('#listMount').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='listSearch'||e.target.dataset.businessDate)){e.preventDefault();applyBusinessSearch()}});
-q('#markers').addEventListener('click',e=>{if(boardFilter?.mode!=='component')boardFilter=null;const marker=e.target.closest('[data-marker]');if(!marker)return;if(e.detail>1)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;if(focusMatches(id,type,variant)){exitComponentFocus();return}switchBusinessListType(type);const rows=filtered().filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;enterComponentFocus();focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;enterComponentFocus();focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
+q('#markers').addEventListener('click',e=>{if(boardFilter?.mode!=='component')boardFilter=null;const marker=e.target.closest('[data-marker]');if(!marker)return;if(e.detail>1)return;const id=marker.dataset.marker,type=marker.dataset.markerType,variant=marker.dataset.markerVariant;if(focusMatches(id,type,variant)){exitComponentFocus();return}switchBusinessListType(type);if((type==='quality'||type==='safety')&&billOfComponent(id,type).length){selectedId=null;listOpen=true;bindView='bound';enterComponentFocus();focusOn(id,variant);renderList();return}const rows=filtered().filter(r=>r.type===type&&r.componentId===id&&(type!=='briefing'||r.subtype===variant)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));if(rows.length){if(type==='briefing'&&hasBriefMedia(rows[0])){selectedId=rows[0].id;enterComponentFocus();focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openBriefingPreview(rows[0])}else if(type==='measure'){selectedId=rows[0].id;enterComponentFocus();focusOn(id,variant);renderList();q('#tableMount').innerHTML='';openMeasurementTable(id)}else choose(rows[0])}});
 q('#stage').addEventListener('click',e=>{const work=pendingWork();if(!(work&&placing===work.type&&selectedModel))return;const rect=q('#stage').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100;toggleBindingComponent(nearestComponent(Math.max(4,Math.min(96,x)),Math.max(8,Math.min(90,y))))});
 /* ==== v2.6 需求「优化新增方式」：在模型上双击构件 → 直接弹出新增批注表单（侧边清单「＋ 新增」原路径保留） ==== */
 /* 命中判定：先按实际点击点取最近标记元素；取不到时按标记盒最近距离 18px 兜底（标记为 translate(-50%,-100%)，头部在上） */
@@ -2528,8 +2559,8 @@ q('#stage').addEventListener('click',e=>{
 });
 q('#tableMount').addEventListener('click',e=>{const rp=e.target.closest('[data-report-page]');if(rp){detailId=+rp.dataset.reportPage;q('#tableMount').innerHTML='';renderReportPage();return}const a=e.target.closest('[data-action]')?.dataset.action;if(a==='close-table'){selectedId=null;expandedMeasureRows.clear();resetFocus();if(listType&&active.has(listType))listOpen=true;renderTable();renderList();return}const measureId=Number(e.target.closest('[data-measure-expand]')?.dataset.measureExpand);if(measureId){if(expandedMeasureRows.has(measureId))expandedMeasureRows.delete(measureId);else expandedMeasureRows.add(measureId);renderTable();return}const id=Number(e.target.closest('[data-detail]')?.dataset.detail);if(id){const r=records.find(x=>x.id===id);if(!r)return;selectedId=id;if(isIssue(r)){detailId=id;renderDetailPage()}else openGeneric(r);return}const page=e.target.closest('[data-page]')?.dataset.page;if(page){const max=Math.ceil(tableRows().length/5);tablePage=Math.max(1,Math.min(max,tablePage+(page==='next'?1:-1)));renderTable()}});
 q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-component]')?.dataset.removeComponent;if(remove){selectedComponents.delete(remove);renderPlacement();return}const locate=e.target.closest('[data-locate-component]')?.dataset.locateComponent;if(locate){locateBindingComponent(locate);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='clear-component-search'){componentQuery='';renderPlacement();q('#componentSearch')?.focus();return}if(action==='choose-model'){showModelSelection();return}if(action==='confirm-binding'){saveBusinessBinding();return}if(action==='cancel-place'){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render();toast('已取消本次挂接')}});
-q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
-q('#placeMount').addEventListener('input',e=>{if(e.target.id!=='componentSearch')return;componentQuery=e.target.value;renderPlacement();const input=q('#componentSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
+q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){if(safetyBindingWork())return;const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
+q('#placeMount').addEventListener('input',e=>{if(e.target.id==='webProblemLocation'){if(pendingUnbound)pendingUnbound.problemLocation=e.target.value;return}if(e.target.id!=='componentSearch')return;componentQuery=e.target.value;renderPlacement();const input=q('#componentSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
 q('#modalMount').addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(a==='cancel-model-select'){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}else renderPlacement();return}if(a==='close-modal'||(e.target.classList.contains('shade')&&!e.target.querySelector('.model-select-modal')))closeModal();if(a==='save-modal'&&modalMode)modalMode()});
 q('#pageMount').addEventListener('click',e=>{const ub=e.target.closest('[data-unbound-bind]');if(ub){startUnboundReportBinding(ub.dataset.unboundBind);return}if(e.target.closest('[data-action="back-report"]')||e.target.closest('[data-action="back-bim"]')){reportDetailOverride=null;restoreState();return}});bindBoardEvents();bindFilterEvents();
 window.addEventListener('resize',()=>{if(pendingWork()&&placing)renderBindingHighlights();else if(focusComponent)focusOn(focusComponent)});window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(detailId){detailId=null;renderDetailPage()}else if(q('#modalMount').querySelector('.model-select-modal')){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}}else if(q('#modalMount').innerHTML)closeModal();else if(placing){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render()}else if(focusComponent){resetFocus();if(listType&&active.has(listType))listOpen=true;renderTable();renderList()}}});
@@ -2664,7 +2695,7 @@ function listCardHtml(r,selected,overdue){
     ? listField('方案类型',r.category)+listField('文件名称',r.fileName||r.title)+listField('上传人',r.uploader)+listField('上传时间',r.uploadTime)
     : r.type==='annotation'
       ? listField('问题描述',r.description)+status+listField('挂接构件',briefLocation(r))+listField('整改期限',r.deadline,deadlineTail)
-      : listField('问题分类',r.category||r.issueCategory)+status+listField('问题描述',r.description)+listField('挂接构件',briefLocation(r))+listField('检查类型',r.checkType||r.subtype)+listField('整改期限',r.deadline,deadlineTail);
+      : listField('问题分类',r.category||r.issueCategory)+status+listField('问题描述',r.description)+(r.type==='safety'?listField('问题部位',businessSubject(r).problemLocation||'未填写'):listField('挂接构件',briefLocation(r)))+listField('检查类型',r.checkType||r.subtype)+listField('整改期限',r.deadline,deadlineTail);
   return '<button class="issue-card '+(selected?'selected':'')+'" data-item="'+r.id+'"><div class="card-fields">'+rows+'</div></button>';
 }
 
