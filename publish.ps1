@@ -191,6 +191,19 @@ if (-not $RenderOnly) {
     Write-Host "已归档版本：$verName（模板 $tplCount 个）" -ForegroundColor Green
 }
 
+# 首页需求文档下载：同步指定的 V1.8，供线上直接下载。
+# 只重建首页时也同步文档；在独立站点目录运行时保留已发布的文件。
+$requirementName = 'prd-bim-v1.8.docx'
+$requirementSource = Join-Path (Split-Path $root -Parent) $requirementName
+$requirementDocsRoot = Join-Path $root 'docs'
+$requirementTarget = Join-Path $requirementDocsRoot $requirementName
+if (Test-Path -LiteralPath $requirementSource -PathType Leaf) {
+    New-Item -ItemType Directory -Force -Path $requirementDocsRoot | Out-Null
+    Copy-Item -LiteralPath $requirementSource -Destination $requirementTarget -Force
+} elseif (-not (Test-Path -LiteralPath $requirementTarget -PathType Leaf)) {
+    throw "找不到需求文档：$requirementSource"
+}
+
 # ---------------------------------------------------------------- 2. 重建首页
 $versionsRoot = Join-Path $root 'versions'
 $items = @()
@@ -333,6 +346,7 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
       <a class="btn" href="latest.html">打开演示</a>
       {{LATESTHTML}}
       <a class="btn ghost" href="versions/{{LATESTDIR}}/index.html">固定版本快照</a>
+      <a class="btn ghost" href="docs/{{REQUIREMENTDOC}}" download="{{REQUIREMENTDOC}}">下载需求文档</a>
       {{LATESTTPL}}
     </div>
   </div>
@@ -367,6 +381,7 @@ $out = $out.Replace('{{LATESTNOTE}}', $latestNote)
 $out = $out.Replace('{{LATESTHTML}}', $latestHtml)
 $out = $out.Replace('{{LATESTDIR}}', $latestDir)
 $out = $out.Replace('{{LATESTTPL}}', $latestTpl)
+$out = $out.Replace('{{REQUIREMENTDOC}}', $requirementName)
 $out = $out.Replace('{{ROWS}}', $rows)
 Write-Utf8NoBom (Join-Path $root 'index.html') $out
 Write-Host "已重建首页（共 $($items.Count) 个版本）" -ForegroundColor Green
