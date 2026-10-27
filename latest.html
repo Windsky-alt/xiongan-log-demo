@@ -266,7 +266,7 @@
 </style>
 </head>
 <body>
-<div class="app" data-prd-version="2.9" data-updated="2026-10-23">
+<div class="app" data-prd-version="2.10" data-updated="2026-10-23">
   <div class="topbar">
     <div class="brand">雄安科创园智慧工地</div>
     <div class="topnav" id="topNav">
@@ -281,7 +281,7 @@
       <div class="item" data-module="bim">BIM应用</div>
     </div>
     <div class="userbox">
-      <span class="project-ver" title="原型版本 v2.8">v2.9</span><span class="project-name">雄安科创园项目部　⌄</span>
+      <span class="project-ver" title="原型版本 v2.8">v2.10</span><span class="project-name">雄安科创园项目部　⌄</span>
       <span class="divider"></span><a class="device-ico screen-entry" id="bimScreenEntry" href="javascript:void(0)" title="进入BIM大屏" aria-label="进入BIM大屏">▱</a>
       <span class="divider"></span><a class="device-ico mobile-entry" href="移动端_BIM管理原型.html" title="进入移动端" aria-label="进入移动端">▯</a>
       <span class="divider"></span><a class="user-entry" id="userEntry" href="javascript:void(0)"><span class="round-user"></span><span>系统管理员</span></a>
@@ -319,7 +319,7 @@
    ========================================================================= */
 const LS_KEY = "xa_cons_log_v1";
 const PROJECT = "中煤雄安科创园项目";
-const BUILD = "20261023-safety-location-3";
+const BUILD = "20261027-v2.10-1";
 const $ = s => document.querySelector(s);
 
 const fmtDate = d => { const x = new Date(d);
@@ -592,7 +592,7 @@ function schemaQualityProject(){
   ];
   return [
     {h:"一  截至目前质量状态", blocks:[
-      TB(8,[R("累计检查","累计问题","实际下发整改单","已闭环","当前未闭环","待复查","已逾期","闭环率"),R(RO("126次"),RO("238项"),RO("84张"),RO("69张"),RO("15张"),RO("4张"),RO("3张"),RO(calcRateText(82, 84)))]),
+      TB(8,[R("累计检查","累计问题","实际下发整改单","已闭环","当前未闭环","待复查","待整改逾期","闭环率"),R(RO("126次"),RO("238项"),RO("84张"),RO("69张"),RO("15张"),RO("4张"),RO("3张"),RO(calcRateText(82, 84)))]),
       TA("q_current_note","状态说明","累计检查发现问题238项。当前15张未闭环整改单共包含问题41项，其中最早一张已持续12天；未来3日内到期2张。","系统自动生成",3),
       TB(2,[R("专项","截至目前"),R(KV("质量验收",""),RO("累计申请86项，通过72项，待审批10项")),R(KV("物资送检",""),RO("累计同步已审批报告23份")),R(KV("实测实量",""),RO("累计42条记录、672个测点，合格率94.94%")),R(KV("标养室",""),RO("当前20.1℃、99%，在养23组，到龄待取0组"))])
     ]},
@@ -601,7 +601,7 @@ function schemaQualityProject(){
       TB(3,[R("序号","业务类型","系统固定生成语句")].concat(major.map((x,i)=>R(KV(String(i+1),""),KV(x[0],""),RO(x[1])))))
     ]},
     {h:"三  昨日整改单闭环跟踪", blocks:[
-      TA("q_yesterday_summary","昨日闭环概况","昨日共下发整改单【 自动统计 】张，涉及问题【 自动统计 】项。截至目前，已闭环【 自动统计 】张、待整改【 自动统计 】张、待复查【 自动统计 】张、继续整改【 自动统计 】张、已逾期【 自动统计 】张，昨日有效整改单闭环率为【 自动统计 】。","系统自动生成",3),
+      TA("q_yesterday_summary","昨日闭环概况","昨日共下发整改单【 自动统计 】张，涉及问题【 自动统计 】项。截至目前，已闭环【 自动统计 】张、待整改【 自动统计 】张、待复查【 自动统计 】张、继续整改【 自动统计 】张、待整改逾期【 自动统计 】张，昨日有效整改单闭环率为【 自动统计 】。","系统自动生成",3),
       TB(5,[R("整改单号","包含问题","整改期限","截至目前状态","闭环说明"),R(RO("ZG-20260908-001"),RO("3项"),RO("2026-09-10"),RO("已闭环"),RO("整张整改单复查通过并闭环")),R(RO("ZG-20260908-002"),RO("2项"),RO("2026-09-10"),RO("继续整改"),RO("整张整改单复查未通过并继续整改"))])
     ]},
     {h:"四  今日质量概况", blocks:[
@@ -634,8 +634,8 @@ function schemaQualityPersonal(){
       TB(6,[R("整改单号","本人角色","包含问题","整改期限","截至目前状态","今日跟进情况"),R(RO("系统自动带入"),RO("本人负责 / 本人复查 / 本人参与"),RO("自动统计"),RO("YYYY-MM-DD"),RO("已闭环 / 待整改 / 待复查 / 逾期"),RO("系统自动生成"))])
     ]},
     {h:"四  截止当日本人质量责任状态", blocks:[
-      TA("pq_current","责任状态概况","截至【日期】，本人累计完成质量检查【 自动统计 】次，发现问题【 自动统计 】项，涉及整改单【 自动统计 】份；其中已闭环【 自动统计 】份，当前未闭环【 自动统计 】份，待本人复查【 自动统计 】份，已逾期【 自动统计 】份。","系统自动生成",3),
-      TB(7,[R("本人累计检查","累计发现问题","累计涉及整改单","已闭环整改单","当前未闭环","待本人复查","已逾期"),R(RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"))]),
+      TA("pq_current","责任状态概况","截至【日期】，本人累计完成质量检查【 自动统计 】次，发现问题【 自动统计 】项，涉及整改单【 自动统计 】份；其中已闭环【 自动统计 】份，当前未闭环【 自动统计 】份，待本人复查【 自动统计 】份，待整改逾期【 自动统计 】份。","系统自动生成",3),
+      TB(7,[R("本人累计检查","累计发现问题","累计涉及整改单","已闭环整改单","当前未闭环","待本人复查","待整改逾期"),R(RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"),RO("自动统计"))]),
       TB(4,[R("事项类型","事项编号","本人责任关系","当前状态"),R(RO("整改单 / 复查 / 处罚"),RO("系统自动带入"),RO("本人完成 / 本人负责 / 本人参与"),RO("进行中 / 待复查 / 逾期 / 已闭环"))])
     ]},
     {h:"五  明日质量工作及现场补充", blocks:[
@@ -862,7 +862,7 @@ function defaultState(){
 }
 function makeQualityChild(parent,pid){
   const s=staffOf(pid);
-  return {id:`qchild_${parent.date}_${pid}`,parentId:parent.id,date:parent.date,personId:pid,personName:s.name,dept:s.dept,role:s.role,weather:parent.weather,wind:parent.wind,temp_high:parent.temp_high,temp_low:parent.temp_low,data:{pq_today_summary:"今日本人完成质量检查2次，发现问题4项，下发整改单2份；提交整改1份，完成整改单复查1份，其中整单闭环1份；今日发起质量处罚1份。",pq_yesterday:"昨日与本人相关的整改单2份，截至今日已闭环1份，待整改1份，待本人复查0份，继续整改0份。",pq_current:"截至2026年09月20日，本人累计完成质量检查12次，发现问题18项，涉及整改单7份；其中已闭环5份，当前未闭环2份，待本人复查1份，已逾期0份。"},status:"done",updatedAt:`${parent.date} 17:20`};
+  return {id:`qchild_${parent.date}_${pid}`,parentId:parent.id,date:parent.date,personId:pid,personName:s.name,dept:s.dept,role:s.role,weather:parent.weather,wind:parent.wind,temp_high:parent.temp_high,temp_low:parent.temp_low,data:{pq_today_summary:"今日本人完成质量检查2次，发现问题4项，下发整改单2份；提交整改1份，完成整改单复查1份，其中整单闭环1份；今日发起质量处罚1份。",pq_yesterday:"昨日与本人相关的整改单2份，截至今日已闭环1份，待整改1份，待本人复查0份，继续整改0份。",pq_current:"截至2026年09月20日，本人累计完成质量检查12次，发现问题18项，涉及整改单7份；其中已闭环5份，当前未闭环2份，待本人复查1份，待整改逾期0份。"},status:"done",updatedAt:`${parent.date} 17:20`};
 }
 function makeChild(parent, pid, withData){
   const s = staffOf(pid);
@@ -1543,12 +1543,12 @@ function autoExample(c){
     p_plan_desc:"本周计划共安排6项任务，截至当日已完成3项；今日共填报4项工序，其中完成2项，分别为：主体结构钢筋绑扎、模板安装。",
     p_res_desc:"今日现场投入管理人员10人、劳务人员78人；截至当日在用普通设备25台、在线物联设备34台；今日新增安全问题5项、质量问题7项。",
     q_today_summary:"截至2026年09月20日，今日完成质量检查3次，发现问题7项，下发整改单4张；提交整改2张，完成复查2张，其中整张单闭环2张、继续整改0张；今日发起质量处罚1张。",
-    q_yesterday_summary:"昨日共下发整改单3张，涉及问题6项。截至目前，已闭环2张、待整改1张、待复查0张、继续整改0张、已逾期0张，昨日有效整改单闭环率为66.67%。",
+    q_yesterday_summary:"昨日共下发整改单3张，涉及问题6项。截至目前，已闭环2张、待整改1张、待复查0张、继续整改0张、待整改逾期0张，昨日有效整改单闭环率为66.67%。",
     q_current_note:"累计检查发现问题238项。当前12张未闭环整改单共包含问题31项，其中最早一张已持续12天；未来3日内到期2张。",
     q_tomorrow:"截至目前尚有未闭环整改单12张，其中待整改8张、待复查2张、继续整改2张、逾期3张；明日到期整改单2张、明日到龄试块4组、待审批质量验收10项。",
     pq_today_summary:"今日本人完成质量检查2次，发现问题4项，下发整改单2份；提交整改1份，完成整改单复查1份，其中整单闭环1份；今日发起质量处罚1份。",
     pq_yesterday:"昨日与本人相关的整改单2份，截至今日已闭环1份，待整改1份，待本人复查0份，继续整改0份。",
-    pq_current:"截至2026年09月20日，本人累计完成质量检查12次，发现问题18项，涉及整改单7份；其中已闭环5份，当前未闭环2份，待本人复查1份，已逾期0份。"
+    pq_current:"截至2026年09月20日，本人累计完成质量检查12次，发现问题18项，涉及整改单7份；其中已闭环5份，当前未闭环2份，待本人复查1份，待整改逾期0份。"
   };
   if(Object.prototype.hasOwnProperty.call(map,k)) return map[k];
   if(/^plan\d+_[a-d]$/.test(k) || /^sp\d+_[a-d]$/.test(k)) return "2026-09-20";

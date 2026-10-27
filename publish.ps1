@@ -20,6 +20,7 @@
 [CmdletBinding()]
 param(
     [string]$Source,
+    [string]$SingleFile,
     [string]$Note = '',
     [switch]$RenderOnly,
     [switch]$NoPush,
@@ -123,6 +124,15 @@ if (-not $RenderOnly) {
     # 带扩展名的独立文件名：浏览器点「下载演示文件」时才能存成 .html
     $htmlFile = "施工日志演示-V$prdVer.html"
     Copy-Item $Source (Join-Path $verDir $htmlFile) -Force
+
+    # 下载产物：优先用单文件版覆盖下载文件，别人下载后可直接双击打开（不再依赖同目录资源）
+    $singleSrc = $SingleFile
+    if (-not $singleSrc) { $cand = Join-Path $workspace '雄安科创园原型_单文件版.html'; if (Test-Path $cand) { $singleSrc = $cand } }
+    if ($singleSrc -and (Test-Path $singleSrc)) {
+        Copy-Item $singleSrc (Join-Path $verDir $htmlFile) -Force
+        Copy-Item $singleSrc (Join-Path $root '雄安科创园演示-单文件版.html') -Force
+        Write-Host "下载产物已替换为单文件版：$htmlFile" -ForegroundColor Green
+    }
 
     # 同步演示页依赖，避免发布后移动端入口、BIM 页面及业务嵌入页出现 404。
     $assetCount = 0

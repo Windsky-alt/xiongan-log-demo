@@ -85,7 +85,7 @@ tbody tr{cursor:pointer}
     <select id="fStatus">
       <option value="all">全部状态</option>
       <option value="noIssue">无需整改</option>
-      <option value="待整改">待整改</option>
+      <option value="待整改">待整改</option><option value="待整改逾期">待整改逾期</option>
       <option value="继续整改">继续整改</option>
       <option value="待复查">待复查</option>
       <option value="已复查">已复查</option>
@@ -904,17 +904,25 @@ function save(rows,options={}){
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
 }
-function status(r){return r.issueRequired===false?'无需整改':String(r.baseStatus||r.status||r.state||'待整改').replace('逾期','')}
+function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return ['逾期未整改','待整改逾期','已逾期'].includes(raw)?'待整改':raw}
 function overdueDays(r){
- const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
- const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
- if(!end)return 0;const days=(Date.parse(end+'T00:00:00Z')-Date.parse(r.deadline+'T00:00:00Z'))/86400000;
- return Number.isFinite(days)?Math.max(0,Math.round(days)):0;
+ if(!['待整改','继续整改'].includes(status(r)))return 0;
+ const deadline=String(r.deadline||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(deadline))return 0;
+ const end=new Date().toLocaleDateString('sv-SE'),due=Date.parse(deadline+'T00:00:00Z');
+ if(!Number.isFinite(due)||new Date(due).toISOString().slice(0,10)!==deadline)return 0;
+ return Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-due)/86400000));
 }
+function isOverdue(r){
+ if(!['待整改','继续整改'].includes(status(r)))return false;
+ if(r.deadline)return overdueDays(r)>0;
+ if(typeof r.overdue==='boolean')return r.overdue;
+ return ['逾期未整改','待整改逾期','已逾期'].includes(String(r.baseStatus||r.status||r.state||''));
+}
+function displayStatus(r){return isOverdue(r)?'待整改逾期':status(r)}
 function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
 function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
 function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
-window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,overdueDays,pointSummary};
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,displayStatus,isOverdue,overdueDays,pointSummary};
 })();
 
 /* END BIM SHARED */</script>
@@ -965,11 +973,7 @@ function mergeAnnotationRows(list){return [...new Map(SEED.concat(list||[]).map(
 let DATA=mergeAnnotationRows(loadStore());
 
 /* ===== 状态派生（与其它端一致） ===== */
-function displayStatus(r){
-  if(r.issueRequired===false)return '无需整改';
-  const b=r.baseStatus||r.status||'待整改';
-  return b==='待整改逾期'?'待整改':b;
-}
+function displayStatus(r){return XABimStore.displayStatus(r)}
 function overdueDays(r){return XABimStore.overdueDays(r)}
 
 function badgeCls(s){
@@ -983,7 +987,7 @@ function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
 function filtered(){
   return allRows().filter(({r,s})=>{
     if(view.status==='noIssue'){ if(s!=='无需整改') return false }
-    else if(view.status!=='all'&&s!==view.status) return false;
+    else if(view.status!=='all'&&(view.status==='待整改逾期'?s!==view.status:XABimStore.status(r)!==view.status)) return false;
     if(view.overdue&&(overdueDays(r)>0)!==(view.overdue==='yes'))return false;
     if(view.checker&&r.checker!==view.checker) return false;
     if(view.comp&&r.compName!==view.comp) return false;

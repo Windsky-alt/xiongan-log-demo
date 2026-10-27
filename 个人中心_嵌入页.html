@@ -869,17 +869,25 @@ function save(rows,options={}){
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
 }
-function status(r){return r.issueRequired===false?'无需整改':String(r.baseStatus||r.status||r.state||'待整改').replace('逾期','')}
+function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return ['逾期未整改','待整改逾期','已逾期'].includes(raw)?'待整改':raw}
 function overdueDays(r){
- const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
- const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
- if(!end)return 0;const days=(Date.parse(end+'T00:00:00Z')-Date.parse(r.deadline+'T00:00:00Z'))/86400000;
- return Number.isFinite(days)?Math.max(0,Math.round(days)):0;
+ if(!['待整改','继续整改'].includes(status(r)))return 0;
+ const deadline=String(r.deadline||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(deadline))return 0;
+ const end=new Date().toLocaleDateString('sv-SE'),due=Date.parse(deadline+'T00:00:00Z');
+ if(!Number.isFinite(due)||new Date(due).toISOString().slice(0,10)!==deadline)return 0;
+ return Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-due)/86400000));
 }
+function isOverdue(r){
+ if(!['待整改','继续整改'].includes(status(r)))return false;
+ if(r.deadline)return overdueDays(r)>0;
+ if(typeof r.overdue==='boolean')return r.overdue;
+ return ['逾期未整改','待整改逾期','已逾期'].includes(String(r.baseStatus||r.status||r.state||''));
+}
+function displayStatus(r){return isOverdue(r)?'待整改逾期':status(r)}
 function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
 function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
 function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
-window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,overdueDays,pointSummary};
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,displayStatus,isOverdue,overdueDays,pointSummary};
 })();
 
 /* END BIM SHARED */</script>
@@ -931,12 +939,7 @@ async function saveAnnos(list){
 }
 let DATA=loadAnnos().map(r=>({...r}));
 
-function displayStatus(r){
-  if(r.issueRequired===false) return '无需整改';
-  const b=r.baseStatus||r.status||'待整改';
-  const open=(b==='待整改'||b==='继续整改');
-  return (open&&r.deadline&&r.deadline<today())?'待整改逾期':b;
-}
+function displayStatus(r){return XABimStore.displayStatus(r)}
 function badgeCls(s){
   return s==='待整改逾期'?'fix':s==='待整改'?'fix':s==='继续整改'?'cont':s==='待复查'?'rev':'done';
 }
@@ -990,7 +993,7 @@ function renderTabBody(){
       +list.map(r=>{
         const rev=isRevTodo(r);
         return '<div class="todo-card">'
-          +'<span class="todo-badge '+(rev?'rev':'fix')+'">'+(rev?'待复查':'待整改')+'</span>'
+          +'<span class="todo-badge '+badgeCls(displayStatus(r))+'">'+esc(displayStatus(r))+'</span>'
           +'<div class="t-main"><div class="t-title">'+esc(r.title)+'</div>'
           +'<div class="t-meta">'+esc(r.compName||r.componentId)+'<br>批注人 '+esc(r.checker)+' · 期限 '+esc(r.deadline||'--')
           +(r.baseStatus==='继续整改'?' · <span style="color:#c2690a">第 '+(r.round||1)+' 轮继续整改</span>':'')+'</div></div>'
@@ -1034,6 +1037,7 @@ const findRec=id=>DATA.find(x=>x.id===id);
 
 function baseBlock(r){
   return '<div class="sec-title">基本信息</div>'
+    +'<div class="kv"><span class="k">整改状态</span><span class="v">'+esc(displayStatus(r))+'</span></div>'
     +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
     +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'</span></div>'
     +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'

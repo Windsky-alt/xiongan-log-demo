@@ -1269,17 +1269,25 @@ function save(rows,options={}){
  try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
  return next;
 }
-function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return(raw==='逾期未整改'||raw==='待整改逾期')?'待整改':raw}
+function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return ['逾期未整改','待整改逾期','已逾期'].includes(raw)?'待整改':raw}
 function overdueDays(r){
- const s=status(r);if(s==='无需整改'||!/^\d{4}-\d{2}-\d{2}$/.test(r.deadline||''))return 0;
- const end=['待整改','继续整改'].includes(s)?new Date().toLocaleDateString('sv-SE'):(r.rectifiedAt||r.reviewAt||'').slice(0,10);
- if(!end)return 0;const days=(Date.parse(end+'T00:00:00Z')-Date.parse(r.deadline+'T00:00:00Z'))/86400000;
- return Number.isFinite(days)?Math.max(0,Math.round(days)):0;
+ if(!['待整改','继续整改'].includes(status(r)))return 0;
+ const deadline=String(r.deadline||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(deadline))return 0;
+ const end=new Date().toLocaleDateString('sv-SE'),due=Date.parse(deadline+'T00:00:00Z');
+ if(!Number.isFinite(due)||new Date(due).toISOString().slice(0,10)!==deadline)return 0;
+ return Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-due)/86400000));
 }
+function isOverdue(r){
+ if(!['待整改','继续整改'].includes(status(r)))return false;
+ if(r.deadline)return overdueDays(r)>0;
+ if(typeof r.overdue==='boolean')return r.overdue;
+ return ['逾期未整改','待整改逾期','已逾期'].includes(String(r.baseStatus||r.status||r.state||''));
+}
+function displayStatus(r){return isOverdue(r)?'待整改逾期':status(r)}
 function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
 function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
 function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
-window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,overdueDays,pointSummary};
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,displayStatus,isOverdue,overdueDays,pointSummary};
 })();
 
 /* END BIM SHARED */</script>
@@ -1501,7 +1509,7 @@ const records=[
    来源：全景对比中点选 BIM 构件发起，或移动端现场发起。
    复用问题/整改的全部渲染路径（列表/表格/详情），只多两个字段：
    photoId + yaw/pitch（回到全景时自动转向该批注方向）。
-   整改状态：待整改 / 继续整改 / 待复查 / 已复查；「逾期未整改」为派生状态，不落库。 */
+   整改状态：待整改 / 继续整改 / 待复查 / 已复查；「待整改逾期」为派生状态，不落库。 */
 records.push(
  {id:101,type:'annotation',title:'桥架与风管净距不足',componentId:'C-A1',x:33,y:39,checkTime:'2026-10-12 09:26',checkType:'现场批注',checker:'张恒毓',area:'施工区',position:'十四层',category:'机电安装 / 管线综合',level:'一般',result:'不合格',description:'电气桥架与排风管交叉处净距不足 50mm，不满足规范要求。',requirement:'调整桥架标高或路由，避让排风管后复检。',deadline:'2026-10-15',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',status:'待整改',baseStatus:'待整改',issueRequired:true,round:1,photoId:'F1',yaw:0.42,pitch:0.30,source:'全景对比'},
  {id:102,type:'annotation',title:'模板拼缝处漏浆痕迹',componentId:'C-A3',x:36,y:43,checkTime:'2026-10-08 15:40',checkType:'现场批注',checker:'刘振',area:'施工区',position:'十四层',category:'主体结构工程 / 模板工程',level:'一般',result:'不合格',description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',requirement:'封堵拼缝，后续浇筑前复查。',deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',status:'待复查',baseStatus:'待复查',issueRequired:true,round:1,photoId:'F1',yaw:-0.35,pitch:0.12,source:'全景对比'},
@@ -1553,9 +1561,10 @@ function billProblems(b){return (b.problemIds||[]).map(id=>records.find(r=>r.id=
 function billComponentIds(b){return Array.isArray(b.componentIds)?b.componentIds:[b.componentId].filter(Boolean)}
 function billOfComponent(componentId,type){return RECTIFY_BILLS.filter(b=>billComponentIds(b).includes(componentId)&&(!type||b.type===type))}
 function billStatus(b){return XABimStore.status(b)}
-function billOverdue(b){return XABimStore.overdueDays(b)>0}
+function billOverdue(b){return XABimStore.isOverdue(b)}
+function billDisplayStatus(b){return XABimStore.displayStatus(b)}
 initRectifyBills();
-function annotationDisplayStatus(r){if(r.issueRequired===false)return'无需整改';const b=r.baseStatus||r.status||'待整改';return(b==='待整改逾期'||b==='逾期未整改')?'逾期未整改':b}/* ================= 结构 / 专业 筛选树 ================= */
+function annotationDisplayStatus(r){return XABimStore.displayStatus(r)}/* ================= 结构 / 专业 筛选树 ================= */
 
 const MAJOR_OF=Object.fromEntries(componentOptions.map(c=>[c[0],c[0]==='C-T1'?'施工机械':/外墙/.test(c[1])?'幕墙':'土建']));
 const MAJOR_LIST=['土建','幕墙','施工机械'];
@@ -1701,8 +1710,8 @@ function bindFilterEvents(){
 }
 let boardLeftOpen=false,boardRightOpen=false,boardGroup='comp',boardQuery='',boardsBuilt=false;
 const BOARD_TYPES=[['quality','质量','质','#2084ed'],['safety','安全','安','#e88330'],['briefing','交底','交','#8a61d3'],['measure','实测实量','测','#20a486'],['panorama','全景','景','#249db8'],['annotation','批注','注','#e2503f'],['plan','方案','案','#8b5cf6']];
-const BOARD_STATE_ORDER=['待整改','逾期未整改','待复查','继续整改','已复查','无需整改'];
-const BOARD_STATE_COLOR={'待整改':'#e2503f','逾期未整改':'#b02418','待复查':'#e8a33d','继续整改':'#8a61d3','已复查':'#20a486','无需整改':'#7f95ab'};
+const BOARD_STATE_ORDER=['待整改','待整改逾期','待复查','继续整改','已复查','无需整改'];
+const BOARD_STATE_COLOR={'待整改':'#e2503f','待整改逾期':'#b02418','待复查':'#e8a33d','继续整改':'#8a61d3','已复查':'#20a486','无需整改':'#7f95ab'};
 function boardIsPano(r){return String(r.componentId||'').startsWith('PANO-')}
 function boardTime(r){return r.checkTime||r.uploadTime||''}
 function boardTypeColor(t){return(BOARD_TYPES.find(x=>x[0]===t)||[0,0,0,'#7f95ab'])[3]}
@@ -1715,7 +1724,7 @@ function uniqueBoard(rows){return [...new Map(rows.map(r=>[r.type+'|'+(r.sourceI
 function boardOpen(r){return !['已复查','无需整改','合格','已撤回'].includes(r.status)}
 function boardLate(r){return ['待整改','继续整改'].includes(XABimStore.status(r))&&XABimStore.overdueDays(r)>0}
 function boardAction(type,filter,label,value){return '<button class="dash-stat" data-dash-type="'+type+'" data-dash-filter="'+filter+'"><b>'+value+'</b><span>'+label+'</span></button>'}
-function issueBoard(type){const rows=uniqueBoard(records.filter(r=>r.type===type));return '<section class="dash-module"><h3>'+typeName(type)+'问题</h3><button class="dash-main" data-dash-type="'+type+'" data-dash-filter="open"><strong>'+rows.filter(boardOpen).length+'</strong><span>项未复查问题 ›</span></button><div class="dash-three">'+boardAction(type,'todo','待整改',rows.filter(r=>boardOpen(r)&&r.status!=='待复查').length)+boardAction(type,'review','待复查',rows.filter(r=>r.status==='待复查').length)+boardAction(type,'late','逾期',rows.filter(boardLate).length)+'</div></section>'}
+function issueBoard(type){const rows=uniqueBoard(records.filter(r=>r.type===type));return '<section class="dash-module"><h3>'+typeName(type)+'问题</h3><button class="dash-main" data-dash-type="'+type+'" data-dash-filter="open"><strong>'+rows.filter(boardOpen).length+'</strong><span>项未复查问题 ›</span></button><div class="dash-three">'+boardAction(type,'todo','待整改',rows.filter(r=>boardOpen(r)&&r.status!=='待复查').length)+boardAction(type,'review','待复查',rows.filter(r=>r.status==='待复查').length)+boardAction(type,'late','待整改逾期',rows.filter(boardLate).length)+'</div></section>'}
 function boardStats(){return {total:records.length}}
 function boardStatsHtml(){const groups=new Map();records.filter(r=>['quality','safety'].includes(r.type)&&boardLate(r)).forEach(r=>{if(!groups.has(r.componentId))groups.set(r.componentId,[]);groups.get(r.componentId).push(r)});const ranked=[...groups].sort((a,b)=>b[1].length-a[1].length).slice(0,3);return issueBoard('quality')+issueBoard('safety')+'<section class="dash-module"><h3>重点关注部位 <small>逾期问题最多</small></h3><div class="dash-focus">'+(ranked.length?ranked.map(([id,rows])=>'<button data-dash-item="'+rows[0].id+'"><span>'+esc(component(id)[1])+'</span><small>'+[...new Set(rows.map(r=>typeName(r.type)))].join(' / ')+' · 逾期 '+uniqueBoard(rows).length+'项 ›</small></button>').join(''):'<div class="dash-empty">暂无逾期问题部位</div>')+'</div></section>'}
 function boardDetailHtml(){const br=uniqueBoard(records.filter(r=>r.type==='briefing')),mr=uniqueBoard(records.filter(r=>r.type==='measure')),points=mr.flatMap(r=>r.points||[]),bad=points.filter(p=>p.result==='不合格'),rate=XABimStore.pointSummary(points).rate;const pano=records.filter(r=>r.type==='panorama'),photos=panoramaData.photos.filter(p=>p.bound),latest=photos.slice().sort((a,b)=>b.time.localeCompare(a.time))[0],point=latest&&panoramaData.points.find(p=>p.id===latest.point);return '<section class="dash-module"><h3>交底资料 <small>已挂接 · 去重统计</small></h3><div class="dash-four">'+briefingKinds.map(k=>boardAction('briefing',k,k,br.filter(r=>briefingKind(r)===k).length)).join('')+'</div></section><section class="dash-module"><h3>实测实量</h3><button class="dash-main" data-dash-type="measure" data-dash-filter="all"><strong>'+rate+'</strong><span>合格测点率 ›</span></button><div class="dash-three">'+boardAction('measure','all','总测点',points.length)+boardAction('measure','bad','不合格',bad.length)+boardAction('measure','all','涉及部位',new Set(mr.map(r=>r.measurementPosition||r.componentId)).size)+'</div></section><section class="dash-module"><h3>全景记录</h3><div class="dash-three dash-two">'+boardAction('panorama','all','拍摄点位',new Set(pano.map(r=>r.pointId||r.componentId)).size)+boardAction('panorama','all','全景照片',photos.length)+'</div><button class="dash-recent" data-dash-photo="'+esc(latest?.id||'')+'"><span>最近拍摄 · '+esc(point?.name||'暂无拍摄')+'</span><small>'+esc(latest?.time.replace('T',' ')||'--')+' ›</small></button></section>'}
@@ -1733,7 +1742,7 @@ function matchesBoardFilter(r){
  if(boardFilter.mode==='component')return ISSUE_COMPONENT_TYPES.includes(r.type)&&r.componentId===boardFilter.componentId;
  if(r.type!==boardFilter.type)return false;
  const m=boardFilter.mode;if(m==='all')return true;
- if(r.type==='annotation')return XABimStore.status(r)===m;
+ if(r.type==='annotation')return XABimStore.displayStatus(r)===m;
  if(r.type==='briefing')return briefingKind(r)===m;
  if(r.type==='measure')return(r.points||[]).some(p=>p.result==='不合格');
  if(m==='open')return boardOpen(r);if(m==='todo')return ['待整改','继续整改'].includes(XABimStore.status(r));
@@ -1817,14 +1826,11 @@ function businessSubject(r){return (r.type==='quality'||r.type==='safety')?(bill
 function businessDate(r,t=r.type){const s=businessSubject(r);return String(t==='measure'?(r.measurementTime||r.checkTime||''):t==='plan'?(r.uploadTime||''):t==='report'?(r.sendDate||''):t==='panorama'?(r.time||''):(s.checkTime||s.time||'')).slice(0,10)}
 function validBusinessDate(v){if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===v}
 function businessOverdue(r){
- const s=businessSubject(r),state=XABimStore.status(s);
- if(typeof s.overdue==='boolean')return s.overdue?'已逾期':'未逾期';
- if(!(s.baseStatus||s.status||s.state))return '';
- if(['逾期未整改','待整改逾期'].includes(s.baseStatus||s.status))return '已逾期';
- if(!validBusinessDate(String(s.deadline||'')))return '';
- const end=['待整改','继续整改'].includes(state)?today():String(s.rectifiedAt||s.reviewAt||'').slice(0,10);
- if(!validBusinessDate(end))return '';
- return XABimStore.overdueDays(s)>0?'已逾期':'未逾期';
+ const subject=businessSubject(r);
+ if(!(subject.baseStatus||subject.status||subject.state))return '';
+ if(!['待整改','继续整改'].includes(XABimStore.status(subject)))return '未逾期';
+ if(!subject.deadline&&typeof subject.overdue!=='boolean'&&!['逾期未整改','待整改逾期','已逾期'].includes(subject.baseStatus||subject.status||subject.state))return '';
+ return XABimStore.isOverdue(subject)?'待整改逾期':'未逾期';
 }
 function businessAxis(r){
  if(r.type==='safety')return '';
@@ -1885,7 +1891,7 @@ function matchesBusinessSearch(r,t=r.type,options={}){
  for(const [key,selected]of Object.entries(values)){
   if(key==='from'||key==='to'||!Array.isArray(selected)||!selected.length)continue;
   if(key==='archived'&&t==='report'&&reportView!=='unbound')continue;
-  if(key==='lateOpen'){if(!['待整改','继续整改'].includes(businessFieldValue(r,'status',t))||businessOverdue(r)!=='已逾期')return false;continue}
+  if(key==='lateOpen'){if(!['待整改','继续整改'].includes(businessFieldValue(r,'status',t))||businessOverdue(r)!=='待整改逾期')return false;continue}
   if(!selected.includes(businessFieldValue(r,key,t)))return false;
  }
  if(values.from||values.to){const date=businessDate(r,t);if(!validBusinessDate(date)||(values.from&&date<values.from)||(values.to&&date>values.to))return false}
@@ -1915,7 +1921,7 @@ function businessSourceRows(t){
 function businessFilterOptions(t,key){
  if(key==='status'&&(t==='quality'||t==='safety'))return ['待整改','待复查','已复查','继续整改','已撤回','无需整改'];
  const values=businessSourceRows(t).map(r=>businessFieldValue(r,key,t)).filter(v=>v&&v!=='--');
- if(key==='overdue')return ['已逾期','未逾期'];
+ if(key==='overdue')return ['待整改逾期','未逾期'];
  return [...new Set(values)].sort((a,b)=>String(a).localeCompare(String(b),'zh-CN'));
 }
 function businessFiltersHtml(){
@@ -1941,7 +1947,7 @@ function applyBusinessSearch(){
 function resetBusinessSearch(){const s=businessSearchFor();s.values={};s.draft={};s.error='';listQuery='';s.query='';statusFilter='all';boardFilter=null;refreshFilteredView()}
 function matchingUnboundItems(t){return unboundItems(t).filter(it=>{const row=t==='panorama'?panoramaSearchRows(false).find(f=>f.id===it.photoId):{...it.src,type:t};return row&&matchesBusinessSearch(row,t)})}
 function listed(){return visible().filter(r=>matchesBoardFilter(r)&&matchesBusinessSearch(r,listType))}
-function boardFilterLabel(){if(!boardFilter||boardFilter.mode==='all')return'';if(boardFilter.mode==='component')return'构件：'+component(boardFilter.componentId)[1];return({open:'未复查',todo:'待整改',review:'待复查',late:'逾期',bad:'不合格测点'})[boardFilter.mode]||boardFilter.mode}
+function boardFilterLabel(){if(!boardFilter||boardFilter.mode==='all')return'';if(boardFilter.mode==='component')return'构件：'+component(boardFilter.componentId)[1];return({open:'未复查',todo:'待整改',review:'待复查',late:'待整改逾期',bad:'不合格测点'})[boardFilter.mode]||boardFilter.mode}
 function listSearchHtml(){
  const add=listType==='annotation'?'<button class="list-add" data-action="new-annotation" aria-label="新增批注">＋ 新增</button>':'',ui=businessFiltersHtml();
  let label='';
@@ -1999,8 +2005,8 @@ function recLine(label,value,tail){
   return '<div class="rec-line'+(['问题部位','定位参考构件'].includes(label)?' rec-location':'')+'"><span>'+label+'</span><strong title="'+esc(val)+'">'+esc(val)+(tail||'')+'</strong></div>';
 }
 function recStatusLine(r,label){
-  const st=XABimStore.status(r),od=XABimStore.overdueDays(r)>0;
-  return '<div class="rec-line"><span>'+(label||'状态')+'</span><em class="status-chip '+statusClass(st)+'">'+esc(st)+'</em>'+(od?'<small class="overdue">已逾期</small>':'')+'</div>';
+  const st=XABimStore.displayStatus(r),od=XABimStore.isOverdue(r);
+  return '<div class="rec-line"><span>'+(label||'状态')+'</span><em class="status-chip '+statusClass(st)+'">'+esc(st)+'</em>'+'</div>';
 }
 function recCard(r,body,extra){
   return '<div class="rec-card '+(selectedId===r.id?'selected':'')+'" data-locate="'+r.id+'"><div class="rec-fields">'+body+'</div>'
@@ -2221,9 +2227,9 @@ function billHeadHtml(b,shown,forceOpen){
   return '<section class="tree-node"><div class="tree-head" data-locate-bill="'+esc(b.code)+'">'
     +'<button type="button" class="tree-caret" data-group="'+esc(key)+'" aria-expanded="'+open+'" aria-label="展开/收起整改单问题">'+(open?'▾':'▸')+'</button>'
     +'<button type="button" class="tree-title" data-locate-bill="'+esc(b.code)+'" title="定位该整改单挂接范围">'+esc(b.code)+'</button>'
-    +'<em>'+kids.length+' 个问题'+(od?' · 已逾期':'')+'</em></div>'
+    +'<em>'+kids.length+' 个问题'+(od?' · 待整改逾期':'')+'</em></div>'
     +'<div class="tree-sub bill-fields" data-locate-bill="'+esc(b.code)+'">'
-    +'<div class="rec-line"><span>整改状态</span><em class="status-chip '+statusClass(billStatus(b))+'">'+esc(billStatus(b))+'</em>'+(od?'<small class="overdue">已逾期</small>':'')+'</div>'
+    +'<div class="rec-line"><span>整改状态</span><em class="status-chip '+statusClass(billStatus(b))+'">'+esc(billDisplayStatus(b))+'</em>'+'</div>'
     +fields
     +'<div class="rec-actions"><button type="button" data-bill-detail="'+esc(b.code)+'">详情</button></div>'
     +'</div>'
@@ -2263,7 +2269,7 @@ function billDetailHtml(b){
   if(b.checkTime)flow.push(['检查',b.checkTime,esc(b.checkType||'检查')+' · '+esc(b.checker||'--')]);
   if(rectified)flow.push(['整改',rectified,esc(rectifier||'--')+(rectifyDesc?' · '+esc(rectifyDesc):'')]);
   if(reviewAt)flow.push(['复查',reviewAt,esc(reviewResult||'--')+(reviewDesc?' · '+esc(reviewDesc):'')]);
-  return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+tn+'检查/整改 · 整改单详情</strong><span class="page-state">'+esc(billStatus(b))+(od?' · 已逾期':'')+'</span></div>'
+  return '<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+tn+'检查/整改 · 整改单详情</strong><span class="page-state">'+esc(billDisplayStatus(b))+'</span></div>'
     +'<section class="page-section"><h2>基本信息</h2><div class="page-grid">'
     +kv('整改单编号',b.code)+kv('检查类型',b.checkType)+kv('检查人',b.checker)+kv('检查时间',b.checkTime)
     +kv('区域',area)+kv('部位',pos)+kv('检查结果',result)+kv('整改责任单位',unit)
@@ -2273,7 +2279,7 @@ function billDetailHtml(b){
     +(photoCount?'<section class="page-section"><h2>现场附件</h2><div class="page-grid">'+kv('现场照片',photoCount+' 张')+'</div></section>':'')
     +'<hr class="page-divider">'
     +'<section class="page-section"><h2>整改信息</h2><div class="page-grid">'
-    +kv('整改状态',billStatus(b))+kv('整改责任人',b.assignee)+kv('复查人',b.reviewer||reviewer)+kv('整改期限',b.deadline)
+    +kv('整改状态',billDisplayStatus(b))+kv('整改责任人',b.assignee)+kv('复查人',b.reviewer||reviewer)+kv('整改期限',b.deadline)
     +(rectified?kv('实际整改时间',rectified):'')+(rectifier?kv('实际整改人',rectifier):'')+(rectifyDesc?kv('整改描述',rectifyDesc):'')
     +'</div></section>'
     +((reviewAt||reviewResult)?'<section class="page-section"><h2>复查信息</h2><div class="page-grid">'+kv('复查时间',reviewAt)+kv('复查结果',reviewResult)+kv('复查描述',reviewDesc)+'</div></section>':'')
@@ -2438,7 +2444,7 @@ function annotationOverdueDays(r){return XABimStore.overdueDays(r)}
 function annotationHistoryOf(r){if(Array.isArray(r.workflowHistory)&&r.workflowHistory.length)return r.workflowHistory; if(!r.rectifiedAt&&!r.reviewAt)return [];const round=r.baseStatus==='继续整改'?Math.max(1,(r.round||2)-1):(r.round||1);return[{round,rectifiedAt:r.rectifiedAt,rectifyDescription:r.rectifyDescription,rectifyImages:r.rectifyImages||[],reviewAt:r.reviewAt,reviewResult:r.reviewResult,reviewDescription:r.reviewDescription,reviewImages:r.reviewImages||[]}]}
 function annotationImages(images){return Array.isArray(images)&&images.length?'<div class="anno-images">'+images.map(src=>'<img src="'+esc(src)+'" alt="整改复查附件">').join('')+'</div>':'<span class="page-muted">--</span>'}
 function annotationHistoryHtml(r){const history=annotationHistoryOf(r);if(!history.length)return '<p class="page-muted">尚未提交整改记录</p>';return history.map(x=>'<div class="anno-round"><div class="anno-round-head">第 '+esc(x.round||1)+' 轮整改与复查</div><div class="anno-round-body"><div class="page-grid">'+kv('实际整改日期',x.rectifiedAt)+kv('整改说明',x.rectifyDescription)+kv('复查结果',x.reviewResult||'待复查')+kv('复查说明',x.reviewDescription)+kv('复查时间',x.reviewAt)+'</div><p class="small-copy">整改照片</p>'+annotationImages(x.rectifyImages)+'<p class="small-copy">复查照片</p>'+annotationImages(x.reviewImages)+'</div></div>').join('')}
-function annotationFlowHtml(r){const s=annotationDisplayStatus(r),od=annotationOverdueDays(r),steps=[{t:'批注发起',m:(r.checker||'--')+' · '+(r.checkTime||'--')+' · 来源：'+(r.source||'—'),on:true}];if(r.issueRequired===false)steps.push({t:'无需整改',m:'仅记录问题，未指派整改人与期限',on:true});else{steps.push({t:'下发整改单',m:'整改人：'+(r.assignee||'--')+' · 期限：'+(r.deadline||'--')+' · 复查人：'+(r.reviewer||'--'),on:true});annotationHistoryOf(r).forEach(x=>{if(x.rectifiedAt)steps.push({t:'第 '+(x.round||1)+' 轮整改已提交',m:(r.assignee||'--')+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});if(x.reviewAt)steps.push({t:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),m:(r.reviewer||'--')+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'})});if(s==='待整改')steps.push({t:'等待整改',m:(r.assignee||'--')+' 尚未提交第 '+(r.round||1)+' 轮整改结果'});if(s==='继续整改')steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交'});if(s==='待复查')steps.push({t:'待复查',m:'等待 '+(r.reviewer||'--')+' 提交复查结果'});if(s==='已复查')steps.push({t:'问题闭环',m:'最终复查通过',on:true});if(od>0)steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',over:true})}return'<div class="anno-flow">'+steps.map(x=>'<div class="anno-flow-step '+(x.over?'over':x.on?'on':'')+'"><b>'+esc(x.t)+'</b><small>'+esc(x.m)+'</small></div>').join('')+'</div>'}
+function annotationFlowHtml(r){const s=XABimStore.status(r),od=annotationOverdueDays(r),steps=[{t:'批注发起',m:(r.checker||'--')+' · '+(r.checkTime||'--')+' · 来源：'+(r.source||'—'),on:true}];if(r.issueRequired===false)steps.push({t:'无需整改',m:'仅记录问题，未指派整改人与期限',on:true});else{steps.push({t:'下发整改单',m:'整改人：'+(r.assignee||'--')+' · 期限：'+(r.deadline||'--')+' · 复查人：'+(r.reviewer||'--'),on:true});annotationHistoryOf(r).forEach(x=>{if(x.rectifiedAt)steps.push({t:'第 '+(x.round||1)+' 轮整改已提交',m:(r.assignee||'--')+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});if(x.reviewAt)steps.push({t:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),m:(r.reviewer||'--')+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'})});if(s==='待整改')steps.push({t:'等待整改',m:(r.assignee||'--')+' 尚未提交第 '+(r.round||1)+' 轮整改结果'});if(s==='继续整改')steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交'});if(s==='待复查')steps.push({t:'待复查',m:'等待 '+(r.reviewer||'--')+' 提交复查结果'});if(s==='已复查')steps.push({t:'问题闭环',m:'最终复查通过',on:true});if(od>0)steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',over:true})}return'<div class="anno-flow">'+steps.map(x=>'<div class="anno-flow-step '+(x.over?'over':x.on?'on':'')+'"><b>'+esc(x.t)+'</b><small>'+esc(x.m)+'</small></div>').join('')+'</div>'}
 function annotationDetailHtml(r){const s=annotationDisplayStatus(r),od=annotationOverdueDays(r),issued=r.issueRequired!==false;let h='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>批注详情</strong><span class="page-state">'+esc(s)+(od?' · 超 '+od+' 天':'')+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题描述',r.description||r.title)+kv('关联构件',r.compName||briefLocation(r))+kv('批注人',r.checker)+kv('批注时间',r.checkTime)+kv('来源',r.source)+kv('是否需整改',issued?'是':'否')+'</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2><div class="page-grid">'+kv('整改状态',s)+(issued?kv('整改人',(r.assignee||'--')+(r.unit?'（'+r.unit+'）':''))+kv('整改期限',r.deadline)+kv('复查人',r.reviewer):kv('说明','未下发整改单，无需整改。'))+'</div>'+(issued?annotationHistoryHtml(r):'')+'</section><hr class="page-divider"><section class="page-section"><h2>流转记录</h2>'+annotationFlowHtml(r)+'</section></main>';return h}
 function renderDetailPage(){const mount=q('#pageMount'),r=records.find(x=>x.id===detailId);if(!r){mount.innerHTML='';return}if(r.type==='report'){renderReportPage();return}if(!isIssue(r)&&r.type!=='briefing'&&r.type!=='plan'&&r.type!=='measure'){mount.innerHTML='';return}if(r.type==='annotation'){mount.innerHTML=annotationDetailHtml(r);return}if(r.type==='briefing'){mount.innerHTML=briefingDetailHtml(r);return}if(r.type==='plan'){mount.innerHTML=planDetailHtml(r);return}if(r.type==='measure'){mount.innerHTML=measureDetailHtml(r);return}mount.innerHTML='<main class="detail-page"><div class="page-header"><button data-action="back-bim">← 返回BIM模型</button><strong>'+typeName(r.type)+'检查/整改 · 问题详情</strong><span class="page-state">'+esc(r.status)+'</span></div><section class="page-section"><h2>基本信息</h2><div class="page-grid">'+kv('问题编号',(r.type==='quality'?'Q-':'S-')+String(r.id).padStart(4,'0'))+kv('检查类型',r.checkType)+kv('检查人',r.checker)+kv('检查时间',r.checkTime)+kv('检查内容',r.checkContent||r.checkType)+kv('区域',r.area)+(r.type==='safety'?kv('问题部位',businessSubject(r).problemLocation||'未填写'):kv('关联构件',briefLocation(r)))+'</div></section><section class="page-section"><h2>问题信息</h2><table class="page-problem"><thead><tr>'+(r.type==='annotation'?'':'<th>问题分类</th>')+'<th>问题描述</th>'+(r.type==='annotation'?'':'<th>问题级别</th>')+'<th>整改要求</th><th>整改期限</th></tr></thead><tbody><tr>'+(r.type==='annotation'?'':'<td>'+esc(r.category)+'</td>')+'<td>'+esc(r.description)+'</td>'+(r.type==='annotation'?'':'<td>'+esc(r.level)+'</td>')+'<td>'+esc(r.requirement)+'</td><td>'+esc(r.deadline)+'</td></tr></tbody></table><div class="page-grid" style="margin-top:16px">'+kv('检查结果',r.result)+kv('整改责任单位',r.unit)+kv('整改责任人',r.assignee)+'</div><p class="small-copy">现场附件</p><div class="attachment">现场照片（示意）</div></section><hr class="page-divider"><section class="page-section"><h2>整改信息</h2>'+(r.rectifiedAt?'<div class="page-grid">'+kv('实际整改时间',r.rectifiedAt)+kv('整改人',r.rectifier)+kv('整改描述',r.rectifyDescription)+'</div><p class="small-copy">整改附件</p><div class="attachment">整改照片（示意）</div>':'<p class="page-muted">待整改，暂无整改记录</p>')+'</section><hr class="page-divider"><section class="page-section"><h2>复查信息</h2>'+(r.reviewAt?'<div class="page-grid">'+kv('复查意见',r.reviewResult)+kv('复查时间',r.reviewAt)+kv('复查人',r.reviewer)+kv('复查描述',r.reviewDescription)+'</div><p class="small-copy">复查附件</p><div class="attachment">复查照片（示意）</div>':'<p class="page-muted">待复查，暂无复查记录</p>')+'</section></main>'}
 q('#tabs').addEventListener('click',e=>{
@@ -2669,7 +2675,7 @@ var progressPlanRows=[
  {node:'1.1.1.1.4',name:'01地块挂网喷面',level:'六级',owner:'孙晓明',role:'土方工长',planStart:'2026-06-15',planEnd:'2026-06-20',planDays:'6',actualStart:'2026-06-15',actualEnd:'--',actualDays:'--',variance:'0',warning:'正常',state:'未开始',completion:'0%'}
 ];
 function planBoardHtml(){const rows=progressPlanRows||[],total=rows.length,inProgress=rows.filter(r=>r.state==='进行中').length,done=rows.filter(r=>r.state==='已完成').length,dev=rows.filter(planHasVariance).length;return '<section class="dash-module dash-plan"><div class="dash-plan-head"><h3>进度计划</h3><button data-plan-open>查看计划</button></div><div class="dash-plan-summary"><strong>'+total+'</strong><span>计划任务</span></div><div class="dash-plan-kpis"><button type="button" data-plan-kpi="inProgress"><b>'+inProgress+'</b>进行中</button><button type="button" data-plan-kpi="done"><b>'+done+'</b>已完成</button><button type="button" data-plan-kpi="variance"><b>'+dev+'</b>偏差</button></div></section>'}
-function annotationStatusBoardHtml(){const rows=records.filter(r=>r.type==='annotation'),states=['无需整改','待整改','待复查','继续整改','已复查'],labels=states.map(s=>boardAction('annotation',s,s,rows.filter(r=>(r.status||'待整改')===s).length)).join('');return '<section class="dash-module dash-annotation"><h3>全景批注问题状态 <small>'+rows.length+'条</small></h3><button class="dash-main" data-dash-type="annotation" data-dash-filter="all"><strong>'+rows.length+'</strong><span>全景批注问题 ›</span></button><div class="dash-status-grid">'+labels+'</div></section>'}
+function annotationStatusBoardHtml(){const rows=records.filter(r=>r.type==='annotation'),states=['无需整改','待整改','待整改逾期','待复查','继续整改','已复查'],labels=states.map(s=>boardAction('annotation',s,s,rows.filter(r=>(r.status||'待整改')===s).length)).join('');return '<section class="dash-module dash-annotation"><h3>全景批注问题状态 <small>'+rows.length+'条</small></h3><button class="dash-main" data-dash-type="annotation" data-dash-filter="all"><strong>'+rows.length+'</strong><span>全景批注问题 ›</span></button><div class="dash-status-grid">'+labels+'</div></section>'}
 function boardStatsHtml(){return planBoardHtml()+issueBoard('quality')+issueBoard('safety')+annotationStatusBoardHtml()}
 const progressPlanHeads=['节点号','工序名称','工序级别','责任人','责任岗位','计划开始日期','计划完成日期','计划工期','实际开始日期','实际结束日期','实际工期','偏差天数','执行状态','完成率(%)'],progressPlanKeys=['node','name','level','owner','role','planStart','planEnd','planDays','actualStart','actualEnd','actualDays','variance','state','completion'];
 let progressPlanQuery='';
@@ -2689,7 +2695,7 @@ function listValue(v){return v===undefined||v===null||v===''?'--':String(v)}
 function listField(label,value,tail,cls){const val=listValue(value);return '<div class="card-field"><span>'+label+'</span><strong class="'+(cls||'')+'" title="'+esc(val)+'">'+esc(val)+(tail||'')+'</strong></div>'}
 function listStatusField(value){const val=listValue(value);return '<div class="card-field"><span>状态</span><em class="status-chip '+statusClass(value)+'">'+esc(val)+'</em></div>'}
 function listCardHtml(r,selected,overdue){
-  const deadlineTail=overdue?' <small class="overdue">已逾期</small>':'';
+  const deadlineTail=overdue?' <small class="overdue">待整改逾期</small>':'';
   const status=listStatusField(r.status);
   const rows=r.type==='plan'
     ? listField('方案类型',r.category)+listField('文件名称',r.fileName||r.title)+listField('上传人',r.uploader)+listField('上传时间',r.uploadTime)
