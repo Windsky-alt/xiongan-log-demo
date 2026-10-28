@@ -11,6 +11,41 @@
 .anno-hotspot.has .dot{background:#ffb020}
 .anno-hotspot .cnt{background:#ffb020;color:#3a2600;border-radius:9px;padding:0 5px;font-weight:700;font-size:10px;line-height:14px}
 .anno-tip{position:absolute;left:12px;bottom:44px;background:rgba(16,34,54,.86);border:1px solid #3d5a7a;color:#a9c6e0;border-radius:6px;padding:5px 10px;font-size:11px;pointer-events:none}
+/* ===== 批注查看侧栏（全景对比）：深色贴合 BIM 面板，配色取本页既有深色令牌 ===== */
+.anno-drawer{position:absolute;top:0;right:0;bottom:0;width:340px;max-width:88%;background:#182a43;border-left:1px solid #ffffff20;box-shadow:-10px 0 26px #05101ccc;transform:translateX(100%);transition:transform .2s ease;z-index:8;display:flex;flex-direction:column;pointer-events:auto}
+.anno-drawer.open{transform:translateX(0)}
+.anno-drawer header{display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid #ffffff20;color:#e5effa;font-size:12.5px}
+.anno-drawer header b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.anno-drawer .ad-close{flex:none;width:26px;height:26px;line-height:1;background:#293c55;border:1px solid #58718a;color:#e4eef8;border-radius:4px;cursor:pointer;font-size:14px}
+.anno-drawer .ad-close:hover{background:#35516f}
+.anno-drawer .ad-body{flex:1;min-height:0;overflow:auto;padding:12px 13px}
+.anno-drawer .ad-empty{color:#a9bdd3;font-size:12px;text-align:center;padding:30px 8px}
+.anno-card{background:#20334d;border:1px solid #33506f;border-radius:5px;padding:10px 11px;margin-bottom:10px}
+.anno-card:last-child{margin-bottom:0}
+.anno-card .ac-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.anno-card .ac-title{flex:1;min-width:0;color:#e5effa;font-size:12.5px;font-weight:600;line-height:1.5;word-break:break-word}
+.anno-card .ac-desc{color:#c3d5e8;font-size:12px;line-height:1.65;margin-bottom:7px;word-break:break-word}
+.anno-card .ac-meta{color:#a9bdd3;font-size:11px;line-height:1.85}
+.anno-card .ac-meta b{color:#d7e4f2;font-weight:600}
+.ab{flex:none;margin-left:auto;display:inline-block;padding:1px 6px;border-radius:3px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.ab.wait{background:#f0525226;color:#ff9b9b;border:1px solid #f0525266}
+.ab.cont{background:#ffb0201f;color:#ffd08a;border:1px solid #ffb02066}
+.ab.check{background:#4aadf01f;color:#a8d8ff;border:1px solid #4aadf066}
+.ab.done{background:#2fbf7f1f;color:#93e6c1;border:1px solid #2fbf7f66}
+.ab.void{background:#ffffff14;color:#b9c8d8;border:1px solid #ffffff2e}
+/* 批注标识：沿用 BIM 统一模型页「金边盾形定位标」轮廓（bimPinSvg），只放「注」字，不显示构件名 */
+.anno-pin{position:absolute;pointer-events:auto;transform:translate(-50%,-100%);width:44px;height:52px;min-width:44px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;cursor:pointer;z-index:2}
+.anno-pin svg{display:block;width:44px;height:52px;filter:drop-shadow(0 4px 5px #06131fc9)}
+.anno-pin:hover{filter:brightness(1.13)}
+.anno-pin .cnt{position:absolute;top:0;right:-5px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 3px;border:1px solid #fff;border-radius:10px;background:#e34f39;color:#fff;font:700 10px/1 Arial,sans-serif;box-shadow:0 2px 5px #0008}
+/* 侧栏字段：与「新增批注」表单同字段、同顺序、同文案 */
+.ad-card-top{display:flex;justify-content:flex-end;padding-bottom:7px}
+.ad-row{display:flex;gap:10px;padding:6px 0;border-top:1px solid #ffffff14}
+.ad-row:first-of-type{border-top:0}
+.ad-k{flex:0 0 84px;color:#a9bdd3;font-size:11.5px;line-height:1.7}
+.ad-v{flex:1;min-width:0;color:#e5effa;font-size:12.5px;line-height:1.7;word-break:break-word}
+
+
 .switch-row{display:flex;align-items:center;gap:18px;margin:4px 0;font-weight:600;color:#e5effa;font-size:13px}
 .switch-row label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:400}
 .switch-row input{width:16px;height:16px;cursor:pointer;accent-color:#3983ff}
@@ -208,12 +243,29 @@ const annoComponents=[
   {id:'C-A2',name:'1号楼 · 14层 · 楼板 B-01',x:64,y:60},
   {id:'C-B1',name:'2号楼 · 13层 · 梁 L-12',x:73,y:48}
 ];
+const ANNO_SEED=[
+  {id:101,componentId:'C-A1',compName:'1号楼 · 14层 · 柱 KZ-01',title:'桥架与风管净距不足',checkTime:'2026-10-12 09:26',checker:'张恒毓',level:'一般',description:'电气桥架与排风管交叉处净距不足 50mm，不满足规范要求。',unit:'机电安装班组',assignee:'李强',deadline:'2026-10-15',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true},
+  {id:102,componentId:'C-A3',compName:'1号楼 · 14层 · 柱 KZ-02',title:'模板拼缝处漏浆痕迹',checkTime:'2026-10-08 15:40',checker:'刘振',level:'一般',description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',unit:'主体施工班组',assignee:'徐志成',deadline:'2026-10-11',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true},
+  {id:103,componentId:'C-A2',compName:'1号楼 · 14层 · 楼板 B-01',title:'临边防护栏杆缺失',checkTime:'2026-09-18 10:05',checker:'王会彬',level:'严重',description:'楼板临边防护栏杆未安装到位，存在坠落风险。',unit:'主体施工班组',assignee:'徐志成',deadline:'2026-09-20',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true},
+  {id:104,componentId:'C-A5',compName:'1号楼 · 14层 · 梁 KL-05',title:'地面成品保护不到位',checkTime:'2026-09-22 11:20',checker:'张恒毓',level:'一般',description:'已完工地坪未做覆盖保护，材料堆放造成划痕。',unit:'',assignee:'',deadline:'',reviewer:'',baseStatus:'待整改',issueRequired:false},
+  {id:105,componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',title:'桥架吊架间距偏大',checkTime:'2026-09-16 14:30',checker:'李强',level:'一般',description:'桥架吊架间距超过规范要求，需加密。',unit:'机电安装班组',assignee:'李强',deadline:'2026-10-20',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true},
+  {id:106,componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',title:'风管保温层局部破损',checkTime:'2026-09-10 16:05',checker:'刘振',level:'一般',description:'风管保温层局部破损，影响保温效果。',unit:'机电安装班组',assignee:'李强',deadline:'2026-09-13',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true},
+  {id:107,componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',title:'楼梯踏步阳角破损',checkTime:'2026-10-09 11:20',checker:'王会彬',level:'一般',description:'楼梯踏步阳角拆模后破损，需修补并复核。',unit:'主体施工班组',assignee:'徐志成',deadline:'2026-10-14',reviewer:'刘振',baseStatus:'已撤回',issueRequired:true}
+];
+/* 只读演示种子：与「批注台账_嵌入页.html」的 SEED 同源（id 101-107），仅用于不接后台时的演示。
+   localStorage 有同 id 记录时以 localStorage 为准；被删除的 id 走 xa-annotations-removed-v1 墓碑过滤。 */
+function annoStored(){
+  try{const raw=localStorage.getItem('xa-annotations-v1');if(!raw)return [];const d=JSON.parse(raw);return Array.isArray(d)?d:(d.annotations||[])}catch(e){return []}
+}
+function annoRemovedIds(){
+  try{const r=JSON.parse(localStorage.getItem('xa-annotations-removed-v1')||'[]');return new Set((Array.isArray(r)?r:[]).map(String))}catch(e){return new Set()}
+}
 function annoList(){
-  try{const raw=localStorage.getItem('xa-annotations-v1');if(raw){const d=JSON.parse(raw);return Array.isArray(d)?d:(d.annotations||[])}}catch(e){}
-  return [];
+  const stored=annoStored(),removed=annoRemovedIds(),seen=new Set(stored.map(a=>String(a.id)));
+  return stored.concat(ANNO_SEED.filter(a=>!seen.has(String(a.id)))).filter(a=>!removed.has(String(a.id)));
 }
 function annoPush(rec){
-  const list=annoList();list.push(rec);
+  const list=annoStored();list.push(rec);
   try{localStorage.setItem('xa-annotations-v1',JSON.stringify({annotations:list,seq:list.length}))}catch(e){}
   try{const ch=new BroadcastChannel('xa-annotation-sync');ch.postMessage({type:'changed'});ch.close()}catch(e){}
   if(embedded)parent.postMessage({channel:'xa-annotation',action:'annotate',record:rec},'*');
@@ -222,16 +274,67 @@ function annoNow(){
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
 }
+/* 金边盾形「注」标：SVG 路径与 BIM统一模型_交互原型.html 的 bimPinSvg() 完全一致，避免两页视觉分叉 */
+function annoPinSvg(){
+  return '<svg viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M8 2h28a5 5 0 0 1 5 5v25c0 4-2.8 7.1-6.7 8H9.7C5.8 39.1 3 36 3 32V7a5 5 0 0 1 5-5Z" fill="#8b5b19" stroke="#f7ca57" stroke-width="2"/><path d="M8.5 5h27a2.6 2.6 0 0 1 2.6 2.6v23.9c0 2.5-1.7 4.7-4.2 5.3H10.1C7.6 36.2 5.9 34 5.9 31.5V7.6A2.6 2.6 0 0 1 8.5 5Z" fill="#292720" stroke="#c28a27" stroke-width=".8"/><path d="M8 7h28" stroke="#ffde81" stroke-width="1" opacity=".7"/><path d="M17 40h10l-5 10Z" fill="#f5bd28" stroke="#f8d15e" stroke-linejoin="round" stroke-width="1"/><path d="M13 12h18v13.3c0 5.2-3.6 8.2-9 10.4-5.4-2.2-9-5.2-9-10.4Z" fill="#beb7aa" stroke="#f5e6be" stroke-width="1.5"/><path d="M15.3 14.3h13.4v10.4c0 3.7-2.5 6.2-6.7 8.1-4.2-1.9-6.7-4.4-6.7-8.1Z" fill="#5b5852" stroke="#8d8a82" stroke-width=".7"/><text x="22" y="26.7" text-anchor="middle" fill="#fffaf0" font-family="Microsoft YaHei,PingFang SC,sans-serif" font-size="13.5" font-weight="700">注</text></svg>';
+}
+/* 是否需要整改：以 issueRequired 为准，历史数据缺失时按 baseStatus 推断 */
+function annoNeedsFix(a){return a.issueRequired===undefined?String(a.baseStatus)!=='无需整改':!!a.issueRequired}
+function annoField(k,v){return '<div class="ad-row"><span class="ad-k">'+esc(k)+'</span><div class="ad-v">'+v+'</div></div>'}
+function annoBadge(status){
+  const map={'待整改':'wait','继续整改':'cont','待复查':'check','已复查':'done','无需整改':'done','已撤回':'void'};
+  return '<span class="ab '+(map[status]||'void')+'">'+esc(status||'—')+'</span>';
+}
+function annoDrawerOpen(){const d=$('#annoDrawer');return !!(d&&d.classList.contains('open'))}
+function renderAnnoDrawer(comp){
+  const d=$('#annoDrawer');if(!d)return;
+  const list=annoList().filter(a=>String(a.componentId)===String(comp.id)).sort((a,b)=>String(b.checkTime||'').localeCompare(String(a.checkTime||'')));
+  d.innerHTML='<header><b>'+esc(comp.name)+'</b><button class="ad-close" id="annoDrawerClose" aria-label="关闭">×</button></header><div class="ad-body">'+
+    (list.length?list.map(a=>
+      '<div class="anno-card">'+
+        '<div class="ad-card-top">'+annoBadge(a.baseStatus)+'</div>'+
+        annoField('问题描述 *',esc(a.description||'—'))+
+        annoField('是否需要整改 *',annoNeedsFix(a)?'是':'否')+
+        (annoNeedsFix(a)?
+          annoField('整改人 *',esc(a.assignee||'—')+(a.unit?'（'+esc(a.unit)+'）':''))+
+          annoField('整改截止日期 *',esc(a.deadline||'—'))+
+          annoField('复查人 *',esc(a.reviewer||'—')):'')+
+      '</div>').join(''):'<div class="ad-empty">该构件暂无批注</div>')+'</div>';
+  const btn=$('#annoDrawerClose');if(btn)btn.onclick=closeAnnoDrawer;
+}
+function syncAnnoTip(){const tip=$('.anno-tip');if(tip)tip.hidden=annoDrawerOpen()}
+function openAnnoDrawer(comp,f){
+  const pane=$('#rightPane');if(!pane)return;
+  let d=$('#annoDrawer');
+  if(!d){d=document.createElement('aside');d.id='annoDrawer';d.className='anno-drawer';pane.appendChild(d)}
+  d.dataset.annoComp=comp.id;
+  renderAnnoDrawer(comp);
+  d.classList.add('open');
+  syncAnnoTip();
+}
+function closeAnnoDrawer(){
+  const d=$('#annoDrawer');if(d)d.classList.remove('open');
+  syncAnnoTip();
+}
+/* 无真实构件拾取：双击位置取最近的示意构件（演示映射，不是真实业务归属） */
+function nearestAnnoComponent(px,py){
+  let best=null,bd=Infinity;
+  annoComponents.forEach(c=>{const dd=(c.x-px)*(c.x-px)+(c.y-py)*(c.y-py);if(dd<bd){bd=dd;best=c}});
+  return best;
+}
 function renderAnnoHotspots(f){
   const layer=$('#annoLayer');if(!layer)return;
   const saved=annoList();
-  layer.innerHTML=annoComponents.map(c=>{
-    const n=saved.filter(a=>a.componentId===c.id).length;
-    return '<button class="anno-hotspot'+(n?' has':'')+'" data-anno-comp="'+esc(c.id)+'" style="left:'+c.x+'%;top:'+c.y+'%" title="点击发起批注"><span class="dot"></span><span>'+esc(c.name.split(' · ').pop())+'</span>'+(n?'<span class="cnt">'+n+'</span>':'')+'</button>';
-  }).join('')+'<div class="anno-tip">点击 BIM 构件即可发起批注</div>';
+  const items=annoComponents.map(c=>({c:c,n:saved.filter(a=>String(a.componentId)===String(c.id)).length})).filter(x=>x.n>0);
+  layer.innerHTML=items.map(x=>
+    '<button class="anno-pin" data-anno-comp="'+esc(x.c.id)+'" style="left:'+x.c.x+'%;top:'+x.c.y+'%" title="查看批注" aria-label="'+esc(x.c.name)+'，'+x.n+' 条批注">'+annoPinSvg()+'<span class="cnt">'+x.n+'</span></button>'
+  ).join('')+'<div class="anno-tip">双击模型任意位置新增批注 · 点击「注」标识查看批注</div>';
   layer.querySelectorAll('[data-anno-comp]').forEach(b=>{
-    b.onclick=e=>{e.stopPropagation();const c=annoComponents.find(x=>x.id===b.dataset.annoComp);if(c)openAnnoForm(c,f)};
+    b.onclick=e=>{e.stopPropagation();const c=annoComponents.find(x=>String(x.id)===String(b.dataset.annoComp));if(c)openAnnoDrawer(c,f)};
+    b.ondblclick=e=>{e.stopPropagation()};
   });
+  if(annoDrawerOpen()){const cur=annoComponents.find(x=>String(x.id)===String($('#annoDrawer').dataset.annoComp));if(cur)renderAnnoDrawer(cur)}
+  syncAnnoTip();
 }
 function openAnnoForm(comp,f){
   const p=context(f).p||{};
@@ -278,7 +381,9 @@ function openAnnoForm(comp,f){
   };
 }
 function openCompare(id,cal=false,preview=false){$('#toast').innerHTML='';clearViews();screen='compare';photoId=id;calibrating=cal;const f=cal?draft.photo:photo(id);if(!f)return;const p=cal?draft.point:context(f).p,r=cal?draft.region:context(f).r,rangeLabel=r.bindMode==='structure'?'结构树 '+(r.structureIds?.length||0)+' 个构件':'轴网 '+(r.axes||[]).join('～');linked=!cal;$('#root').innerHTML='<div class="viewer"><div class="viewhead"><button id="backView">← '+(cal?'上一步':preview?'返回台账':'返回模型')+'</button><b>'+esc(r.name)+' / '+esc(p.name)+'</b><span class="spacer"></span>'+(!preview?'<button id="linkViews" class="'+(linked?'primary':'')+'">'+(linked?'视角联动：开':'视角联动：关')+'</button>':'')+'<button id="restore">恢复初始视角</button><button id="full">全屏</button></div>'+(cal?steps():'')+'<div class="statusline"><span>拍摄：'+esc(f.time.replace('T',' '))+'</span><span>'+esc(r.floor)+' · 标高 '+r.low+'～'+r.high+'m</span><span>挂接：'+esc(rangeLabel)+'</span>'+(!preview?'<span>模型：'+esc(r.model)+' · '+r.version+'</span>':'')+'</div><div class="split" id="split"><div class="pane" id="leftPane"><canvas id="panoCanvas"></canvas><div class="pane-title">◉ '+(f.image?'现场全景':'现场全景 · 示意场景')+'</div><div class="pane-bottom"><span>拖动环视 · 滚轮缩放</span><span id="leftAngle"></span></div></div>'+(!preview?'<div class="divider" id="divider"></div><div class="pane" id="rightPane"><canvas id="bimCanvas"></canvas><div class="pane-title">◇ BIM模型 · 示例楼层</div><div class="anno-layer" id="annoLayer"></div><div class="pane-bottom"><span id="bimHint">固定拍摄站位 · '+p.height+'m</span><span id="rightAngle"></span></div><svg class="mini" viewBox="0 0 154 100"><rect x="13" y="12" width="128" height="76" fill="none" stroke="#7f9caf"/><rect x="23" y="22" width="108" height="56" fill="#2e96e62a" stroke="#4aadf0"/><circle cx="77" cy="50" r="5" fill="#42a2ff"/><path d="M77 50 L55 24 H98 Z" fill="#42a2ff55"/></svg></div>':'')+'</div>'+(cal?'<div class="viewfoot"><span class="hint">分别拖动两侧画面，使其朝向同一处，再保存对比视角。</span><button id="cancelCalibration">取消挂接</button><button id="saveBinding" class="primary">保存当前对比视角并完成挂接</button></div>':preview?'':'<div class="history"><span class="muted" style="white-space:nowrap">同点位历史拍摄</span>'+db.photos.filter(x=>x.point===f.point&&x.bound).sort((a,b)=>b.time.localeCompare(a.time)).map(x=>'<button data-history="'+x.id+'" class="'+(x.id===id?'current':'')+'">'+esc(x.time.replace('T',' '))+'<small>'+esc(x.name)+'</small></button>').join('')+'</div>')+'</div>';
-const left=new Scene($('#panoCanvas'),false,f,p),right=preview?null:new Scene($('#bimCanvas'),true,f,p);viewers=right?[left,right]:[left];if(!preview&&!cal)renderAnnoHotspots(f);let offset=right?right.yaw-left.yaw:0,pitchOffset=right?right.pitch-left.pitch:0;viewers.forEach((v,i)=>v.onchange=()=>{if(linked&&right){const other=i?left:right;other.yaw=v.yaw+(i?-offset:offset);other.pitch=v.pitch+(i?-pitchOffset:pitchOffset);other.fov=v.fov;other.render()}angles()});function angles(){$('#leftAngle').textContent=Math.round(left.yaw*180/Math.PI)+'°';if(right)$('#rightAngle').textContent=Math.round(right.yaw*180/Math.PI)+'°'}angles();$('#backView').onclick=()=>{if(cal){step=1;showWizard()}else if(preview||lastScreen==='ledger')showLedger();else{if(embedded)send('close');else showOverview()}};$('#restore').onclick=()=>{viewers.forEach(v=>v.reset());offset=right?right.yaw-left.yaw:0;pitchOffset=right?right.pitch-left.pitch:0;angles()};$('#full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast('请使用浏览器全屏按钮或 F11')}};if(right){$('#linkViews').onclick=()=>{linked=!linked;offset=right.yaw-left.yaw;pitchOffset=right.pitch-left.pitch;$('#linkViews').textContent='视角联动：'+(linked?'开':'关');$('#linkViews').classList.toggle('primary',linked)};let dragging=false;$('#divider').onpointerdown=e=>{dragging=true;$('#divider').setPointerCapture(e.pointerId)};$('#divider').onpointermove=e=>{if(!dragging)return;const b=$('#split').getBoundingClientRect(),ratio=Math.max(.25,Math.min(.75,(e.clientX-b.left)/b.width));$('#leftPane').style.flex='0 0 '+ratio*100+'%';viewers.forEach(v=>v.resize())};$('#divider').onpointerup=()=>dragging=false}if(cal){$('#saveBinding').onclick=saveBinding;$('#cancelCalibration').onclick=cancelBinding}else document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>openCompare(b.dataset.history))}
+const left=new Scene($('#panoCanvas'),false,f,p),right=preview?null:new Scene($('#bimCanvas'),true,f,p);viewers=right?[left,right]:[left];if(!preview&&!cal)renderAnnoHotspots(f);
+if(!preview&&!cal){const rp=$('#rightPane');rp.addEventListener('dblclick',e=>{if(e.target.closest('.anno-drawer')||e.target.closest('.anno-hotspot'))return;const b=rp.getBoundingClientRect();if(!b.width||!b.height)return;const c=nearestAnnoComponent((e.clientX-b.left)/b.width*100,(e.clientY-b.top)/b.height*100);if(c)openAnnoForm(c,f)});rp.addEventListener('pointerdown',e=>{if(!e.target.closest('.anno-drawer')&&!e.target.closest('.anno-hotspot'))closeAnnoDrawer()})}
+if(!window.__annoDrawerEsc){window.__annoDrawerEsc=1;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAnnoDrawer()})}let offset=right?right.yaw-left.yaw:0,pitchOffset=right?right.pitch-left.pitch:0;viewers.forEach((v,i)=>v.onchange=()=>{if(linked&&right){const other=i?left:right;other.yaw=v.yaw+(i?-offset:offset);other.pitch=v.pitch+(i?-pitchOffset:pitchOffset);other.fov=v.fov;other.render()}angles()});function angles(){$('#leftAngle').textContent=Math.round(left.yaw*180/Math.PI)+'°';if(right)$('#rightAngle').textContent=Math.round(right.yaw*180/Math.PI)+'°'}angles();$('#backView').onclick=()=>{if(cal){step=1;showWizard()}else if(preview||lastScreen==='ledger')showLedger();else{if(embedded)send('close');else showOverview()}};$('#restore').onclick=()=>{viewers.forEach(v=>v.reset());offset=right?right.yaw-left.yaw:0;pitchOffset=right?right.pitch-left.pitch:0;angles()};$('#full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast('请使用浏览器全屏按钮或 F11')}};if(right){$('#linkViews').onclick=()=>{linked=!linked;offset=right.yaw-left.yaw;pitchOffset=right.pitch-left.pitch;$('#linkViews').textContent='视角联动：'+(linked?'开':'关');$('#linkViews').classList.toggle('primary',linked)};let dragging=false;$('#divider').onpointerdown=e=>{dragging=true;$('#divider').setPointerCapture(e.pointerId)};$('#divider').onpointermove=e=>{if(!dragging)return;const b=$('#split').getBoundingClientRect(),ratio=Math.max(.25,Math.min(.75,(e.clientX-b.left)/b.width));$('#leftPane').style.flex='0 0 '+ratio*100+'%';viewers.forEach(v=>v.resize())};$('#divider').onpointerup=()=>dragging=false}if(cal){$('#saveBinding').onclick=saveBinding;$('#cancelCalibration').onclick=cancelBinding}else document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>openCompare(b.dataset.history))}
 function loadImage(src){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error('无法读取全景图片'));im.src=src})}
 class Scene{constructor(canvas,bim,f,p){this.cv=canvas;this.g=canvas.getContext('2d');this.bim=bim;this.photo=f;this.point=p;this.only=false;this.disposed=false;this.initial={yaw:(bim?(calibrating?p.yaw:(f.bimYaw??p.yaw)):(f.yaw||0))*Math.PI/180,pitch:(bim?f.bimPitch:f.pitch)||0,fov:(bim?f.bimFov:f.fov)||80};Object.assign(this,this.initial);this.ro=new ResizeObserver(()=>this.resize());this.ro.observe(canvas);let down=null;canvas.onpointerdown=e=>{down={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)};canvas.onpointermove=e=>{if(!down)return;this.yaw+=(e.clientX-down.x)*.005;this.pitch=Math.max(-1.1,Math.min(1.1,this.pitch+(e.clientY-down.y)*.003));down={x:e.clientX,y:e.clientY};this.render();this.onchange?.()};canvas.onpointerup=()=>down=null;canvas.onpointercancel=()=>down=null;canvas.onwheel=e=>{e.preventDefault();this.fov=Math.max(38,Math.min(105,this.fov+e.deltaY*.04));this.render();this.onchange?.()};if(f.image&&!bim)loadImage(f.image).then(im=>{if(this.disposed)return;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);this.texture=g.getImageData(0,0,c.width,c.height);this.render()});this.resize()}
 destroy(){this.disposed=true;this.ro.disconnect()}reset(){Object.assign(this,this.initial);this.render()}resize(){const b=this.cv.getBoundingClientRect();this.cv.width=Math.max(1,Math.min(800,Math.round(b.width)));this.cv.height=Math.max(1,Math.min(600,Math.round(b.height)));this.render()}
