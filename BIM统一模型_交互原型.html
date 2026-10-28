@@ -381,6 +381,8 @@
 .tree-sub.bill-fields .rec-actions{margin-top:4px}
 .focus-pin .tree-node{border-bottom:1px solid #ffffff24}
 .focus-pin .tree-title{color:#fff;font-weight:700}
+/* 换绑/解绑弹窗 */
+.confirm-text{font-size:13px;line-height:1.9;color:#3f5266}
 /* ===== 结构树收藏 ===== */
 .fp-tabs{display:flex;gap:4px;padding:6px 8px 0;background:#0d1a29}
 .fp-tabs button{flex:1;padding:6px 0;border:1px solid #ffffff26;border-radius:4px;background:#ffffff0d;color:#aebdcd;font-size:12px}
@@ -480,7 +482,7 @@
   <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="focusScrim" aria-hidden="true"></div><div id="markers"></div><div id="focus"></div><span class="toolbar-icon-mask mask-helmet" aria-hidden="true"></span><span class="toolbar-icon-mask mask-tools" aria-hidden="true"></span><span class="toolbar-icon-mask mask-cloud" aria-hidden="true"></span><button type="button" class="stage-hotspot" id="treeHotspot" title="结构 / 专业筛选" aria-label="结构 / 专业筛选"></button></div></div>
   <div class="tabs" id="tabs" role="group" aria-label="BIM业务标签"></div>
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
-  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.9</span></div>
+  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.10.2</span></div>
 </div>
 <script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
 /* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
@@ -1302,6 +1304,15 @@ const queryParams=new URLSearchParams(location.search);
 let businessReady=parent===window,bindingSaving=false,bindingRequestSeq=0;
 const bindingRequests=new Map();
 function applyBusinessState(state){
+  /* 批注台账删除/撤回同步：删除的批注不再出现在模型清单与标记中；已撤回状态回显 */
+  try{
+    const removed=JSON.parse(localStorage.getItem('xa-annotations-removed-v1')||'[]');
+    const annRaw=localStorage.getItem('xa-annotations-v1');
+    const annList=annRaw?(Array.isArray(JSON.parse(annRaw))?JSON.parse(annRaw):(JSON.parse(annRaw).annotations||[])):[];
+    if(removed.length)for(let i=records.length-1;i>=0;i--)if(records[i].type==='annotation'&&removed.indexOf(records[i].id)>=0)records.splice(i,1);
+    const byId=new Map(annList.map(a=>[a.id,a]));
+    records.forEach(r=>{const a=r.type==='annotation'&&byId.get(r.id);if(a&&a.baseStatus)Object.assign(r,{baseStatus:a.baseStatus,status:a.baseStatus})});
+  }catch(e){}
   const reportCodes=new Set(Object.keys(state.reportBindings||{})),savedKeys=new Set((state.records||[]).map(XABimStore.rowKey));
   for(let i=records.length-1;i>=0;i--)if((records[i].type==='report'&&reportCodes.has(records[i].sendCode))||(records[i].storeManaged&&!savedKeys.has(XABimStore.rowKey(records[i]))))records.splice(i,1);
   RECTIFY_BILLS.filter(b=>b.storeManaged).forEach(b=>RECTIFY_BILLS.splice(RECTIFY_BILLS.indexOf(b),1));
@@ -1434,7 +1445,7 @@ function renderReportList(){
             + recLine('送检日期',String(r.sendDate||'').slice(0,10))
             + recLine('送检状态',r.status)
             + recLine('挂接构件',bound.length?bound.join('、')+'（'+bound.length+' 个）':'--')
-            + '</div><div class="rec-actions"><button type="button" data-report-item="'+esc(reportKeyOf(r))+'">详情</button></div></div>';
+            + '</div><div class="rec-actions"><button type="button" data-report-item="'+esc(reportKeyOf(r))+'">详情</button>'+boundActions(r)+'</div></div>';
         }).join('')+'</div>' : '')
       + '</div>';
   }).join('')+'</div>' : '<div class="list-scroll"><div class="list-empty">'+(listQuery?'未找到匹配的检测报告':'暂无已挂接检测报告')+'</div></div>';}
@@ -2069,7 +2080,7 @@ function treeGroupHtml(t,key,label,rows){
   return '<section class="tree-node"><div class="tree-head">'
     +'<button type="button" class="tree-caret" data-group="'+esc(key)+'" aria-expanded="'+open+'" aria-label="展开/收起">'+(open?'▾':'▸')+'</button>'
     +'<button type="button" class="tree-title" data-group="'+esc(key)+'">'+esc(label)+'</button><em>'+rows.length+' 条</em></div>'
-    +(open?'<div class="tree-body">'+rows.map(r=>recCard(r,cardBodyFor(r))).join('')+'</div>':'')+'</section>';
+    +(open?'<div class="tree-body">'+rows.map(r=>recCard(r,cardBodyFor(r),boundActions(r))).join('')+'</div>':'')+'</section>';
 }
 /* ===== 未挂接台账与“去挂接”（质量/安全/交底/实测/方案/批注/全景）=====
    检测报告已有自己的未挂接来源（27 条共享台账）。其余页签在现有原型里没有独立台账来源，
@@ -2201,7 +2212,7 @@ function listBodyHtml(){
     return entries.map(([k,list])=>treeGroupHtml(t,k,k,list)).join('');
   }
   if(!rows.length)return '<div class="list-empty">'+(listQuery?'未找到匹配记录':'暂无已挂接记录')+'</div>';
-  return rows.map(r=>recCard(r,cardBodyFor(r))).join('');
+  return rows.map(r=>recCard(r,cardBodyFor(r),boundActions(r))).join('');
 }
 function focusPinHtml(){
   if(!focusComponent)return '';
@@ -2217,6 +2228,89 @@ function focusPinHtml(){
     +'</div>';
 }
 /* 整改单（父级）→ 问题（子级）渲染 */
+
+/* 已挂接清单列表：详情右侧提供换绑/解绑（只在清单里出现，定位区不出现） */
+function boundActions(r){
+  if(bindView!=='bound'||!r||!r.componentId)return '';
+  return '<button type="button" data-rebind="'+r.id+'">换绑</button><button type="button" data-unbind="'+r.id+'">解绑</button>';
+}
+/* ===== 换绑 / 解绑 ===== */
+function storeRows(){try{return XABimStore.load().records||[]}catch(e){return []}}
+function storeBindings(){try{return XABimStore.load().reportBindings||{}}catch(e){return {}}}
+function compOf(id){return componentOptions.find(c=>c[0]===id)}
+function compNameOf(id){const c=compOf(id);return c?c[1]:id}
+async function commitBindingEdit(rows,options){
+  try{const state=await saveBindingRecords(rows,options);applyBusinessState(state);render();return true}
+  catch(error){toast(error.message||'操作失败，请重试');return false}
+}
+function unbindRecordById(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  if(r.type==='panorama'){toast('全景挂接请在全景台账中处理');return}
+  showModal('解绑确认',
+    '<div class="confirm-text">确认把「'+esc(r.title||r.compName||'该记录')+'」从构件「'+esc(r.compName||compNameOf(r.componentId))+'」解绑？<br>解绑后该记录回到「未挂接」，单据状态、归档状态与问题内容均不变。</div>',
+    async()=>{
+      const key=XABimStore.sourceKey(r);const opts={replaceSources:[key]};
+      let rows=[];
+      if(r.type==='report'){
+        const b={...storeBindings()};b[r.sendCode]=(b[r.sendCode]||[]).filter(n=>n!==r.compName);
+        opts.reportBindings=b;
+      }else{
+        rows=storeRows().filter(x=>XABimStore.sourceKey(x)===key&&XABimStore.rowKey(x)!==XABimStore.rowKey(r));
+      }
+      if(await commitBindingEdit(rows,opts)){closeModal();toast('已解绑')}
+    });
+}
+function rebindRecordById(id){const r=records.find(x=>x.id===id);if(!r)return;if(r.type==='panorama'){toast('全景挂接请在全景台账中处理');return}startRebindFlow({record:r});}
+function unbindBillByCode(code){
+  const b=RECTIFY_BILLS.find(x=>x.code===code);if(!b)return;
+  if(billStatus(b)==='已撤回'){toast('已撤回整改单不允许操作');return}
+  showModal('解绑整改单',
+    '<div class="confirm-text">确认解绑整改单「'+esc(code)+'」的全部构件？<br>解绑后整张单回到「未挂接」，单据状态不变；子问题不单独解绑。</div>',
+    async()=>{
+      const key=XABimStore.sourceKey({type:b.type,sourceId:code});
+      const rows=storeRows().filter(x=>XABimStore.sourceKey(x)!==key);
+      const ok=await commitBindingEdit(rows,{replaceSources:[key],inspectOverrides:{[code]:{componentIds:[],componentId:''}}});
+      if(ok){b.componentIds=[];b.componentId='';render();closeModal();toast('已解绑整改单')}
+    });
+}
+function rebindBillByCode(code){const b=RECTIFY_BILLS.find(x=>x.code===code);if(!b)return;if(billStatus(b)==='已撤回'){toast('已撤回整改单不允许操作');return}startRebindFlow({bill:b});}
+
+let pendingRebind=null;
+function rebindSafety(){return !!(pendingRebind&&pendingRebind.bill&&pendingRebind.bill.type==='safety')}
+function rebindSourceText(){const p=pendingRebind;if(!p)return'';return p.bill?('整改单 '+p.bill.code+(p.bill.problemLocation?(' · '+p.bill.problemLocation):'')):((p.record.title||p.record.compName||'该记录')+' · 当前构件 '+(p.record.compName||compNameOf(p.record.componentId)))}
+function startRebindFlow(p){pendingRebind=p;placing='rebind';const r=p.bill||p.record;selectedModel=r.bimModel||((modelGroups[0]&&modelGroups[0].models[0])||'');selectedComponents=new Set(p.bill?billComponentIds(p.bill):[r.componentId].filter(Boolean));componentQuery='';listOpen=false;renderList();renderPlacement()}
+function renderRebindPlacement(){
+  const p=pendingRebind,results=componentSearchRows(),selected=selectedComponentRows();
+  const boundIds=new Set(p.bill?billComponentIds(p.bill):[p.record.componentId].filter(Boolean));
+  const available=results.filter(c=>!boundIds.has(c[0]));
+  const allChecked=available.length&&available.every(c=>selectedComponents.has(c[0]));
+  const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="'+(rebindSafety()?'radio':'checkbox')+'" name="referenceComponent" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">原构件</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');
+  q('#placeMount').innerHTML='<aside class="bind-panel" aria-label="换绑BIM构件"><div class="bind-head"><span>换绑构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(rebindSourceText())+'">换绑内容：'+esc(rebindSourceText())+'</span></div><div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all" '+(rebindSafety()?'hidden':'')+'><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">'+(rebindSafety()?'安全整改单只能选择一个参考构件。':'勾选搜索结果或直接点击模型；确认后替换原挂接构件，支持多选。')+'</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定换绑</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();
+}
+async function submitRebind(){
+  const p=pendingRebind;if(!p)return;const comps=selectedComponentRows();if(!comps.length){toast('请选择构件');return}
+  if(rebindSafety()&&comps.length!==1){toast('安全整改单只能选择一个参考构件');return}
+  let ok=false;
+  if(p.bill){
+    const b=p.bill,key=XABimStore.sourceKey({type:b.type,sourceId:b.code});
+    const ids=comps.map(c=>c[0]);
+    const base=storeRows().find(x=>XABimStore.sourceKey(x)===key)||{type:b.type,sourceId:b.code,rectifyCode:b.code,bindingKind:'bill',rectifySnapshot:{...b},title:b.code};
+    const rows=ids.map(id=>{const c=compOf(id);return {...base,componentId:c[0],compName:c[1],x:c[2],y:c[3]}});
+    ok=await commitBindingEdit(rows,{replaceSources:[key],inspectOverrides:{[b.code]:{componentIds:ids,componentId:ids[0]}}});
+    if(ok){b.componentIds=ids;b.componentId=ids[0]}
+  }else{
+    const r=p.record,key=XABimStore.sourceKey(r);
+    if(r.type==='report'){
+      const b={...storeBindings()};let arr=(b[r.sendCode]||[]).filter(n=>n!==r.compName);
+      comps.forEach(c=>{if(!arr.includes(c[1]))arr.push(c[1])});b[r.sendCode]=arr;
+      ok=await commitBindingEdit([],{replaceSources:[key],reportBindings:b});
+    }else{
+      const rows=comps.map(c=>({...r,componentId:c[0],compName:c[1],x:c[2],y:c[3]}));
+      ok=await commitBindingEdit(rows,{replaceSources:[key]});
+    }
+  }
+  if(ok){placing=null;pendingRebind=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;const pm=q('#placeMount');if(pm)pm.innerHTML='';q('#stage').classList.remove('placing');renderList();renderBindingHighlights();toast('已换绑到 '+comps.length+' 个构件')}
+}
 function billHeadHtml(b,shown,forceOpen){
   const key='BILL:'+b.code, open=forceOpen||businessSearchActive()?true:treeIsOpen(listType,key), all=billProblems(b), od=billOverdue(b);
   const fields=recLine('检查类型',b.checkType)+recLine('检查人',b.checker)+recLine('检查日期',b.checkTime)+recLine('整改人',b.assignee)+(b.type==='safety'?recLine('问题部位',b.problemLocation||'未填写'):recLine('挂接构件',businessBindingText(b)));
@@ -2231,7 +2325,7 @@ function billHeadHtml(b,shown,forceOpen){
     +'<div class="tree-sub bill-fields" data-locate-bill="'+esc(b.code)+'">'
     +'<div class="rec-line"><span>整改状态</span><em class="status-chip '+statusClass(billStatus(b))+'">'+esc(billDisplayStatus(b))+'</em>'+'</div>'
     +fields
-    +'<div class="rec-actions"><button type="button" data-bill-detail="'+esc(b.code)+'">详情</button></div>'
+    +'<div class="rec-actions"><button type="button" data-bill-detail="'+esc(b.code)+'">详情</button>'+(bindView==='bound'&&billComponentIds(b).length?'<button type="button" data-bill-rebind="'+esc(b.code)+'">换绑</button><button type="button" data-bill-unbind="'+esc(b.code)+'">解绑</button>':'')+'</div>'
     +'</div>'
     +(open?'<div class="tree-body">'+childHtml+'</div>':'')+'</section>';
 }
@@ -2409,7 +2503,7 @@ function initialComponentIds(){const work=pendingWork();if(!work)return new Set(
 function componentSearchRows(){const keyword=componentQuery.trim().toLowerCase();return componentOptions.filter(c=>!keyword||c[0].toLowerCase().includes(keyword)||c[1].toLowerCase().includes(keyword))}
 function locateBindingComponent(id){const c=component(id),stage=q('#stage'),view=q('#viewport'),w=view.clientWidth,h=view.clientHeight,scale=1.48,available=w-380,targetX=available*.58,targetY=h*.4,tx=targetX-scale*c[2]/100*w,ty=targetY-scale*c[3]/100*h;focusComponent=id;stage.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+scale+')';renderBindingHighlights()}
 function renderBindingHighlights(){if(!(pendingWork()&&placing&&selectedModel)){q('#focus').innerHTML='';return}q('#focus').innerHTML=selectedComponentRows().map(c=>'<div class="component-pick" data-label="'+esc(c[1])+'" style="left:'+c[2]+'%;top:'+c[3]+'%"></div>').join('')}
-function renderPlacement(){if(placing==='annotation'){renderAnnotationPicker();return}const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),measurements=work.type==='measure'?measurementRows(pending):[],sourceText=work.type==='unbound'?(pending.label||'未挂接台账数据'):work.type==='report'?('送检单号 '+pending.sendCode+' · '+pending.materialName+' · '+pending.spec):work.type==='briefing'?(pending.resourceName||pending.fileName):(measurements.length===1?(measurements[0].measurementItem+' · '+measurements[0].measurementPosition+' · '+(measurements[0].points?.length||0)+'个测点'):'已选 '+measurements.length+' 个测量部位 · 共 '+measurements.reduce((total,row)=>total+(row.points?.length||0),0)+' 个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="'+(safetyBindingWork()?'radio':'checkbox')+'" name="referenceComponent" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div>'+safetyLocationHtml()+'<div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all" '+(safetyBindingWork()?'hidden':'')+'><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">'+(safetyBindingWork()?'点选模型或搜索名称选择一个参考构件；改选时替换原选择。':'勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。')+'</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
+function renderPlacement(){if(placing==='annotation'){renderAnnotationPicker();return}if(placing==='rebind'){renderRebindPlacement();return}const mount=q('#placeMount'),work=pendingWork();if(work&&placing===work.type&&selectedModel){const pending=work.data,boundIds=initialComponentIds(),selected=selectedComponentRows(),results=componentSearchRows(),available=results.filter(c=>!boundIds.has(c[0])),allChecked=available.length&&available.every(c=>selectedComponents.has(c[0])),measurements=work.type==='measure'?measurementRows(pending):[],sourceText=work.type==='unbound'?(pending.label||'未挂接台账数据'):work.type==='report'?('送检单号 '+pending.sendCode+' · '+pending.materialName+' · '+pending.spec):work.type==='briefing'?(pending.resourceName||pending.fileName):(measurements.length===1?(measurements[0].measurementItem+' · '+measurements[0].measurementPosition+' · '+(measurements[0].points?.length||0)+'个测点'):'已选 '+measurements.length+' 个测量部位 · 共 '+measurements.reduce((total,row)=>total+(row.points?.length||0),0)+' 个测点');const resultRows=results.map(c=>{const bound=boundIds.has(c[0]);return '<div class="bind-result-row"><input type="'+(safetyBindingWork()?'radio':'checkbox')+'" name="referenceComponent" data-search-component="'+esc(c[0])+'" aria-label="选择'+esc(c[1])+'" '+(bound?'checked disabled':selectedComponents.has(c[0])?'checked':'')+'><button class="component-name" data-locate-component="'+esc(c[0])+'" title="'+esc(c[1])+'">'+esc(c[1])+'</button>'+(bound?'<span class="bound-state">已挂接</span>':'<button class="locate" data-locate-component="'+esc(c[0])+'">定位</button>')+'</div>'}).join('');mount.innerHTML='<aside class="bind-panel" aria-label="绑定BIM构件"><div class="bind-head"><span>绑定BIM构件</span><button data-action="cancel-place" aria-label="关闭">×</button></div><div class="bind-model" title="'+esc(selectedModel)+'">当前模型：'+esc(selectedModel)+'</div><div class="bind-row" style="margin:0 10px 10px;background:#203149"><span title="'+esc(sourceText)+'">挂接内容：'+esc(sourceText)+'</span></div>'+safetyLocationHtml()+'<div class="bind-search"><div class="bind-search-box"><input id="componentSearch" value="'+esc(componentQuery)+'" placeholder="输入构件名称或编号搜索" autocomplete="off"><button data-action="clear-component-search" aria-label="清空搜索">×</button></div><div class="bind-result-head"><span>搜索结果（'+results.length+'）</span><label class="bind-check-all" '+(safetyBindingWork()?'hidden':'')+'><input id="selectAllSearchResults" type="checkbox" '+(allChecked?'checked':'')+' '+(!available.length?'disabled':'')+'> 全选当前结果</label></div><div class="bind-results">'+(results.length?resultRows:'<div class="bind-result-empty">未找到匹配构件</div>')+'</div></div><div class="bind-help">'+(safetyBindingWork()?'点选模型或搜索名称选择一个参考构件；改选时替换原选择。':'勾选搜索结果或直接点击模型，构件会加入预挂接清单；切换关键词后选择会保留。')+'</div><div class="bind-sections"><section class="bind-section"><h4>预挂接（'+selected.length+'）</h4><div class="bind-section-list">'+(selected.length?selected.map(c=>'<div class="bind-row"><span title="'+esc(c[1])+'">'+esc(c[1])+'</span><button data-remove-component="'+esc(c[0])+'" aria-label="移除'+esc(c[1])+'">×</button></div>').join(''):'<div class="bind-empty">搜索勾选或在模型中点选构件</div>')+'</div></section></div><div class="bind-actions"><button class="reload" data-action="choose-model">重新选择模型</button><span class="selection-count">已选 '+selected.length+' 个</span><button data-action="cancel-place">取消</button><button class="primary" data-action="confirm-binding" '+(selected.length?'':'disabled')+'>确定挂接</button></div></aside>';q('#stage').classList.add('placing');renderBindingHighlights();return}const message=work?'请先选择需要载入的BIM模型':'请在模型画面点击挂接位置';mount.innerHTML=placing?'<div class="placement-note">'+message+' <button data-action="cancel-place">取消</button></div>':'';q('#stage').classList.toggle('placing',!!placing);if(!placing)q('#focus').innerHTML=''}
 function render(){refreshAnnotationStatus();renderTabs();renderMarkers();renderList();renderTable();renderPlacement();renderDetailPage();renderBoards();renderFilterPanel()}
 function choose(r,collapse){const keepList=collapse!==true;switchBusinessListType(r.type);selectedId=r.id;tablePage=1;listOpen=keepList;collapsedDates.delete(String(r.checkTime||'').slice(0,10));focusOn(r.componentId,markerVariantOf(r));renderList()}
 function showModal(title,body,onSave){modalMode=onSave;q('#modalMount').innerHTML='<div class="shade"><section class="modal" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="modal-head"><span>'+esc(title)+'</span><button data-action="close-modal" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button data-action="close-modal">取消</button><button class="primary" data-action="save-modal">确定</button></div></section></div>'}
@@ -2418,7 +2512,7 @@ function openBriefingPreview(r){const isModel=r.subtype==='三维交底',name=is
 function openMeasurementTable(componentId){listType='measure';focusComponent=componentId;q('#modalMount').innerHTML='';renderTable()}
 function nearestComponent(x,y){return componentOptions.reduce((best,item)=>{const distance=Math.hypot(item[2]-x,item[3]-y);return !best||distance<best.distance?{item,distance}:best},null).item}
 function showModelSelection(){const work=pendingWork();if(!work)return;const body=modelGroups.map((group,index)=>'<section class="model-tree-group"><div class="model-tree-title"><span class="tree-caret">'+(index?'›':'▼')+'</span><span>'+esc(group.name)+'</span></div>'+(index?'':group.models.map(name=>'<label class="model-tree-item"><input type="radio" name="bimModel" value="'+esc(name)+'" '+(selectedModel===name?'checked':'')+'><span>'+esc(name)+'</span></label>').join(''))+'</section>').join('');modalMode=()=>{const checked=q('input[name="bimModel"]:checked');if(!checked){q('#formError').textContent='请选择一个BIM模型';return false}selectedModel=checked.value;selectedComponents.clear();componentQuery='';placing=work.type;listOpen=false;closeModal();renderList();renderPlacement();toast('模型已载入，可搜索或点选构件');return true};q('#modalMount').innerHTML='<div class="shade"><section class="modal model-select-modal" role="dialog" aria-modal="true" aria-label="载入模型"><div class="modal-head"><span>载入模型</span><button data-action="cancel-model-select" aria-label="关闭">×</button></div><div class="modal-body">'+body+'<div class="form-error" id="formError"></div></div><div class="modal-foot"><button class="primary" data-action="save-modal">确定</button><button data-action="cancel-model-select">取消</button></div></section></div>'}
-function toggleBindingComponent(c){const bound=initialComponentIds();if(bound.has(c[0])){toast('该构件已挂接当前业务数据');return}if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else{if(safetyBindingWork())selectedComponents.clear();selectedComponents.add(c[0])}renderPlacement()}
+function toggleBindingComponent(c){if(placing==='rebind'){const bound=new Set(pendingRebind&&pendingRebind.bill?billComponentIds(pendingRebind.bill):(pendingRebind&&pendingRebind.record?[pendingRebind.record.componentId]:[]));if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else{if(rebindSafety())selectedComponents.clear();selectedComponents.add(c[0])}renderPlacement();return}const bound=initialComponentIds();if(bound.has(c[0])){toast('该构件已挂接当前业务数据');return}if(selectedComponents.has(c[0]))selectedComponents.delete(c[0]);else{if(safetyBindingWork())selectedComponents.clear();selectedComponents.add(c[0])}renderPlacement()}
 async function saveBusinessBinding(){const work=pendingWork();if(!work||!selectedComponents.size||bindingSaving||!businessReady)return;
   if(work.type==='unbound'){
     const p=work.data,comps=selectedComponentRows();if(!comps.length)return;
@@ -2497,6 +2591,10 @@ q('#listMount').addEventListener('click',e=>{
   if(gpo){toggleTree('panorama',gpo.dataset.groupPano);renderPanoramaList();return}
   const bb=e.target.closest('[data-bill-bind]');if(bb){e.stopPropagation();startBillBinding(bb.dataset.billBind);return}
   const bd=e.target.closest('[data-bill-detail]');if(bd){e.stopPropagation();openBillDetail(bd.dataset.billDetail);return}
+  const bu=e.target.closest('[data-bill-unbind]');if(bu){e.stopPropagation();unbindBillByCode(bu.dataset.billUnbind);return}
+  const br=e.target.closest('[data-bill-rebind]');if(br){e.stopPropagation();rebindBillByCode(br.dataset.billRebind);return}
+  const un=e.target.closest('[data-unbind]');if(un){e.stopPropagation();unbindRecordById(Number(un.dataset.unbind));return}
+  const rb=e.target.closest('[data-rebind]');if(rb){e.stopPropagation();rebindRecordById(Number(rb.dataset.rebind));return}
   const lb=e.target.closest('[data-locate-bill]');
   if(lb){locateBillByCode(lb.dataset.locateBill);return}
   const det=e.target.closest('[data-detail]');
@@ -2564,8 +2662,8 @@ q('#stage').addEventListener('click',e=>{
   annotationDblTrace={t:now,x:e.clientX,y:e.clientY};
 });
 q('#tableMount').addEventListener('click',e=>{const rp=e.target.closest('[data-report-page]');if(rp){detailId=+rp.dataset.reportPage;q('#tableMount').innerHTML='';renderReportPage();return}const a=e.target.closest('[data-action]')?.dataset.action;if(a==='close-table'){selectedId=null;expandedMeasureRows.clear();resetFocus();if(listType&&active.has(listType))listOpen=true;renderTable();renderList();return}const measureId=Number(e.target.closest('[data-measure-expand]')?.dataset.measureExpand);if(measureId){if(expandedMeasureRows.has(measureId))expandedMeasureRows.delete(measureId);else expandedMeasureRows.add(measureId);renderTable();return}const id=Number(e.target.closest('[data-detail]')?.dataset.detail);if(id){const r=records.find(x=>x.id===id);if(!r)return;selectedId=id;if(isIssue(r)){detailId=id;renderDetailPage()}else openGeneric(r);return}const page=e.target.closest('[data-page]')?.dataset.page;if(page){const max=Math.ceil(tableRows().length/5);tablePage=Math.max(1,Math.min(max,tablePage+(page==='next'?1:-1)));renderTable()}});
-q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-component]')?.dataset.removeComponent;if(remove){selectedComponents.delete(remove);renderPlacement();return}const locate=e.target.closest('[data-locate-component]')?.dataset.locateComponent;if(locate){locateBindingComponent(locate);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='clear-component-search'){componentQuery='';renderPlacement();q('#componentSearch')?.focus();return}if(action==='choose-model'){showModelSelection();return}if(action==='confirm-binding'){saveBusinessBinding();return}if(action==='cancel-place'){placing=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render();toast('已取消本次挂接')}});
-q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){if(safetyBindingWork())return;const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
+q('#placeMount').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-component]')?.dataset.removeComponent;if(remove){selectedComponents.delete(remove);renderPlacement();return}const locate=e.target.closest('[data-locate-component]')?.dataset.locateComponent;if(locate){locateBindingComponent(locate);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action==='clear-component-search'){componentQuery='';renderPlacement();q('#componentSearch')?.focus();return}if(action==='choose-model'){showModelSelection();return}if(action==='confirm-binding'){if(placing==='rebind'){submitRebind();return}saveBusinessBinding();return}if(action==='cancel-place'){placing=null;pendingRebind=null;clearPending();selectedModel='';selectedComponents.clear();componentQuery='';listOpen=true;resetFocus();render();toast('已取消本次挂接')}});
+q('#placeMount').addEventListener('change',e=>{const id=e.target.dataset.searchComponent;if(id){toggleBindingComponent(component(id));return}if(e.target.id==='selectAllSearchResults'){if(placing==='rebind'){if(rebindSafety())return;const rb=new Set(pendingRebind&&pendingRebind.bill?billComponentIds(pendingRebind.bill):[pendingRebind&&pendingRebind.record?pendingRebind.record.componentId:null].filter(Boolean));componentSearchRows().filter(c=>!rb.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement();return}if(safetyBindingWork())return;const bound=initialComponentIds();componentSearchRows().filter(c=>!bound.has(c[0])).forEach(c=>e.target.checked?selectedComponents.add(c[0]):selectedComponents.delete(c[0]));renderPlacement()}});
 q('#placeMount').addEventListener('input',e=>{if(e.target.id==='webProblemLocation'){if(pendingUnbound)pendingUnbound.problemLocation=e.target.value;return}if(e.target.id!=='componentSearch')return;componentQuery=e.target.value;renderPlacement();const input=q('#componentSearch');if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length)}});
 q('#modalMount').addEventListener('click',e=>{const a=e.target.closest('[data-action]')?.dataset.action;if(a==='cancel-model-select'){closeModal();if(!selectedModel){clearPending();placing=null;listOpen=true;render()}else renderPlacement();return}if(a==='close-modal'||(e.target.classList.contains('shade')&&!e.target.querySelector('.model-select-modal')))closeModal();if(a==='save-modal'&&modalMode)modalMode()});
 q('#pageMount').addEventListener('click',e=>{const ub=e.target.closest('[data-unbound-bind]');if(ub){startUnboundReportBinding(ub.dataset.unboundBind);return}if(e.target.closest('[data-action="back-report"]')||e.target.closest('[data-action="back-bim"]')){reportDetailOverride=null;restoreState();return}});bindBoardEvents();bindFilterEvents();

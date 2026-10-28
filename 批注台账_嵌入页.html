@@ -76,7 +76,38 @@ tbody tr{cursor:pointer}
 .round-card{margin:10px 0 14px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden}
 .round-head{padding:9px 12px;background:#f6f9fc;font-weight:700;color:#425a76}
 .round-body{padding:2px 12px 9px}
-.annotation-table{min-width:1400px;table-layout:fixed}.annotation-description{font-weight:400;color:#41546c;line-height:1.65}.annotation-table td{vertical-align:middle}
+.annotation-table{min-width:1300px;table-layout:fixed}.annotation-description{font-weight:400;color:#41546c;line-height:1.65}.badge.void{background:#eef1f5;color:#7c8794}.action.danger{color:#d9534f}.annotation-table td{vertical-align:middle}
+.ann-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1d2b3e;color:#fff;padding:9px 16px;border-radius:5px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}.ann-toast.show{opacity:1}
+.ann-mask{position:fixed;inset:0;background:#0b162480;display:flex;align-items:center;justify-content:center;z-index:98}
+.ann-dialog{background:#fff;border-radius:8px;padding:18px 20px;width:340px;box-shadow:0 12px 40px #0b162433;font-size:13px;color:#33465e}
+.ann-dialog-wide{width:460px}
+.ann-dialog h3{margin:0 0 12px;font-size:15px}
+.ann-dialog p{margin:0 0 16px;line-height:1.7}
+.ann-dialog-foot{display:flex;justify-content:flex-end;gap:8px}
+/* 编辑批注：字段与排版沿用「新增批注」 */
+.ann-dialog-form{width:520px;max-height:86vh;display:flex;flex-direction:column;padding:0}
+.ann-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e0e7ef;font-weight:700;color:#1d2b3e;font-size:15px}
+.ann-x{border:0;background:none;color:#6b7d90;font-size:20px;line-height:1;cursor:pointer}
+.ann-dialog-body{padding:18px;overflow:auto}
+.ann-dialog-form .field{display:block;margin:0 0 13px;color:#40526a;font-size:13px}
+.ann-dialog-form .field span{display:block;margin-bottom:5px}
+.ann-dialog-form .field input,.ann-dialog-form .field select,.ann-dialog-form .field textarea{width:100%;border:1px solid #cbd8e5;border-radius:3px;padding:8px;color:#263c54;font:inherit}
+.ann-dialog-form .field textarea{min-height:80px;resize:vertical}
+.ann-dialog-form .field[hidden]{display:none}
+.ann-dialog-form .required{color:#d34b4b;font-weight:700}
+.ann-dialog-form .annotation-radio{display:flex;gap:24px;align-items:center}
+.ann-dialog-form .annotation-radio label{display:flex;align-items:center;gap:6px;color:#40526a}
+.ann-dialog-form .annotation-radio input{width:auto}
+.ann-dialog-form .form-error{color:#c43838;font-size:12px;min-height:18px}
+.ann-dialog-form .ann-comp-row{display:flex;align-items:center;gap:10px}
+.ann-dialog-form .ann-comp-row strong{flex:1;font-weight:700;color:#1d2b3e}
+.ann-dialog-form .ann-btn,.ann-dialog-form .ann-dialog-foot button{border:1px solid #c9d6e4;border-radius:3px;background:#fff;color:#28699f;padding:7px 11px;font:inherit;cursor:pointer}
+.ann-dialog-form .ann-dialog-foot .primary{background:#2787f5;border-color:#2787f5;color:#fff}
+.ann-dialog-form .ann-dialog-foot{display:flex;justify-content:flex-end;gap:8px}
+.ann-dialog-form .ann-dialog-foot{padding:12px 18px;border-top:1px solid #e1e9f1}
+.ann-field{display:block;margin-bottom:12px;font-size:12px;color:#5a6b80}
+.ann-field textarea,.ann-field input{display:block;width:100%;margin-top:5px;border:1px solid #d9e2ec;border-radius:4px;padding:7px 9px;font:inherit;color:#33465e}
+.ann-field textarea{min-height:64px;resize:vertical}
 </style>
 </head>
 <body>
@@ -89,6 +120,7 @@ tbody tr{cursor:pointer}
       <option value="继续整改">继续整改</option>
       <option value="待复查">待复查</option>
       <option value="已复查">已复查</option>
+      <option value="已撤回">已撤回</option>
       
     </select>
     <select id="fOverdue" aria-label="是否逾期"><option value="">是否逾期：全部</option><option value="yes">是</option><option value="no">否</option></select>
@@ -956,7 +988,10 @@ const SEED=[
    deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比',rectifiedAt:'2026-09-18 11:00',rectifyDescription:'已按规范加密吊架至 1.5m 间距。',rectifyImages:[PH('整改照片')],reviewAt:'2026-09-19 09:30',reviewResult:'不通过',reviewDescription:'抽检仍有 2 处间距超 1.8m，需继续加密后重新提交。',reviewImages:[PH('复查照片')]},
   {id:106,type:'annotation',title:'风管保温层局部破损',componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',checkTime:'2026-09-10 16:05',checker:'刘振',category:'机电安装 / 暖通',level:'一般',
    description:'风管保温层局部破损，影响保温效果。',requirement:'修补保温层并复查。',
-   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-09-12 10:30',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]}
+   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-09-12 10:30',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]},
+  {id:107,type:'annotation',title:'楼梯踏步阳角破损',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-10-09 11:20',checker:'王会彬',category:'主体结构工程 / 混凝土工程',level:'一般',
+   description:'楼梯踏步阳角拆模后破损，需修补并复核。',requirement:'剔凿松动部位后修补，达到强度后复核。',
+   deadline:'2026-10-14',unit:'主体施工班组',assignee:'徐志成',reviewer:'刘振',baseStatus:'已撤回',issueRequired:true,round:1,source:'BIM模型',withdrawnAt:'2026-10-10 09:40',withdrawReason:'批注对象选错构件，撤回后重新提交'}
 ];
 
 function loadStore(){
@@ -969,7 +1004,7 @@ function loadStore(){
     return list.length?list:null;
   }catch(e){ return null }
 }
-function mergeAnnotationRows(list){return [...new Map(SEED.concat(list||[]).map(r=>[r.id,{...r}])).values()]}
+function mergeAnnotationRows(list){const removed=new Set(removedIds());return [...new Map(SEED.concat(list||[]).map(r=>[r.id,{...r}])).values()].filter(r=>!removed.has(r.id))}
 let DATA=mergeAnnotationRows(loadStore());
 
 /* ===== 状态派生（与其它端一致） ===== */
@@ -977,7 +1012,7 @@ function displayStatus(r){return XABimStore.displayStatus(r)}
 function overdueDays(r){return XABimStore.overdueDays(r)}
 
 function badgeCls(s){
-  return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':(s==='已复查'||s==='无需整改')?'done':'wait';
+  return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':(s==='已复查'||s==='无需整改')?'done':s==='已撤回'?'void':'wait';
 }
 const isClosed=s=>s==='已复查'||s==='无需整改';
 
@@ -1019,7 +1054,7 @@ function renderTable(){
   if(view.page<1) view.page=1;
   const start=(view.page-1)*PAGE_SIZE, paged=list.slice(start,start+PAGE_SIZE);
 
-  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)).length, overCnt=all.filter(x=>overdueDays(x.r)>0).length;
+  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)&&x.s!=='已撤回').length, overCnt=all.filter(x=>overdueDays(x.r)>0).length;
   $('#count').textContent=total;
   $('#subInfo').textContent=' · 未复查 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
   $('#pageInfo').textContent='第 '+view.page+' / '+pages+' 页';
@@ -1028,7 +1063,7 @@ function renderTable(){
   if(!list.length){
     mount.innerHTML='<div class="empty">没有符合条件的批注</div>';
   }else{
-    mount.innerHTML='<div class="table-wrap"><table class="annotation-table"><colgroup><col style="width:50px"><col style="width:280px"><col style="width:180px"><col style="width:90px"><col style="width:155px"><col style="width:100px"><col style="width:90px"><col style="width:115px"><col style="width:85px"><col style="width:85px"><col style="width:65px"></colgroup><thead><tr>'+['序号','批注内容','关联构件','批注人','批注时间','整改状态','整改人','整改期限','是否逾期','逾期天数','操作'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+paged.map(({r,s},i)=>{const days=overdueDays(r),required=s!=='无需整改';return '<tr data-id="'+r.id+'"><td>'+(start+i+1)+'</td><td class="wrap-cell annotation-description">'+esc(r.description||r.title||'--')+'</td><td class="wrap-cell">'+esc(r.compName||r.componentId||'--')+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></td><td>'+esc(required?r.assignee||'--':'--')+'</td><td>'+esc(required?r.deadline||'--':'--')+'</td><td class="'+(days?'over-days':'')+'">'+(days?'是':'否')+'</td><td class="'+(days?'over-days':'')+'">'+days+'</td><td><button class="action" data-detail="'+r.id+'">详情</button></td></tr>'}).join('')+'</tbody></table></div>';
+    mount.innerHTML='<div class="table-wrap"><table class="annotation-table"><colgroup><col style="width:50px"><col style="width:250px"><col style="width:175px"><col style="width:85px"><col style="width:150px"><col style="width:100px"><col style="width:85px"><col style="width:105px"><col style="width:75px"><col style="width:75px"><col style="width:170px"></colgroup><thead><tr>'+['序号','批注内容','关联构件','批注人','批注时间','整改状态','整改人','整改期限','是否逾期','逾期天数','操作'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+paged.map(({r,s},i)=>{const days=overdueDays(r),required=s!=='无需整改';return '<tr data-id="'+r.id+'"><td>'+(start+i+1)+'</td><td class="wrap-cell annotation-description">'+esc(r.description||r.title||'--')+'</td><td class="wrap-cell">'+esc(r.compName||r.componentId||'--')+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></td><td>'+esc(required?r.assignee||'--':'--')+'</td><td>'+esc(required?r.deadline||'--':'--')+'</td><td class="'+(days?'over-days':'')+'">'+(days?'是':'否')+'</td><td class="'+(days?'over-days':'')+'">'+days+'</td><td>'+'<button class="action" data-detail="'+r.id+'">详情</button>'+((['待整改','待整改逾期','继续整改','待复查'].indexOf(s)>=0)?'<button class="action" data-withdraw="'+r.id+'">撤回</button>':'')+((s==='已撤回')?'<button class="action" data-edit="'+r.id+'">编辑</button><button class="action danger" data-del="'+r.id+'">删除</button>':'')+'</td></tr>'}).join('')+'</tbody></table></div>';
   }
 
   const pg=$('#pagination');
@@ -1128,6 +1163,129 @@ function backToList(){
   $('#detailView').hidden=true;
   $('#listView').hidden=false;
 }
+
+/* ===== 撤回 / 已撤回 / 编辑重提 / 删除 ===== */
+const REMOVED_KEY='xa-annotations-removed-v1';
+function removedIds(){try{return JSON.parse(localStorage.getItem('xa-annotations-removed-v1')||'[]')}catch(e){return []}}
+function annStore(){try{const raw=localStorage.getItem('xa-annotations-v1');if(!raw)return {annotations:[],seq:0};const d=JSON.parse(raw);return {annotations:Array.isArray(d)?d:(d.annotations||[]),seq:d.seq||0}}catch(e){return null}}
+function saveAnnStore(st){try{localStorage.setItem('xa-annotations-v1',JSON.stringify(st));return true}catch(e){return false}}
+function findAnn(id){const st=annStore();if(st){const hit=st.annotations.find(x=>x.id===id);if(hit)return hit}return SEED.find(x=>x.id===id)}
+function patchAnn(id,fields){
+  const st=annStore()||{annotations:[],seq:0};
+  let rec=st.annotations.find(x=>x.id===id);
+  if(!rec){rec={...(SEED.find(x=>x.id===id)||{})};st.annotations.push(rec)}
+  Object.assign(rec,fields);return saveAnnStore(st);
+}
+function syncBimRows(id,fields,remove){
+  try{
+    const raw=localStorage.getItem('xa-bim-business-v2');if(!raw)return;
+    const st=JSON.parse(raw);if(!Array.isArray(st.records))return;
+    const match=r=>r.type==='annotation'&&(String(r.ledgerKey)===String(id)||String(r.sourceId||'').indexOf(String(id))>=0);
+    if(remove){st.records=st.records.filter(r=>!match(r))}
+    else{let hit=false;st.records.forEach(r=>{if(match(r)){Object.assign(r,fields);hit=true}});if(!hit)return}
+    localStorage.setItem('xa-bim-business-v2',JSON.stringify(st));
+  }catch(e){}
+}
+function reloadAnn(){DATA=mergeAnnotationRows(loadStore());renderFilters();renderTable()}
+function annToast(msg){let t=document.getElementById('annToast');if(!t){t=document.createElement('div');t.id='annToast';document.body.appendChild(t)}t.textContent=msg;t.className='ann-toast show';clearTimeout(t._tm);t._tm=setTimeout(()=>t.className='ann-toast',2200)}
+function askAnnConfirm(text,onOk){
+  const box=document.createElement('div');box.className='ann-mask';
+  box.innerHTML='<div class="ann-dialog"><p>'+esc(text)+'</p><div class="ann-dialog-foot"><button class="action" data-cancel>取消</button><button class="action danger" data-ok>确定</button></div></div>';
+  document.body.appendChild(box);
+  box.querySelector('[data-cancel]').onclick=()=>box.remove();
+  box.querySelector('[data-ok]').onclick=()=>{box.remove();onOk()};
+}
+function withdrawAnn(id){
+  askAnnConfirm('确认撤回该批注？撤回后状态变为「已撤回」，可编辑重新提交或删除。',()=>{
+    patchAnn(id,{baseStatus:'已撤回',status:'已撤回'});
+    syncBimRows(id,{baseStatus:'已撤回',status:'已撤回'});
+    reloadAnn();annToast('已撤回，可编辑重新提交');
+  });
+}
+function deleteAnn(id){
+  askAnnConfirm('确认删除该批注？删除后不可恢复，BIM 模型上的挂接数据同步删除。',()=>{
+    const st=annStore()||{annotations:[],seq:0};
+    st.annotations=st.annotations.filter(x=>x.id!==id);saveAnnStore(st);
+    try{const rm=JSON.parse(localStorage.getItem(REMOVED_KEY)||'[]');if(rm.indexOf(id)<0){rm.push(id);localStorage.setItem(REMOVED_KEY,JSON.stringify(rm))}}catch(e){}
+    syncBimRows(id,{},true);
+    reloadAnn();annToast('已删除，BIM 挂接数据已同步删除');
+  });
+}
+function annPeople(items){
+  return '<option value="">请选择</option>'+items.map(x=>'<option value="'+esc(x[0])+'" data-unit="'+esc(x[1])+'">'+esc(x[0])+'（'+esc(x[1])+'）</option>').join('');
+}
+function annCompOptions(selectedId){
+  const list=(XABimStore&&XABimStore.components)||[];
+  return list.map(c=>'<option value="'+esc(c[0])+'" '+(c[0]===selectedId?'selected':'')+'>'+esc(c[1])+'</option>').join('');
+}
+function annFormValues(){
+  const sel=document.querySelector('#annEditAssignee'),opt=sel&&sel.options[sel.selectedIndex];
+  return {
+    componentId:document.querySelector('#annEditComp')?.value||'',
+    desc:document.querySelector('#annEditDesc')?.value||'',
+    issue:document.querySelector('input[name="annEditIssue"]:checked')?.value==='yes',
+    assignee:sel?.value||'',
+    unit:opt?.dataset.unit||'',
+    deadline:document.querySelector('#annEditDeadline')?.value||'',
+    reviewer:document.querySelector('#annEditReviewer')?.value||''
+  };
+}
+function editAnn(id){
+  const r=findAnn(id);if(!r)return;
+  const issue=r.issueRequired!==false&&r.baseStatus!=='无需整改';
+  const compName=(r.compName||((XABimStore.components||[]).find(c=>c[0]===r.componentId)||[])[1]||'--');
+  const body='<div class="field"><span>已选构件</span><div class="ann-comp-row"><strong id="annEditCompText">'+esc(compName)+'</strong><button type="button" class="ann-btn" data-change-comp>更换构件</button></div><select id="annEditComp" hidden>'+annCompOptions(r.componentId)+'</select></div>'
+    +'<div class="field"><span>问题描述 <b class="required">*</b></span><textarea id="annEditDesc" rows="3" placeholder="描述构件现场发现的问题">'+esc(r.description||'')+'</textarea></div>'
+    +'<div class="field"><span>是否需要整改 <b class="required">*</b></span><div class="annotation-radio"><label><input type="radio" name="annEditIssue" value="yes" '+(issue?'checked':'')+'>是</label><label><input type="radio" name="annEditIssue" value="no" '+(issue?'':'checked')+'>否</label></div></div>'
+    +'<div id="annEditIssueFields">'
+    +'<div class="field"><span>整改人 <b class="required">*</b></span><select id="annEditAssignee">'+annPeople([['李强','机电安装班组'],['徐志成','主体施工班组'],['赵明','装饰班组']])+'</select></div>'
+    +'<div class="field"><span>整改截止日期 <b class="required">*</b></span><input id="annEditDeadline" type="date" value="'+esc(r.deadline||'')+'"></div>'
+    +'<div class="field"><span>复查人 <b class="required">*</b></span><select id="annEditReviewer">'+annPeople([['王会彬','质量员'],['刘振','专业工程师'],['张恒毓','项目技术员']])+'</select></div>'
+    +'</div>';
+  const box=document.createElement('div');box.className='ann-mask';
+  box.innerHTML='<section class="ann-dialog ann-dialog-form annotation-create-modal" role="dialog" aria-modal="true" aria-label="编辑批注">'
+    +'<div class="ann-dialog-head"><span>编辑批注</span><button type="button" class="ann-x" data-cancel aria-label="关闭">×</button></div>'
+    +'<div class="ann-dialog-body">'+body+'<div class="form-error" id="annEditError" role="alert"></div></div>'
+    +'<div class="ann-dialog-foot"><button class="action" data-cancel>取消</button><button class="action primary" data-ok>保存并重新提交</button></div></section>';
+  document.body.appendChild(box);
+  if(r.assignee)box.querySelector('#annEditAssignee').value=r.assignee;
+  else box.querySelector('#annEditAssignee').value='';
+  if(r.reviewer)box.querySelector('#annEditReviewer').value=r.reviewer;
+  const toggle=()=>{const yes=box.querySelector('input[name="annEditIssue"]:checked')?.value==='yes';box.querySelector('#annEditIssueFields').hidden=!yes};
+  box.querySelectorAll('input[name="annEditIssue"]').forEach(i=>i.addEventListener('change',toggle));toggle();
+  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>box.remove());
+  const changeBtn=box.querySelector('[data-change-comp]');
+  if(changeBtn)changeBtn.onclick=()=>{const sel=box.querySelector('#annEditComp');sel.hidden=!sel.hidden;if(!sel.hidden)sel.focus()};
+  const compSel=box.querySelector('#annEditComp');
+  if(compSel)compSel.onchange=()=>{const c=(XABimStore.components||[]).find(x=>x[0]===compSel.value);if(c)box.querySelector('#annEditCompText').textContent=c[1]};
+  box.querySelector('[data-ok]').onclick=()=>{
+    const v=annFormValues(),error=box.querySelector('#annEditError');
+    if(!v.desc.trim()){error.textContent='请填写问题描述';return}
+    if(v.issue&&!v.assignee){error.textContent='请选择整改人';return}
+    if(v.issue&&!v.deadline){error.textContent='请选择整改截止日期';return}
+    if(v.issue&&!v.reviewer){error.textContent='请选择复查人';return}
+    const comp=(XABimStore.components||[]).find(c=>c[0]===v.componentId);
+    const fields={
+      title:v.desc.trim().slice(0,20),
+      description:v.desc.trim(),
+      requirement:v.issue?'按方案整改并复查':'仅记录问题，无需整改',
+      deadline:v.issue?v.deadline:'',
+      unit:v.issue?v.unit:'',
+      assignee:v.issue?v.assignee:'',
+      reviewer:v.issue?v.reviewer:'',
+      issueRequired:!!v.issue,
+      baseStatus:v.issue?'待整改':'无需整改',
+      status:v.issue?'待整改':'无需整改',
+      round:(Number(r.round)||1)+1,
+      resubmittedAt:new Date().toLocaleString('sv-SE').slice(0,16)
+    };
+    if(comp){fields.componentId=comp[0];fields.compName=comp[1];fields.position=comp[1]}
+    patchAnn(id,fields);
+    syncBimRows(id,fields);
+    box.remove();reloadAnn();
+    annToast('已保存并重新提交，状态回到'+(v.issue?'「待整改」':'「无需整改」'));
+  };
+}
 /* ===== 事件 ===== */
 $('#searchBtn').onclick=()=>{
   view.overdue=$('#fOverdue').value;view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
@@ -1139,6 +1297,9 @@ $('#resetBtn').onclick=()=>{
 };
 $('#fSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#searchBtn').click() });
 $('#tableMount').addEventListener('click',e=>{
+  const w=e.target.closest('[data-withdraw]'); if(w){ e.stopPropagation(); withdrawAnn(+w.dataset.withdraw); return }
+  const ed=e.target.closest('[data-edit]'); if(ed){ e.stopPropagation(); editAnn(+ed.dataset.edit); return }
+  const dl=e.target.closest('[data-del]'); if(dl){ e.stopPropagation(); deleteAnn(+dl.dataset.del); return }
   const b=e.target.closest('[data-detail]');
   if(b){ e.stopPropagation(); openDetail(+b.dataset.detail); return }
   const tr=e.target.closest('tr[data-id]');
