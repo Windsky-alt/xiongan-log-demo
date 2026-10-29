@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>批注台账</title>
+<style>
+/* 样式与 实测实量_测量记录台账_嵌入页.html 保持一致 */
+:root{--blue:#3a82ee;--text:#34445a;--muted:#8290a4;--line:#e4eaf2;--head:#f3f4f6}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font:14px/1.5 "Microsoft YaHei","PingFang SC",Arial,sans-serif;color:var(--text);background:#fff}button,input,select{font:inherit}button{cursor:pointer}
+.page{height:100%;padding:22px;overflow:auto}
+.filters{display:flex;align-items:center;gap:14px;padding-bottom:20px;border-bottom:1px solid #edf1f5;flex-wrap:wrap}
+.filters input,.filters select{height:40px;border:1px solid #dbe3ed;border-radius:4px;padding:0 12px;color:#41546c;background:#fff}
+.filters input{width:240px}
+.btn{height:40px;padding:0 18px;border:1px solid #d8e1ec;border-radius:4px;background:#fff;color:#43556d}
+.btn:hover{border-color:#b9cde8;color:var(--blue)}
+.btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.btn.primary:hover{background:#2f74dc;border-color:#2f74dc;color:#fff}
+.summary{display:flex;justify-content:space-between;align-items:center;margin:19px 0 12px}
+.summary b{color:var(--blue)}
+.summary .sub{color:var(--muted);margin-left:4px}
+.table-wrap{min-width:1080px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{height:56px;padding:0 12px;background:var(--head);color:#33465e;text-align:left;font-weight:700}
+td{height:64px;padding:0 12px;border-bottom:1px solid var(--line);color:#566980;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tbody tr:hover td{background:#fbfdff}
+tbody tr{cursor:pointer}
+.wrap-cell{white-space:normal;line-height:1.55;padding-top:12px;padding-bottom:12px;height:auto}
+.cell-title{font-weight:600;color:#33465e}
+.cell-sub{color:var(--muted);margin-top:4px;font-size:13px}
+.comp small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;background:#f0f4f9;color:#5a6d86;border:1px solid #e6edf6;font-size:12px;margin:5px 5px 0 0}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.badge.wait{background:#fff1f2;color:#d94252;border:1px solid #ffd9dd}
+.badge.cont{background:#fff6ea;color:#c2690a;border:1px solid #ffe2bd}
+.badge.check{background:#eef6ff;color:#2176cf;border:1px solid #cfe6ff}
+.badge.done{background:#eefaf3;color:#148659;border:1px solid #cdeedb}
+.badge.over{background:#e45555;color:#fff;border:1px solid #e45555}
+.over-days{color:#e45555;font-size:12.5px;font-weight:700;margin-left:6px}
+.action{border:0;background:transparent;color:#237bea;padding:4px 6px}
+.action:hover{text-decoration:underline}
+.pagination{display:flex;justify-content:flex-end;gap:14px;align-items:center;padding:22px 0;color:#74849a}
+.page-no{color:#237bea;font-weight:700;border:0;background:transparent;padding:2px 6px}
+.page-no.on{color:#fff;background:var(--blue);border-radius:3px}
+.empty{padding:50px;text-align:center;color:#91a0b2}
+.pick-note{padding:10px 12px;margin-bottom:14px;border:1px solid #d9eafd;border-radius:4px;background:#f2f8ff;color:#52718f}
+
+.mask{position:fixed;z-index:10;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:#17283f63}
+.mask.show{display:flex}
+.dialog{width:min(760px,96vw);max-height:88vh;display:flex;flex-direction:column;background:#fff;border-radius:6px;box-shadow:0 18px 45px #17283f42}
+.dialog-head{height:58px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);font-size:17px;font-weight:700}
+.close{margin-left:auto;border:0;background:transparent;color:#7f8da1;font-size:24px}
+.dialog-body{padding:19px 20px;overflow:auto}
+.dialog-foot{height:62px;display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 20px;border-top:1px solid var(--line);background:#fafcff}
+.sec-title{font-weight:700;color:#33465e;margin:18px 0 4px;font-size:13.5px}
+.sec-title:first-child{margin-top:0}
+.kv{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13.5px;line-height:1.6}
+.kv:last-child{border-bottom:0}
+.kv .k{width:88px;flex:none;color:var(--muted)}
+.kv .v{flex:1;min-width:0;word-break:break-word}
+.steps{position:relative;padding-left:18px}
+.steps::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.step{position:relative;padding-bottom:14px}
+.step:last-child{padding-bottom:0}
+.step::before{content:"";position:absolute;left:-17px;top:5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.step.on::before{border-color:var(--blue)}
+.step.over::before{border-color:#e45555}
+.step .st{font-weight:700;color:#33465e}
+.step .sm{color:var(--muted);font-size:13px;margin-top:2px}
+@media(max-width:900px){.page{padding:15px}.dialog{width:97vw}.dialog-body{padding:14px}}
+.detail-bar{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid #edf1f5;margin-bottom:20px}
+.detail-bar .detail-name{font-weight:700;color:#33465e;font-size:15px}
+.page[hidden]{display:none}
+.img-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.img-list img{width:96px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.round-card{margin:10px 0 14px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden}
+.round-head{padding:9px 12px;background:#f6f9fc;font-weight:700;color:#425a76}
+.round-body{padding:2px 12px 9px}
+.annotation-table{min-width:1300px;table-layout:fixed}.annotation-description{font-weight:400;color:#41546c;line-height:1.65}.badge.void{background:#eef1f5;color:#7c8794}.action.danger{color:#d9534f}.annotation-table td{vertical-align:middle}
+/* 操作列在表格横向滚动时固定在最右侧，保证撤回/编辑/删除始终可点 */
+.annotation-table th:last-child,.annotation-table td:last-child{position:sticky;right:0;z-index:2;background:#fff;box-shadow:-10px 0 10px -10px rgba(11,22,36,.22)}
+.annotation-table th:last-child{background:var(--head);z-index:3}
+.annotation-table tbody tr:hover td:last-child{background:#f7fafd}
+.ann-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1d2b3e;color:#fff;padding:9px 16px;border-radius:5px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}.ann-toast.show{opacity:1}
+.ann-mask{position:fixed;inset:0;background:#0b162480;display:flex;align-items:center;justify-content:center;z-index:98}
+.ann-dialog{background:#fff;border-radius:8px;padding:18px 20px;width:340px;box-shadow:0 12px 40px #0b162433;font-size:13px;color:#33465e}
+.ann-dialog-wide{width:460px}
+.ann-dialog h3{margin:0 0 12px;font-size:15px}
+.ann-dialog p{margin:0 0 16px;line-height:1.7}
+.ann-dialog-foot{display:flex;justify-content:flex-end;gap:8px}
+/* 编辑批注：字段与排版沿用「新增批注」 */
+.ann-dialog-form{width:520px;max-height:86vh;display:flex;flex-direction:column;padding:0}
+.ann-dialog-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e0e7ef;font-weight:700;color:#1d2b3e;font-size:15px}
+.ann-x{border:0;background:none;color:#6b7d90;font-size:20px;line-height:1;cursor:pointer}
+.ann-dialog-body{padding:18px;overflow:auto}
+.ann-dialog-form .field{display:block;margin:0 0 13px;color:#40526a;font-size:13px}
+.ann-dialog-form .field span{display:block;margin-bottom:5px}
+.ann-dialog-form .field input,.ann-dialog-form .field select,.ann-dialog-form .field textarea{width:100%;border:1px solid #cbd8e5;border-radius:3px;padding:8px;color:#263c54;font:inherit}
+.ann-dialog-form .field textarea{min-height:80px;resize:vertical}
+.ann-dialog-form .field[hidden]{display:none}
+.ann-dialog-form .required{color:#d34b4b;font-weight:700}
+.ann-dialog-form .annotation-radio{display:flex;gap:24px;align-items:center}
+.ann-dialog-form .annotation-radio label{display:flex;align-items:center;gap:6px;color:#40526a}
+.ann-dialog-form .annotation-radio input{width:auto}
+.ann-dialog-form .form-error{color:#c43838;font-size:12px;min-height:18px}
+.ann-dialog-form .ann-comp-row{display:flex;align-items:center;gap:10px}
+.ann-dialog-form .ann-comp-row strong{flex:1;font-weight:700;color:#1d2b3e}
+.ann-dialog-form .ann-btn,.ann-dialog-form .ann-dialog-foot button{border:1px solid #c9d6e4;border-radius:3px;background:#fff;color:#28699f;padding:7px 11px;font:inherit;cursor:pointer}
+.ann-dialog-form .ann-dialog-foot .primary{background:#2787f5;border-color:#2787f5;color:#fff}
+.ann-dialog-form .ann-dialog-foot{display:flex;justify-content:flex-end;gap:8px}
+.ann-dialog-form .ann-dialog-foot{padding:12px 18px;border-top:1px solid #e1e9f1}
+.ann-field{display:block;margin-bottom:12px;font-size:12px;color:#5a6b80}
+.ann-field textarea,.ann-field input{display:block;width:100%;margin-top:5px;border:1px solid #d9e2ec;border-radius:4px;padding:7px 9px;font:inherit;color:#33465e}
+.ann-field textarea{min-height:64px;resize:vertical}
+</style>
+</head>
+<body>
+<main class="page" id="listView">
+  <div class="filters">
+    <select id="fStatus">
+      <option value="all">全部状态</option>
+      <option value="noIssue">无需整改</option>
+      <option value="待整改">待整改</option><option value="待整改逾期">待整改逾期</option>
+      <option value="继续整改">继续整改</option>
+      <option value="待复查">待复查</option>
+      <option value="已复查">已复查</option>
+      <option value="已撤回">已撤回</option>
+      
+    </select>
+    <select id="fOverdue" aria-label="是否逾期"><option value="">是否逾期：全部</option><option value="yes">是</option><option value="no">否</option></select>
+    <select id="fChecker"><option value="">全部批注人</option></select>
+    <select id="fComp"><option value="">全部构件</option></select>
+    <input id="fSearch" placeholder="搜索批注内容 / 构件 / 责任人"/>
+    <button class="btn" id="resetBtn">重置</button>
+    <button class="btn primary" id="searchBtn">搜索</button>
+  </div>
+
+  <div class="summary">
+    <span>共 <b id="count">0</b> 条批注<span class="sub" id="subInfo"></span></span>
+    <span class="sub" id="pageInfo"></span>
+  </div>
+
+  <div id="tableMount"></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<main class="page" id="detailView" hidden>
+  <div class="detail-bar">
+    <button class="btn" id="backBtn">← 返回台账</button>
+    <span class="detail-name" id="detailName"></span>
+    <span class="badge" id="detailState"></span>
+  </div>
+  <div id="detailBody"></div>
+</main>
+
+<script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
+/* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
+(()=>{'use strict';
+const KEY='xa-bim-business-v2',LEGACY='xa_report_bim_bindings_v1';
+const components=[
+ ['C-A1','1号楼 · 14层 · 柱 KZ-01',33,39],['C-A3','1号楼 · 14层 · 柱 KZ-02',36,43],
+ ['C-A4','1号楼 · 14层 · 柱 KZ-03',39,47],['C-A2','1号楼 · 14层 · 楼板 B-01',42,53],
+ ['C-A5','1号楼 · 14层 · 梁 KL-05',46,48],['C-A6','1号楼 · 13层 · 梁 KL-03',49,44],
+ ['C-B1','2号楼 · 13层 · 梁 L-12',59,46],['C-B3','2号楼 · 13层 · 柱 KZ-08',62,43],
+ ['C-B2','2号楼 · 12层 · 外墙 W-18',66,58],['C-B4','2号楼 · 12层 · 外墙 W-19',69,55],
+ ['C-B5','2号楼 · 12层 · 楼板 B-08',63,61],['C-T1','塔吊 TC-02',72,39],
+ ['C-M1','1号楼 · 14层 · 剪力墙 Q-14',52,49],['C-M2','1号楼 · 14层 · 梁 KL-08',63,42],
+ ['C-M3','1号楼 · 14层 · 梁 KL-09',67,46],['C-M4','1号楼 · 14层 · 楼板 B-14',58,58],
+ ['C-M5','1号楼 · 14层 · 外墙 W-03',73,53]
+];
+const seedBindings={
+ 'SJ-20260730-0005':[components[0][1],components[1][1]],
+ 'SJ-20260730-0009':[components[4][1],components[5][1]],
+ 'SJ-20260730-0013':[components[3][1]],
+ 'SJ-20260730-0016':[components[8][1],components[9][1]],
+ 'SJ-20260730-0019':[components[2][1],components[6][1]]
+};
+/* REPORT_CATALOG */
+const catalog=[
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0005",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0009",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0007",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 25mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0006",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 16mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0013",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0008",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0004",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 22mm",
+  "sendDate": "2026-07-06",
+  "planDate": "2026-07-30",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0014",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0015",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-07-12",
+  "planDate": "2026-08-05",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0016",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-14",
+  "planDate": "2026-08-07",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0017",
+  "materialName": "防水卷材",
+  "spec": "SBS II PY PE 4mm",
+  "sendDate": "2026-07-16",
+  "planDate": "2026-08-09",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0018",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 18mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "屈服强度低于 HRB400E 标准值",
+  "advice": "退场处理并重新取样复检",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0019",
+  "materialName": "盘螺",
+  "spec": "HRB400E 10mm",
+  "sendDate": "2026-07-18",
+  "planDate": "2026-08-11",
+  "status": "不合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0020",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-07-20",
+  "planDate": "2026-08-13",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0021",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 28mm",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0022",
+  "materialName": "砂",
+  "spec": "粗砂",
+  "sendDate": "2026-07-22",
+  "planDate": "2026-08-15",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0023",
+  "materialName": "碎石",
+  "spec": "10-30mm",
+  "sendDate": "2026-07-24",
+  "planDate": "2026-08-17",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0010",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-18",
+  "planDate": "2026-07-12",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-PL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0011",
+  "materialName": "盘螺",
+  "spec": "HRB500E 8mm",
+  "sendDate": "2026-06-22",
+  "planDate": "2026-07-16",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-CEM",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0012",
+  "materialName": "水泥",
+  "spec": "P.O 42.5",
+  "sendDate": "2026-06-26",
+  "planDate": "2026-07-20",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0001",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 20mm",
+  "sendDate": "2026-06-28",
+  "planDate": "2026-07-22",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-SAND",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0002",
+  "materialName": "砂",
+  "spec": "中砂",
+  "sendDate": "2026-06-30",
+  "planDate": "2026-07-24",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "否",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0003",
+  "materialName": "碎石",
+  "spec": "5-25mm",
+  "sendDate": "2026-07-02",
+  "planDate": "2026-07-26",
+  "status": "待检"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0024",
+  "materialName": "螺纹钢",
+  "spec": "HRB400E 25mm",
+  "sendDate": "2026-06-14",
+  "planDate": "2026-07-08",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-LWG",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0025",
+  "materialName": "螺纹钢",
+  "spec": "HRB500E 20mm",
+  "sendDate": "2026-06-16",
+  "planDate": "2026-07-10",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-GRAVEL",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0026",
+  "materialName": "碎石",
+  "spec": "5-16mm",
+  "sendDate": "2026-06-20",
+  "planDate": "2026-07-14",
+  "status": "合格"
+ },
+ {
+  "materialCode": "WL-WP",
+  "heatNo": "--",
+  "qty": "--",
+  "part": "--",
+  "sender": "王克远",
+  "inspector": "张恒毓",
+  "tester": "朱贺敏",
+  "org": "河北雄安唐银检验认证有限公司",
+  "sendType": "第三方检验",
+  "project": "雄安科创园项目部",
+  "requirement": "符合规范要求",
+  "defect": "--",
+  "advice": "--",
+  "creator": "陈书峡",
+  "createTime": "2026-07-30",
+  "archived": "是",
+  "reportFile": "Document_260730_105126_7.pdf",
+  "reportCategory": "",
+  "sendCode": "SJ-20260730-0027",
+  "materialName": "防水卷材",
+  "spec": "SBS I PY PE 3mm",
+  "sendDate": "2026-06-24",
+  "planDate": "2026-07-18",
+  "status": "合格"
+ }
+];
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function read(key,fallback){const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}
+function normalizeBindings(raw){
+ const out={};
+ Object.entries(raw||{}).forEach(([key,values])=>{
+  const code=key.replace(/^(REPORT\||report:)/,'');
+  if(!Array.isArray(values))return;
+  out[code]=[...new Set([...(out[code]||[]),...values.filter(v=>typeof v==='string')])];
+ });
+ return out;
+}
+function sourceKey(r){return [r.type,r.type==='briefing'?r.subtype||'':'',r.type==='report'?'report:'+r.sendCode:r.sourceId||r.id].join('|')}
+function rowKey(r){return sourceKey(r)+'|'+r.componentId}
+function reportRows(bindings,rows,overrides={}){
+ const out=rows.filter(r=>r.type!=='report');
+ Object.entries(bindings).forEach(([code,names])=>{
+  const existing=rows.filter(r=>r.type==='report'&&r.sendCode===code);
+  const original=existing[0]||catalog.find(r=>r.sendCode===code);
+  if(!original)return;const data={...original,...overrides[code]};
+  names.forEach(name=>{const c=components.find(c=>c[0]===name||c[1]===name);if(!c)return;
+   const old=existing.find(r=>r.componentId===c[0]);
+   out.push({...data,...old,type:'report',sourceId:'report:'+code,componentId:c[0],compName:c[1],x:c[2],y:c[3],
+    title:code+' · '+data.materialName,checkTime:data.sendDate||'',bimModel:old?.bimModel||data.bimModel||'XA000_ZMXA_A_建筑单体主文件-01地块-地上.rvt'});
+  });
+ });
+ return out;
+}
+function baseline(){return{records:reportRows(seedBindings,[]),reportBindings:clone(seedBindings)}}
+function load(){
+ const state=read(KEY,{records:[],reportBindings:null});
+ const bindings={...clone(seedBindings),...normalizeBindings(state.reportBindings||read(LEGACY,{}))};
+ return{records:reportRows(bindings,Array.isArray(state.records)?state.records:[],state.reportOverrides||{}),reportBindings:bindings,reportOverrides:state.reportOverrides||{},inspectOverrides:state.inspectOverrides||{}};
+}
+function save(rows,options={}){
+ const state=load(),incoming=(rows||[]).filter(r=>r&&['quality','safety','briefing','measure','report','plan','annotation'].includes(r.type)&&r.sourceId&&r.componentId);
+ const bills=incoming.filter(r=>r.bindingKind==='bill');
+ bills.forEach(r=>{
+  const code=r.rectifyCode||r.sourceId,current=state.inspectOverrides?.[code]||r.rectifySnapshot||r;
+  if(status(current)==='已撤回')throw Error('已撤回整改单不允许挂接');
+  if(r.type==='safety'){
+   if(!String(r.problemLocation||'').trim())throw Error('请填写问题部位');
+   if(new Set(bills.filter(x=>sourceKey(x)===sourceKey(r)).map(x=>x.componentId)).size!==1)throw Error('安全整改单请选择一个范围内的参考构件');
+  }
+ });
+ const replacing=new Set([...(options.replaceSources||[]),...bills.map(sourceKey)]),map=new Map(state.records.filter(r=>!replacing.has(sourceKey(r))).map(r=>[rowKey(r),r]));
+ incoming.forEach(r=>map.set(rowKey(r),clone(r)));
+ const bindings={...state.reportBindings};
+ incoming.filter(r=>r.type==='report').forEach(r=>{
+  if(!bindings[r.sendCode])bindings[r.sendCode]=[];
+  const c=components.find(c=>c[0]===r.componentId);
+  if(c&&!bindings[r.sendCode].includes(c[1]))bindings[r.sendCode].push(c[1]);
+ });
+ Object.entries(normalizeBindings(options.reportBindings)).forEach(([code,names])=>bindings[code]=names);
+ const overrides={...state.reportOverrides,...options.reportOverrides};
+ const next={records:reportRows(bindings,[...map.values()],overrides),reportBindings:bindings,reportOverrides:overrides,inspectOverrides:{...state.inspectOverrides,...options.inspectOverrides}};
+ localStorage.setItem(KEY,JSON.stringify(next));
+ // 新数据以同一个存储项提交；旧索引仅供旧版本页面兼容读取。
+ try{localStorage.setItem(LEGACY,JSON.stringify(bindings))}catch{}
+ return next;
+}
+function status(r){if(r.issueRequired===false)return'无需整改';const raw=String(r.baseStatus||r.status||r.state||'待整改');return ['逾期未整改','待整改逾期','已逾期'].includes(raw)?'待整改':raw}
+function overdueDays(r){
+ if(!['待整改','继续整改'].includes(status(r)))return 0;
+ const deadline=String(r.deadline||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(deadline))return 0;
+ const end=new Date().toLocaleDateString('sv-SE'),due=Date.parse(deadline+'T00:00:00Z');
+ if(!Number.isFinite(due)||new Date(due).toISOString().slice(0,10)!==deadline)return 0;
+ return Math.max(0,Math.round((Date.parse(end+'T00:00:00Z')-due)/86400000));
+}
+function isOverdue(r){
+ if(!['待整改','继续整改'].includes(status(r)))return false;
+ if(r.deadline)return overdueDays(r)>0;
+ if(typeof r.overdue==='boolean')return r.overdue;
+ return ['逾期未整改','待整改逾期','已逾期'].includes(String(r.baseStatus||r.status||r.state||''));
+}
+function displayStatus(r){return isOverdue(r)?'待整改逾期':status(r)}
+function pointSummary(points){const valid=(points||[]).filter(p=>['合格','不合格'].includes(p.result)),bad=valid.filter(p=>p.result==='不合格');return{rate:valid.length?((valid.length-bad.length)/valid.length*100).toFixed(2)+'%':'--',result:bad.length?'不合格':valid.length===(points||[]).length&&valid.length?'合格':'待判定'}}
+function reportCatalog(){let overrides={};try{overrides=read(KEY,{}).reportOverrides||{}}catch{}return catalog.map(r=>({...r,...overrides[r.sendCode]}))}
+function measurementHistory(){return read('xa_measure_work_v1',{history:[]}).history||[]}
+window.XABimStore={reportCatalog,measurementHistory,key:KEY,components,catalog,baseline,load,save,sourceKey,rowKey,normalizeBindings,status,displayStatus,isOverdue,overdueDays,pointSummary};
+})();
+
+/* END BIM SHARED */</script>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toLocaleDateString('sv-SE');
+const PAGE_SIZE=10;
+const PH=t=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="72"><rect width="96" height="72" fill="#e8eef5"/><text x="48" y="41" font-size="11" fill="#8290a4" text-anchor="middle">'+t+'</text></svg>');
+
+/* ===== 数据 =====
+   与 BIM统一模型_交互原型（批注页签）、分屏对比、移动端共用同一份批注数据。
+   存储 key 统一为 xa-annotations-v1；本页作为嵌入页（sandbox 无 same-origin）时读不到 localStorage，
+   自动回落到种子数据，因此任何环境下都能独立演示。 */
+const SEED=[
+  {id:101,type:'annotation',title:'桥架与风管净距不足',componentId:'C-A1',compName:'1号楼 · 14层 · 柱 KZ-01',checkTime:'2026-10-12 09:26',checker:'张恒毓',category:'机电安装 / 管线综合',level:'一般',
+   description:'电气桥架与排风管交叉处净距不足 50mm，不满足规范要求。',requirement:'调整桥架标高或路由，避让排风管后复检。',
+   deadline:'2026-10-15',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:102,type:'annotation',title:'模板拼缝处漏浆痕迹',componentId:'C-A3',compName:'1号楼 · 14层 · 柱 KZ-02',checkTime:'2026-10-08 15:40',checker:'刘振',category:'主体结构工程 / 模板工程',level:'一般',
+   description:'柱模板拼缝处存在漏浆痕迹，拆模后表面观感缺陷。',requirement:'封堵拼缝，后续浇筑前复查。',
+   deadline:'2026-10-11',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-10-10 14:20',rectifyDescription:'已封堵拼缝并清理表面，申请复查。',rectifyImages:[PH('整改照片1'),PH('整改照片2')]},
+  {id:103,type:'annotation',title:'临边防护栏杆缺失',componentId:'C-A2',compName:'1号楼 · 14层 · 楼板 B-01',checkTime:'2026-09-18 10:05',checker:'王会彬',category:'高处作业 / 临边防护',level:'严重',
+   description:'楼板临边防护栏杆未安装到位，存在坠落风险。',requirement:'立即补齐防护栏并设置警示标识。',
+   deadline:'2026-09-20',unit:'主体施工班组',assignee:'徐志成',reviewer:'王会彬',baseStatus:'待整改',issueRequired:true,round:1,source:'全景对比'},
+  {id:104,type:'annotation',title:'地面成品保护不到位',componentId:'C-A5',compName:'1号楼 · 14层 · 梁 KL-05',checkTime:'2026-09-22 11:20',checker:'张恒毓',category:'文明施工 / 成品保护',level:'一般',
+   description:'已完工地坪未做覆盖保护，材料堆放造成划痕。',requirement:'覆盖保护并清理堆放材料。',
+   deadline:'',unit:'',assignee:'',reviewer:'',baseStatus:'待整改',issueRequired:false,round:1,source:'移动端'},
+  {id:105,type:'annotation',title:'桥架吊架间距偏大',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-09-16 14:30',checker:'李强',category:'机电安装 / 支吊架',level:'一般',
+   description:'桥架吊架间距超过规范要求，需加密。',requirement:'按规范加密吊架。',
+   deadline:'2026-10-20',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'继续整改',issueRequired:true,round:2,source:'全景对比',rectifiedAt:'2026-09-18 11:00',rectifyDescription:'已按规范加密吊架至 1.5m 间距。',rectifyImages:[PH('整改照片')],reviewAt:'2026-09-19 09:30',reviewResult:'不通过',reviewDescription:'抽检仍有 2 处间距超 1.8m，需继续加密后重新提交。',reviewImages:[PH('复查照片')]},
+  {id:106,type:'annotation',title:'风管保温层局部破损',componentId:'C-A6',compName:'1号楼 · 13层 · 梁 KL-03',checkTime:'2026-09-10 16:05',checker:'刘振',category:'机电安装 / 暖通',level:'一般',
+   description:'风管保温层局部破损，影响保温效果。',requirement:'修补保温层并复查。',
+   deadline:'2026-09-13',unit:'机电安装班组',assignee:'李强',reviewer:'王会彬',baseStatus:'已复查',issueRequired:true,round:1,source:'全景对比',rectifiedAt:'2026-09-12 10:30',rectifyDescription:'已更换破损保温层并重新包扎。',rectifyImages:[PH('整改照片1'),PH('整改照片2')],reviewAt:'2026-09-13 09:15',reviewResult:'通过',reviewDescription:'复查合格，予以闭合。',reviewImages:[PH('复查照片')]},
+  {id:107,type:'annotation',title:'楼梯踏步阳角破损',componentId:'C-B1',compName:'2号楼 · 13层 · 梁 L-12',checkTime:'2026-10-09 11:20',checker:'王会彬',category:'主体结构工程 / 混凝土工程',level:'一般',
+   description:'楼梯踏步阳角拆模后破损，需修补并复核。',requirement:'剔凿松动部位后修补，达到强度后复核。',
+   deadline:'2026-10-14',unit:'主体施工班组',assignee:'徐志成',reviewer:'刘振',baseStatus:'已撤回',issueRequired:true,round:1,source:'BIM模型',withdrawnAt:'2026-10-10 09:40',withdrawReason:'批注对象选错构件，撤回后重新提交'}
+];
+
+function loadStore(){
+  let raw=null;
+  try{ raw=localStorage.getItem('xa-annotations-v1') }catch(e){ raw=null }
+  if(!raw) return null;
+  try{
+    const d=JSON.parse(raw);
+    const list=Array.isArray(d)?d:(d.annotations||[]);
+    return list.length?list:null;
+  }catch(e){ return null }
+}
+function mergeAnnotationRows(list){const removed=new Set(removedIds());return [...new Map(SEED.concat(list||[]).map(r=>[r.id,{...r}])).values()].filter(r=>!removed.has(r.id))}
+let DATA=mergeAnnotationRows(loadStore());
+
+/* ===== 状态派生（与其它端一致） ===== */
+function displayStatus(r){return XABimStore.displayStatus(r)}
+function overdueDays(r){return XABimStore.overdueDays(r)}
+
+function badgeCls(s){
+  return s==='待整改逾期'?'over':s==='待整改'?'wait':s==='继续整改'?'cont':s==='待复查'?'check':(s==='已复查'||s==='无需整改')?'done':s==='已撤回'?'void':'wait';
+}
+const isClosed=s=>s==='已复查'||s==='无需整改';
+
+/* ===== 查询 ===== */
+let view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1};
+function allRows(){ return DATA.map(r=>({r,s:displayStatus(r)})); }
+function filtered(){
+  return allRows().filter(({r,s})=>{
+    if(view.status==='noIssue'){ if(s!=='无需整改') return false }
+    else if(view.status!=='all'&&(view.status==='待整改逾期'?s!==view.status:XABimStore.status(r)!==view.status)) return false;
+    if(view.overdue&&(overdueDays(r)>0)!==(view.overdue==='yes'))return false;
+    if(view.checker&&r.checker!==view.checker) return false;
+    if(view.comp&&r.compName!==view.comp) return false;
+    if(view.kw){
+      const hay=[r.description||r.title,r.compName,r.assignee,r.checker].join(' ').toLowerCase();
+      if(hay.indexOf(view.kw)<0) return false;
+    }
+    return true;
+  }).sort((a,b)=>{
+    const rank=x=>x==='待整改逾期'?0:x==='待整改'?1:x==='继续整改'?2:x==='待复查'?3:4;
+    return rank(a.s)-rank(b.s)||String(b.r.checkTime).localeCompare(a.r.checkTime);
+  });
+}
+
+/* ===== 渲染 ===== */
+function renderFilters(){
+  const cs=[...new Set(DATA.map(r=>r.checker))].sort();
+  const ps=[...new Set(DATA.map(r=>r.compName).filter(Boolean))].sort();
+  $('#fChecker').innerHTML='<option value="">全部批注人</option>'+cs.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fComp').innerHTML='<option value="">全部构件</option>'+ps.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  $('#fStatus').value=view.status;$('#fOverdue').value=view.overdue;
+  $('#fChecker').value=view.checker;
+  $('#fComp').value=view.comp;
+  $('#fSearch').value=view.kw;
+}
+function renderTable(){
+  const list=filtered(), total=list.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(view.page>pages) view.page=pages;
+  if(view.page<1) view.page=1;
+  const start=(view.page-1)*PAGE_SIZE, paged=list.slice(start,start+PAGE_SIZE);
+
+  const all=allRows(), openCnt=all.filter(x=>!isClosed(x.s)&&x.s!=='已撤回').length, overCnt=all.filter(x=>overdueDays(x.r)>0).length;
+  $('#count').textContent=total;
+  $('#subInfo').textContent=' · 未复查 '+openCnt+' 条 · 逾期 '+overCnt+' 条';
+  $('#pageInfo').textContent='第 '+view.page+' / '+pages+' 页';
+
+  const mount=$('#tableMount');
+  if(!list.length){
+    mount.innerHTML='<div class="empty">没有符合条件的批注</div>';
+  }else{
+    mount.innerHTML='<div class="table-wrap"><table class="annotation-table"><colgroup><col style="width:50px"><col style="width:250px"><col style="width:175px"><col style="width:85px"><col style="width:150px"><col style="width:100px"><col style="width:85px"><col style="width:105px"><col style="width:75px"><col style="width:75px"><col style="width:170px"></colgroup><thead><tr>'+['序号','批注内容','关联构件','批注人','批注时间','整改状态','整改人','整改期限','是否逾期','逾期天数','操作'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+paged.map(({r,s},i)=>{const days=overdueDays(r),required=s!=='无需整改';return '<tr data-id="'+r.id+'"><td>'+(start+i+1)+'</td><td class="wrap-cell annotation-description">'+esc(r.description||r.title||'--')+'</td><td class="wrap-cell">'+esc(r.compName||r.componentId||'--')+'</td><td>'+esc(r.checker||'--')+'</td><td>'+esc(r.checkTime||'--')+'</td><td><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></td><td>'+esc(required?r.assignee||'--':'--')+'</td><td>'+esc(required?r.deadline||'--':'--')+'</td><td class="'+(days?'over-days':'')+'">'+(days?'是':'否')+'</td><td class="'+(days?'over-days':'')+'">'+days+'</td><td>'+'<button class="action" data-detail="'+r.id+'">详情</button>'+((['待整改','待整改逾期','继续整改','待复查'].indexOf(s)>=0)?'<button class="action" data-withdraw="'+r.id+'">撤回</button>':'')+((s==='已撤回')?'<button class="action" data-edit="'+r.id+'">编辑</button><button class="action danger" data-del="'+r.id+'">删除</button>':'')+'</td></tr>'}).join('')+'</tbody></table></div>';
+  }
+
+  const pg=$('#pagination');
+  if(pages<=1){ pg.innerHTML=''; }
+  else{
+    let h='<span>共 '+total+' 条</span>';
+    for(let i=1;i<=pages;i++) h+='<button class="page-no'+(i===view.page?' on':'')+'" data-page="'+i+'">'+i+'</button>';
+    pg.innerHTML=h;
+  }
+}
+function renderAll(){ renderFilters(); renderTable(); }
+
+/* ===== 详情 ===== */
+function stepHtml(r){
+  const s=displayStatus(r), od=overdueDays(r), steps=[];
+  steps.push({t:'批注发起',m:r.checker+' · '+r.checkTime+' · 来源：'+(r.source||'—'),on:true});
+  if(r.issueRequired===false){
+    steps.push({t:'无需整改',m:'仅记录问题，未指派整改人与期限',on:true});
+  }else{
+    steps.push({t:'下发整改单',m:'整改人：'+r.assignee+' · 期限：'+r.deadline+' · 复查人：'+r.reviewer,on:true});
+    historyOf(r).forEach(x=>{
+      if(x.rectifiedAt) steps.push({t:'第 '+(x.round||1)+' 轮整改已提交',m:r.assignee+' · '+x.rectifiedAt+' · '+(x.rectifyDescription||'未填写说明'),on:true});
+      if(x.reviewAt) steps.push({t:'第 '+(x.round||1)+' 轮复查'+(x.reviewResult==='通过'?'通过':'不通过'),m:r.reviewer+' · '+x.reviewAt+(x.reviewDescription?' · '+x.reviewDescription:''),on:x.reviewResult==='通过',over:x.reviewResult==='不通过'});
+    });
+    if(s==='待整改') steps.push({t:'等待整改',m:r.assignee+' 尚未提交第 '+(r.round||1)+' 轮整改结果',on:false});
+    if(s==='继续整改') steps.push({t:'等待重新整改',m:'已进入第 '+(r.round||1)+' 轮，需重新整改后再次提交',on:false});
+    if(s==='待复查') steps.push({t:'待复查',m:'等待 '+r.reviewer+' 提交复查结果',on:false});
+    if(s==='已复查') steps.push({t:'问题闭环',m:'最终复查通过',on:true});
+    if(od>0) steps.push({t:'已超期 '+od+' 天',m:'超过整改期限 '+r.deadline+'，需督办',on:false,over:true});
+  }
+  return '<div class="steps">'+steps.map(x=>'<div class="step '+(x.over?'over':x.on?'on':'')+'"><div class="st">'+esc(x.t)+'</div><div class="sm">'+esc(x.m)+'</div></div>').join('')+'</div>';
+}
+let curDetail=null;
+function imgList(a){
+  if(!Array.isArray(a)||!a.length) return '<span style="color:#8290a4">--</span>';
+  return '<div class="img-list">'+a.map(src=>'<img src="'+src+'" alt="附件"/>').join('')+'</div>';
+}
+function historyOf(r){
+  if(Array.isArray(r.workflowHistory)&&r.workflowHistory.length) return r.workflowHistory.map(x=>({...x}));
+  if(!r.rectifiedAt&&!r.reviewAt) return [];
+  const n=r.baseStatus==='继续整改'?Math.max(1,(r.round||2)-1):(r.round||1);
+  return [{round:n,rectifiedAt:r.rectifiedAt,rectifyDescription:r.rectifyDescription,rectifyImages:r.rectifyImages||[],reviewAt:r.reviewAt,reviewResult:r.reviewResult,reviewDescription:r.reviewDescription,reviewImages:r.reviewImages||[]}];
+}
+function historyHtml(r){
+  const rows=historyOf(r);
+  if(!rows.length) return '<div class="kv"><span class="k">处理记录</span><span class="v" style="color:#8290a4">尚未提交整改记录</span></div>';
+  return rows.map(x=>'<div class="round-card"><div class="round-head">第 '+esc(x.round||1)+' 轮整改与复查</div><div class="round-body">'
+    +'<div class="kv"><span class="k">实际整改日期</span><span class="v">'+esc(x.rectifiedAt||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">整改说明</span><span class="v">'+esc(x.rectifyDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">整改照片</span><span class="v">'+imgList(x.rectifyImages)+'</span></div>'
+    +'<div class="kv"><span class="k">复查结果</span><span class="v" style="font-weight:700;color:'+(x.reviewResult==='通过'?'#148659':x.reviewResult==='不通过'?'#e45555':'#8290a4')+'">'+esc(x.reviewResult||'待复查')+'</span></div>'
+    +'<div class="kv"><span class="k">复查说明</span><span class="v">'+esc(x.reviewDescription||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">复查时间</span><span class="v">'+esc(x.reviewAt||'--')+'</span></div>'
+    +'</div></div>').join('');
+}
+function renderDetail(){
+  const r=DATA.find(x=>x.id===curDetail);
+  if(!r){ backToList(); return }
+  const s=displayStatus(r), od=overdueDays(r);
+  $('#detailName').textContent='批注详情';
+  const st=$('#detailState');
+  st.textContent=s+(od?' 超 '+od+' 天':'');
+  st.className='badge '+badgeCls(s);
+
+  let h='<div class="sec-title">基本信息</div>'
+    +'<div class="kv"><span class="k">问题描述</span><span class="v">'+esc(r.description)+'</span></div>'
+    +'<div class="kv"><span class="k">关联构件</span><span class="v">'+esc(r.compName||r.componentId)+'</span></div>'
+    +'<div class="kv"><span class="k">批注人</span><span class="v">'+esc(r.checker)+'</span></div>'
+    +'<div class="kv"><span class="k">批注时间</span><span class="v">'+esc(r.checkTime)+'</span></div>'
+    +'<div class="kv"><span class="k">来源</span><span class="v">'+esc(r.source||'--')+'</span></div>'
+    +'<div class="kv"><span class="k">是否需整改</span><span class="v">'+(r.issueRequired===false?'否':'是')+'</span></div>';
+
+  h+='<div class="sec-title">整改信息</div>';
+  if(r.issueRequired===false){
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span></span></div>'
+      +'<div class="kv"><span class="k">说明</span><span class="v" style="color:#8290a4">未下发整改单，无需整改。</span></div>';
+  }else{
+    h+='<div class="kv"><span class="k">整改状态</span><span class="v"><span class="badge '+badgeCls(s)+'">'+esc(s)+'</span>'+(od?'<span class="over-days">超 '+od+' 天</span>':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改人</span><span class="v">'+esc(r.assignee||'--')+(r.unit?'（'+esc(r.unit)+'）':'')+'</span></div>'
+      +'<div class="kv"><span class="k">整改期限</span><span class="v">'+esc(r.deadline||'--')+'</span></div>'
+      +'<div class="kv"><span class="k">复查人</span><span class="v">'+esc(r.reviewer||'--')+'</span></div>';
+    h+=historyHtml(r);
+  }
+
+  h+='<div class="sec-title">流转记录</div>'+stepHtml(r);
+  $('#detailBody').innerHTML=h;
+}
+function openDetail(id){
+  curDetail=id;
+  $('#listView').hidden=true;
+  $('#detailView').hidden=false;
+  $('#detailView').scrollTop=0;
+  renderDetail();
+}
+function backToList(){
+  curDetail=null;
+  $('#detailView').hidden=true;
+  $('#listView').hidden=false;
+}
+
+/* ===== 撤回 / 已撤回 / 编辑重提 / 删除 ===== */
+const REMOVED_KEY='xa-annotations-removed-v1';
+function removedIds(){try{return JSON.parse(localStorage.getItem('xa-annotations-removed-v1')||'[]')}catch(e){return []}}
+function annStore(){try{const raw=localStorage.getItem('xa-annotations-v1');if(!raw)return {annotations:[],seq:0};const d=JSON.parse(raw);return {annotations:Array.isArray(d)?d:(d.annotations||[]),seq:d.seq||0}}catch(e){return null}}
+function saveAnnStore(st){try{localStorage.setItem('xa-annotations-v1',JSON.stringify(st));return true}catch(e){return false}}
+function findAnn(id){const st=annStore();if(st){const hit=st.annotations.find(x=>x.id===id);if(hit)return hit}return SEED.find(x=>x.id===id)}
+function patchAnn(id,fields){
+  const st=annStore()||{annotations:[],seq:0};
+  let rec=st.annotations.find(x=>x.id===id);
+  if(!rec){rec={...(SEED.find(x=>x.id===id)||{})};st.annotations.push(rec)}
+  Object.assign(rec,fields);return saveAnnStore(st);
+}
+function syncBimRows(id,fields,remove){
+  try{
+    const raw=localStorage.getItem('xa-bim-business-v2');if(!raw)return;
+    const st=JSON.parse(raw);if(!Array.isArray(st.records))return;
+    const match=r=>r.type==='annotation'&&(String(r.ledgerKey)===String(id)||String(r.sourceId||'').indexOf(String(id))>=0);
+    if(remove){st.records=st.records.filter(r=>!match(r))}
+    else{let hit=false;st.records.forEach(r=>{if(match(r)){Object.assign(r,fields);hit=true}});if(!hit)return}
+    localStorage.setItem('xa-bim-business-v2',JSON.stringify(st));
+  }catch(e){}
+}
+function reloadAnn(){DATA=mergeAnnotationRows(loadStore());renderFilters();renderTable()}
+function annToast(msg){let t=document.getElementById('annToast');if(!t){t=document.createElement('div');t.id='annToast';document.body.appendChild(t)}t.textContent=msg;t.className='ann-toast show';clearTimeout(t._tm);t._tm=setTimeout(()=>t.className='ann-toast',2200)}
+function askAnnConfirm(text,onOk){
+  const box=document.createElement('div');box.className='ann-mask';
+  box.innerHTML='<div class="ann-dialog"><p>'+esc(text)+'</p><div class="ann-dialog-foot"><button class="action" data-cancel>取消</button><button class="action danger" data-ok>确定</button></div></div>';
+  document.body.appendChild(box);
+  box.querySelector('[data-cancel]').onclick=()=>box.remove();
+  box.querySelector('[data-ok]').onclick=()=>{box.remove();onOk()};
+}
+function withdrawAnn(id){
+  askAnnConfirm('确认撤回该批注？撤回后状态变为「已撤回」，可编辑重新提交或删除。',()=>{
+    patchAnn(id,{baseStatus:'已撤回',status:'已撤回'});
+    syncBimRows(id,{baseStatus:'已撤回',status:'已撤回'});
+    reloadAnn();annToast('已撤回，可编辑重新提交');
+  });
+}
+function deleteAnn(id){
+  askAnnConfirm('确认删除该批注？删除后不可恢复，BIM 模型上的挂接数据同步删除。',()=>{
+    const st=annStore()||{annotations:[],seq:0};
+    st.annotations=st.annotations.filter(x=>x.id!==id);saveAnnStore(st);
+    try{const rm=JSON.parse(localStorage.getItem(REMOVED_KEY)||'[]');if(rm.indexOf(id)<0){rm.push(id);localStorage.setItem(REMOVED_KEY,JSON.stringify(rm))}}catch(e){}
+    syncBimRows(id,{},true);
+    reloadAnn();annToast('已删除，BIM 挂接数据已同步删除');
+  });
+}
+function annPeople(items){
+  return '<option value="">请选择</option>'+items.map(x=>'<option value="'+esc(x[0])+'" data-unit="'+esc(x[1])+'">'+esc(x[0])+'（'+esc(x[1])+'）</option>').join('');
+}
+function annCompOptions(selectedId){
+  const list=(XABimStore&&XABimStore.components)||[];
+  return list.map(c=>'<option value="'+esc(c[0])+'" '+(c[0]===selectedId?'selected':'')+'>'+esc(c[1])+'</option>').join('');
+}
+function annFormValues(){
+  const sel=document.querySelector('#annEditAssignee'),opt=sel&&sel.options[sel.selectedIndex];
+  return {
+    componentId:document.querySelector('#annEditComp')?.value||'',
+    desc:document.querySelector('#annEditDesc')?.value||'',
+    issue:document.querySelector('input[name="annEditIssue"]:checked')?.value==='yes',
+    assignee:sel?.value||'',
+    unit:opt?.dataset.unit||'',
+    deadline:document.querySelector('#annEditDeadline')?.value||'',
+    reviewer:document.querySelector('#annEditReviewer')?.value||''
+  };
+}
+function editAnn(id){
+  const r=findAnn(id);if(!r)return;
+  const issue=r.issueRequired!==false&&r.baseStatus!=='无需整改';
+  const compName=(r.compName||((XABimStore.components||[]).find(c=>c[0]===r.componentId)||[])[1]||'--');
+  const body='<div class="field"><span>已选构件</span><div class="ann-comp-row"><strong id="annEditCompText">'+esc(compName)+'</strong><button type="button" class="ann-btn" data-change-comp>更换构件</button></div><select id="annEditComp" hidden>'+annCompOptions(r.componentId)+'</select></div>'
+    +'<div class="field"><span>问题描述 <b class="required">*</b></span><textarea id="annEditDesc" rows="3" placeholder="描述构件现场发现的问题">'+esc(r.description||'')+'</textarea></div>'
+    +'<div class="field"><span>是否需要整改 <b class="required">*</b></span><div class="annotation-radio"><label><input type="radio" name="annEditIssue" value="yes" '+(issue?'checked':'')+'>是</label><label><input type="radio" name="annEditIssue" value="no" '+(issue?'':'checked')+'>否</label></div></div>'
+    +'<div id="annEditIssueFields">'
+    +'<div class="field"><span>整改人 <b class="required">*</b></span><select id="annEditAssignee">'+annPeople([['李强','机电安装班组'],['徐志成','主体施工班组'],['赵明','装饰班组']])+'</select></div>'
+    +'<div class="field"><span>整改截止日期 <b class="required">*</b></span><input id="annEditDeadline" type="date" value="'+esc(r.deadline||'')+'"></div>'
+    +'<div class="field"><span>复查人 <b class="required">*</b></span><select id="annEditReviewer">'+annPeople([['王会彬','质量员'],['刘振','专业工程师'],['张恒毓','项目技术员']])+'</select></div>'
+    +'</div>';
+  const box=document.createElement('div');box.className='ann-mask';
+  box.innerHTML='<section class="ann-dialog ann-dialog-form annotation-create-modal" role="dialog" aria-modal="true" aria-label="编辑批注">'
+    +'<div class="ann-dialog-head"><span>编辑批注</span><button type="button" class="ann-x" data-cancel aria-label="关闭">×</button></div>'
+    +'<div class="ann-dialog-body">'+body+'<div class="form-error" id="annEditError" role="alert"></div></div>'
+    +'<div class="ann-dialog-foot"><button class="action" data-cancel>取消</button><button class="action primary" data-ok>保存并重新提交</button></div></section>';
+  document.body.appendChild(box);
+  if(r.assignee)box.querySelector('#annEditAssignee').value=r.assignee;
+  else box.querySelector('#annEditAssignee').value='';
+  if(r.reviewer)box.querySelector('#annEditReviewer').value=r.reviewer;
+  const toggle=()=>{const yes=box.querySelector('input[name="annEditIssue"]:checked')?.value==='yes';box.querySelector('#annEditIssueFields').hidden=!yes};
+  box.querySelectorAll('input[name="annEditIssue"]').forEach(i=>i.addEventListener('change',toggle));toggle();
+  box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>box.remove());
+  const changeBtn=box.querySelector('[data-change-comp]');
+  if(changeBtn)changeBtn.onclick=()=>{const sel=box.querySelector('#annEditComp');sel.hidden=!sel.hidden;if(!sel.hidden)sel.focus()};
+  const compSel=box.querySelector('#annEditComp');
+  if(compSel)compSel.onchange=()=>{const c=(XABimStore.components||[]).find(x=>x[0]===compSel.value);if(c)box.querySelector('#annEditCompText').textContent=c[1]};
+  box.querySelector('[data-ok]').onclick=()=>{
+    const v=annFormValues(),error=box.querySelector('#annEditError');
+    if(!v.desc.trim()){error.textContent='请填写问题描述';return}
+    if(v.issue&&!v.assignee){error.textContent='请选择整改人';return}
+    if(v.issue&&!v.deadline){error.textContent='请选择整改截止日期';return}
+    if(v.issue&&!v.reviewer){error.textContent='请选择复查人';return}
+    const comp=(XABimStore.components||[]).find(c=>c[0]===v.componentId);
+    const fields={
+      title:v.desc.trim().slice(0,20),
+      description:v.desc.trim(),
+      requirement:v.issue?'按方案整改并复查':'仅记录问题，无需整改',
+      deadline:v.issue?v.deadline:'',
+      unit:v.issue?v.unit:'',
+      assignee:v.issue?v.assignee:'',
+      reviewer:v.issue?v.reviewer:'',
+      issueRequired:!!v.issue,
+      baseStatus:v.issue?'待整改':'无需整改',
+      status:v.issue?'待整改':'无需整改',
+      round:(Number(r.round)||1)+1,
+      resubmittedAt:new Date().toLocaleString('sv-SE').slice(0,16)
+    };
+    if(comp){fields.componentId=comp[0];fields.compName=comp[1];fields.position=comp[1]}
+    patchAnn(id,fields);
+    syncBimRows(id,fields);
+    box.remove();reloadAnn();
+    annToast('已保存并重新提交，状态回到'+(v.issue?'「待整改」':'「无需整改」'));
+  };
+}
+/* ===== 事件 ===== */
+$('#searchBtn').onclick=()=>{
+  view.overdue=$('#fOverdue').value;view.status=$('#fStatus').value; view.checker=$('#fChecker').value;
+  view.comp=$('#fComp').value; view.kw=$('#fSearch').value.trim().toLowerCase();
+  view.page=1; renderTable();
+};
+$('#resetBtn').onclick=()=>{
+  view={status:'all',overdue:'',checker:'',comp:'',kw:'',page:1}; renderFilters(); renderTable();
+};
+$('#fSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#searchBtn').click() });
+$('#tableMount').addEventListener('click',e=>{
+  const w=e.target.closest('[data-withdraw]'); if(w){ e.stopPropagation(); withdrawAnn(+w.dataset.withdraw); return }
+  const ed=e.target.closest('[data-edit]'); if(ed){ e.stopPropagation(); editAnn(+ed.dataset.edit); return }
+  const dl=e.target.closest('[data-del]'); if(dl){ e.stopPropagation(); deleteAnn(+dl.dataset.del); return }
+  const b=e.target.closest('[data-detail]');
+  if(b){ e.stopPropagation(); openDetail(+b.dataset.detail); return }
+  const tr=e.target.closest('tr[data-id]');
+  if(tr) openDetail(+tr.dataset.id);
+});
+$('#pagination').addEventListener('click',e=>{
+  const b=e.target.closest('[data-page]'); if(!b) return;
+  view.page=+b.dataset.page; renderTable();
+});
+$('#backBtn').onclick=backToList;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') backToList() });
+
+/* ===== 跨端同步 ===== */
+window.addEventListener('message',e=>{
+  const d=e.data; if(!d||d.channel!=='xa-annotation') return;
+  if(d.action==='refresh'||d.action==='changed'){
+    if(Array.isArray(d.data)&&d.data.length){
+      d.data.forEach(x=>{
+        const i=DATA.findIndex(y=>y.id===x.id);
+        if(i<0) DATA.push({...x}); else DATA[i]={...DATA[i],...x};
+      });
+    }else{
+      const s=loadStore(); if(s) DATA=mergeAnnotationRows(s);
+    }
+    renderAll();
+  }
+});
+try{
+  const bc=new BroadcastChannel('xa-annotation-sync');
+  bc.onmessage=e=>{ if(e.data&&e.data.type==='changed'){ const s=loadStore(); if(s)DATA=mergeAnnotationRows(s); renderAll() } };
+}catch(e){}
+try{ window.addEventListener('storage',e=>{ if(e.key==='xa-annotations-v1'){ const s=loadStore(); if(s){DATA=mergeAnnotationRows(s); renderAll()} } }) }catch(e){}
+
+renderAll();
+})();
+</script>
+</body>
+</html>
