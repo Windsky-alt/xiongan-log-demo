@@ -201,9 +201,9 @@ if (-not $RenderOnly) {
     Write-Host "已归档版本：$verName（模板 $tplCount 个）" -ForegroundColor Green
 }
 
-# 首页需求文档下载：同步指定的 V2.2，供线上直接下载。
+# 首页需求文档下载：同步指定的 V2.3，供线上直接下载。
 # 只重建首页时也同步文档；在独立站点目录运行时保留已发布的文件。
-$requirementName = 'prd-bim-v2.2.docx'
+$requirementName = 'prd-bim-v2.3.docx'
 $requirementSource = Join-Path (Split-Path $root -Parent) $requirementName
 $requirementDocsRoot = Join-Path $root 'docs'
 $requirementTarget = Join-Path $requirementDocsRoot $requirementName

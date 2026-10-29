@@ -34,6 +34,8 @@ html,body{margin:0;min-height:100%;background:#fff}
 #bim-brief .dialog.times{width:min(550px,calc(100vw - 36px));min-height:440px}
 #bim-brief .dialog.times .db{max-height:calc(100vh - 145px);padding:20px 22px}
 #bim-brief .dialog.times .record-grid table{min-width:0}
+#bim-brief .record-summary{margin:0 0 10px;font-size:13px;color:#3e4b5b}
+#bim-brief .record-summary b{color:#2387f6;font-size:15px;padding:0 2px}
 #bim-brief .record-tabs{display:flex;gap:38px;border-bottom:1px solid #d7dce5;margin:0 0 20px}
 #bim-brief .record-tabs button{border:0;border-radius:0;padding:4px 0 10px;background:none;color:#3e4b5b;font-size:16px}
 #bim-brief .record-tabs button.selected{color:#287efa;border-bottom:2px solid #287efa}
@@ -73,7 +75,10 @@ rows[0].logs=[
   {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-21 12:11:04'},
   {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-21 15:32:09'},
   {person:'系统管理员',phone:'',channel:'appweb',date:'2026-09-22 08:46:31'},
-  {person:'路阳',phone:'17334397700',channel:'appweb',date:'2026-09-22 09:06:23'}
+  {person:'路阳',phone:'17334397700',channel:'appweb',date:'2026-09-22 09:06:23'},
+  {person:'赵晓龙',phone:'',channel:'share',date:'2026-09-22 14:12:40'},
+  {person:'刘耀宇',phone:'17731085339',channel:'share',date:'2026-09-23 09:35:12'},
+  {person:'匿名访客',phone:'',channel:'share',date:'2026-09-23 16:48:05'}
 ];
 function toast(t){clearTimeout(timer);$('#b-toast').innerHTML='<div class="toast">'+esc(t)+'</div>';timer=setTimeout(()=>$('#b-toast').innerHTML='',3000)}
 function close(){$('#b-modal').innerHTML=''}
@@ -126,7 +131,19 @@ function posterSkyline(){return'<svg viewBox="0 0 320 90" fill="none"><g stroke=
 function posterHtml(type,name,qrId){return'<div class="qr-poster" data-poster="'+qrId+'"><div class="qr-brand-mark">中煤<small>中煤集团</small></div><div class="qr-title">'+esc(type)+'</div><div class="qr-project">雄安科创园项目部</div><div class="qr-skyline">'+posterSkyline()+'</div><div class="qr-scan">扫码查看'+esc(type)+'内容</div><div class="qr-code-shell"><div class="qr" id="'+qrId+'"></div><div class="qr-center-logo">中</div></div><div class="qr-separator"><span>雄安科创园项目现场交底</span></div><div class="qr-resource">'+esc(name)+'</div><div class="qr-footnote">二维码长期有效，请妥善张贴保存</div></div>'}
 function makePosterQr(el,url){if(typeof qrcode!=='function'){el.textContent='二维码组件未加载，请稍后重试';return}const q=qrcode(0,'M');q.addData(url);q.make();el.innerHTML=q.createSvgTag(4,12)}
 function exportPoster(type,name,host){const source=host.querySelector('.qr svg');if(!source){toast('二维码组件未加载');return}const code=source.cloneNode(true);code.setAttribute('x','110');code.setAttribute('y','215');code.setAttribute('width','200');code.setAttribute('height','200');const qrMarkup=new XMLSerializer().serializeToString(code),safeType=esc(type),safeName=esc(name),svg='<svg xmlns="http://www.w3.org/2000/svg" width="420" height="620" viewBox="0 0 420 620"><rect width="420" height="620" fill="#fff"/><rect y="430" width="420" height="190" fill="#f5f9fe"/><text x="210" y="60" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="34" font-weight="700" fill="#1670bd">'+safeType+'</text><text x="210" y="91" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="21" fill="#1773c7">雄安科创园项目部</text><text x="365" y="42" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#2071bb">中煤</text><text x="365" y="55" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="8" fill="#2071bb">中煤集团</text><g fill="none" stroke="#78a4d4" opacity=".58"><path d="M30 175H390M45 175V125l35-20 35 20v50M125 175v-38l35-18 36 18v38M215 175v-58h145v58M225 117l20-20h95l20 20M230 135h125"/><path d="M58 137h14m16 0h14M58 151h14m16 0h14M140 145h18m10 0h18M235 145h25m12 0h25m12 0h25"/></g><text x="210" y="199" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="13" fill="#1d2f44">扫码查看'+safeType+'内容</text><rect x="101" y="206" width="218" height="218" rx="5" fill="#fff" stroke="#dce5ee"/>'+qrMarkup+'<circle cx="210" cy="315" r="20" fill="#2177be" stroke="#fff" stroke-width="5"/><text x="210" y="321" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="13" font-weight="700" fill="#fff">中</text><path d="M44 459H135M285 459H376" stroke="#9faebb"/><text x="210" y="464" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="12" fill="#27384e">雄安科创园项目现场交底</text><rect x="55" y="486" width="310" height="76" rx="10" fill="#e8f3ff" stroke="#d6e7f7"/><text x="210" y="531" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="17" font-weight="700" fill="#172c44">'+safeName+'</text><text x="210" y="590" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="10" fill="#6c7d90">二维码长期有效，请妥善张贴保存</text></svg>';download(new Blob([svg],{type:'image/svg+xml'}),name+'-'+type+'二维码.svg')}
-function sharing(r,isQr){const url='https://example.com/bim/share/'+r.id+'/v'+r.versions.length;if(isQr){modal('三维交底二维码',posterHtml('三维交底',r.name,'b-qr'),cancel+'<button class="primary" id="b-save">↓ 下载二维码</button>');root.querySelector('.dialog').classList.add('qr-dialog');makePosterQr($('#b-qr'),url);$('#b-save').onclick=()=>{exportPoster('三维交底',r.name,root.querySelector('.qr-poster'));toast('三维交底二维码已下载')};return}modal('分享模型','<div class="info">'+esc(r.name)+'　<span class="tag">V'+r.versions.length+'</span><br><span class="muted">分享固定指向当前版本，更新模型后原分享版本保持不变。</span></div><label class="field"><span>分享链接</span><input readonly id="b-url" value="'+url+'"></label><span>有效期</span><div class="radios">'+['永久','7天','30天','半年','自定义'].map((x,i)=>'<label><input type="radio" name="b-exp" value="'+x+'" '+(!i?'checked':'')+'> '+x+'</label>').join('')+'</div><input aria-label="到期日期" id="b-date" type="date" hidden><div class="muted" style="margin-top:18px">原型示例链接，正式部署后用于扫码和外部访问。</div>',cancel+'<button class="primary" id="b-save">复制链接</button>');root.querySelectorAll('[name=b-exp]').forEach(x=>x.onchange=()=>$('#b-date').hidden=x.value!=='自定义');$('#b-save').onclick=async()=>{if(!$('#b-date').hidden&&(!$('#b-date').value||$('#b-date').value<=new Date().toISOString().slice(0,10))){toast('请选择未来的到期日期');return}try{await navigator.clipboard.writeText($('#b-url').value);toast('已复制示例链接')}catch{$('#b-url').select();toast('请复制已选中的示例链接')}}}
+function sharing(r,isQr){const url='https://example.com/bim/share/'+r.id+'/v'+r.versions.length;if(isQr){modal('三维交底二维码',posterHtml('三维交底',r.name,'b-qr'),cancel+'<button class="primary" id="b-save">↓ 下载二维码</button>');root.querySelector('.dialog').classList.add('qr-dialog');makePosterQr($('#b-qr'),url);$('#b-save').onclick=()=>{exportPoster('三维交底',r.name,root.querySelector('.qr-poster'));toast('三维交底二维码已下载')};return}const info='<div class="info">'+esc(r.name)+'　<span class="tag">V'+r.versions.length+'</span><br><span class="muted">分享固定指向当前版本，更新模型后原分享版本保持不变。</span></div>';
+  const expRadios='<span>有效期</span><div class="radios">'+['永久','7天','30天','半年','自定义'].map((x,i)=>'<label><input type="radio" name="b-exp" value="'+x+'" '+(!i?'checked':'')+'> '+x+'</label>').join('')+'</div><input aria-label="到期日期" id="b-date" type="date" hidden>';
+  modal('分享模型',info+expRadios+'<div class="muted" style="margin-top:18px">先选择访问有效期，提交后生成分享链接。</div>',cancel+'<button class="primary" id="b-save">提交</button>');
+  root.querySelectorAll('[name=b-exp]').forEach(x=>x.onchange=()=>$('#b-date').hidden=x.value!=='自定义');
+  $('#b-save').onclick=()=>{
+    const exp=root.querySelector('[name=b-exp]:checked').value;
+    const customDate=$('#b-date').value;
+    if(exp==='自定义'&&(!customDate||customDate<=new Date().toISOString().slice(0,10))){toast('请选择未来的到期日期');return}
+    const link=url;
+    modal('分享模型',info+'<label class="field"><span>分享链接</span><input readonly id="b-url" value="'+link+'"></label><div class="muted">有效期：'+esc(exp)+(exp==='自定义'?('（至 '+esc(customDate)+'）'):'')+'</div><div class="muted" style="margin-top:12px">链接已生成，可复制后发送。</div>',cancel+'<button class="primary" id="b-copy">复制链接</button>');
+    $('#b-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('#b-url').value);toast('已复制分享链接')}catch{$('#b-url').select();toast('请复制已选中的分享链接')}};
+  }
+}
 function toggleMenu(r,trigger){
   const target=$('#b-op-menu');
   if(target.dataset.modelId===String(r.id)){closeMenu();target.dataset.modelId='';return}
@@ -163,6 +180,14 @@ function openRecords(r,tab='share',query=''){
 }
 function renderRecordTable(r,tab){
  const query=$('#b-record-search').value,people=groupedViewRecords(r.logs,tab,query);
+ /* 分享链接查看记录：按时间平铺展示，序号 + 查看时间，表格上方显示查看总次数 */
+ if(tab==='share'){
+   const events=[];people.forEach(p=>p.events.forEach(ev=>events.push(ev)));
+   const body=events.map((ev,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(ev.date||'--')+'</td></tr>').join('');
+   const gridEl=document.querySelector('#b-record-grid');
+   if(gridEl)gridEl.innerHTML='<div class="record-summary">查看总次数 <b>'+events.length+'</b></div><table><thead><tr><th>序号</th><th>查看时间</th></tr></thead><tbody>'+body+'</tbody></table>'+(events.length?'':'<div class="record-empty"><span>▤</span>暂无数据</div>');
+   return;
+ }
  const head='<tr><th>序号</th><th>姓名</th><th>手机</th><th>查看次数</th></tr>';
  const body=people.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.name||'--')+'</td><td>'+esc(p.phone||'--')+'</td><td><button type="button" class="count-link" data-count-index="'+i+'">'+p.events.length+'</button></td></tr>').join('');
  $('#b-record-grid').innerHTML='<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>'+(people.length?'':'<div class="record-empty"><span>▤</span>暂无数据</div>');
