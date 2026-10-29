@@ -140,6 +140,8 @@
 .fp-caret:hover{color:#fff}
 .fp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-count{flex:none;font-size:11px;color:#8fa6bb}
+.fp-locate{flex:none;border:1px solid #ffffff26;border-radius:3px;background:transparent;color:#72b4ff;font-size:11px;line-height:1;padding:3px 6px;cursor:pointer}
+.fp-locate:hover{background:#2787f5;border-color:#2787f5;color:#fff}
 .fp-b{padding-left:4px;font-weight:700}
 .fp-b .fp-name{color:#fff}
 .fp-f{padding-left:26px}
@@ -219,6 +221,8 @@
 .fp-caret:hover{color:#fff}
 .fp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-count{flex:none;font-size:11px;color:#8fa6bb}
+.fp-locate{flex:none;border:1px solid #ffffff26;border-radius:3px;background:transparent;color:#72b4ff;font-size:11px;line-height:1;padding:3px 6px;cursor:pointer}
+.fp-locate:hover{background:#2787f5;border-color:#2787f5;color:#fff}
 .fp-b{padding-left:4px;font-weight:700}
 .fp-b .fp-name{color:#fff}
 .fp-f{padding-left:26px}
@@ -274,6 +278,8 @@
 .fp-caret:hover{color:#fff}
 .fp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-count{flex:none;font-size:11px;color:#8fa6bb}
+.fp-locate{flex:none;border:1px solid #ffffff26;border-radius:3px;background:transparent;color:#72b4ff;font-size:11px;line-height:1;padding:3px 6px;cursor:pointer}
+.fp-locate:hover{background:#2787f5;border-color:#2787f5;color:#fff}
 .fp-b{padding-left:4px;font-weight:700}
 .fp-b .fp-name{color:#fff}
 .fp-f{padding-left:26px}
@@ -314,6 +320,8 @@
 .fp-caret:hover{color:#fff}
 .fp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-count{flex:none;font-size:11px;color:#8fa6bb}
+.fp-locate{flex:none;border:1px solid #ffffff26;border-radius:3px;background:transparent;color:#72b4ff;font-size:11px;line-height:1;padding:3px 6px;cursor:pointer}
+.fp-locate:hover{background:#2787f5;border-color:#2787f5;color:#fff}
 .fp-b{padding-left:4px;font-weight:700}
 .fp-b .fp-name{color:#fff}
 .fp-f{padding-left:26px}
@@ -482,7 +490,7 @@
   <div class="viewport" id="viewport"><div class="stage" id="stage"><div id="focusScrim" aria-hidden="true"></div><div id="markers"></div><div id="focus"></div><span class="toolbar-icon-mask mask-helmet" aria-hidden="true"></span><span class="toolbar-icon-mask mask-tools" aria-hidden="true"></span><span class="toolbar-icon-mask mask-cloud" aria-hidden="true"></span><button type="button" class="stage-hotspot" id="treeHotspot" title="结构 / 专业筛选" aria-label="结构 / 专业筛选"></button></div></div>
   <div class="tabs" id="tabs" role="group" aria-label="BIM业务标签"></div>
   <div id="listMount"></div><div id="tableMount"></div><div id="placeMount"></div><div id="modalMount"></div><div id="pageMount"></div><div id="toastMount" aria-live="polite"></div>
-  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.10.3</span></div>
+  <div id="filterMount"></div><div id="boardMount" aria-label="模型挂接看板"></div><div class="info-note">模型画面为项目截图示意；构件定位为原型模拟<span class="ver-tag" title="原型版本">v2.10.4</span></div>
 </div>
 <script>/* BEGIN BIM SHARED — 与 bim-shared.js 同步 */
 /* BIM 原型共用的数据口径。嵌入页保留 sandbox，通过主页面读写存储。 */
@@ -1627,6 +1635,12 @@ function favToggle(k,kind,label,cid){
   favPersist();
 }
 function favRemove(k){const i=favIndexOf(k);if(i>=0){favItems.splice(i,1);favPersist()}}
+function locateTreeComponent(cid){
+  if(!cid||!component(cid))return;
+  focusOn(cid);
+  render();
+  toast('已定位 '+component(cid)[1]);
+}
 function favLocate(cid){
   if(!cid)return;
   if(!active.size)active.add('quality');
@@ -1640,6 +1654,10 @@ function fpHeadHtml(){return '<div class="fp-head"><span>筛选树</span><div cl
 function fpTabsHtml(){
   return '<div class="fp-tabs" role="tablist"><button type="button" role="tab" aria-selected="'+(favPanelTab==='all')+'" class="'+(favPanelTab==='all'?'active':'')+'" data-fp-tab="all">全部</button><button type="button" role="tab" aria-selected="'+(favPanelTab==='fav')+'" class="'+(favPanelTab==='fav'?'active':'')+'" data-fp-tab="fav">收藏<em>'+favItems.length+'</em></button></div>';
 }
+function fpLocateBtn(cid){
+  if(!cid)return '';
+  return '<button type="button" class="fp-locate" data-fp-locate="'+esc(cid)+'" title="定位并放大该构件">定位</button>';
+}
 function fpStar(kind,k,label,cid){
   const on=favIndexOf(k)>=0;
   return '<button type="button" class="fp-fav'+(on?' on':'')+'" data-fp-fav="'+esc(k)+'" data-fav-kind="'+kind+'" data-fav-label="'+esc(label)+'" data-fav-cid="'+esc(cid||'')+'" aria-label="'+(on?'取消收藏':'收藏')+'" title="'+(on?'取消收藏':'收藏')+'">'+(on?'★':'☆')+'</button>';
@@ -1648,7 +1666,7 @@ function favListHtml(){
   if(!favItems.length)return '<div class="fp-empty">还没有收藏。切到「全部」，点结构行右侧的 ☆ 即可收藏楼栋/楼层/构件。</div>';
   const order={building:0,floor:1,member:2};
   const list=favItems.slice().sort((a,b)=>(order[a.kind]-order[b.kind])||String(a.label).localeCompare(String(b.label),'zh-CN'));
-  return '<div class="fp-favlist">'+list.map(x=>'<div class="fp-favitem"><button type="button" class="fp-favgo" data-fav-locate="'+esc(x.cid||'')+'"><b>'+esc(x.label)+'</b><em>'+(x.kind==='building'?'楼栋':x.kind==='floor'?'楼层':'构件')+'</em></button><button type="button" class="fp-fav on" data-fav-remove="'+esc(x.k)+'" aria-label="取消收藏" title="取消收藏">★</button></div>').join('')+'</div>';
+  return '<div class="fp-favlist">'+list.map(x=>'<div class="fp-favitem"><button type="button" class="fp-favgo" data-fav-locate="'+esc(x.cid||'')+'"><b>'+esc(x.label)+'</b><em>'+(x.kind==='building'?'楼栋':x.kind==='floor'?'楼层':'构件')+'</em></button>'+fpLocateBtn(x.cid||'')+'<button type="button" class="fp-fav on" data-fav-remove="'+esc(x.k)+'" aria-label="取消收藏" title="取消收藏">★</button></div>').join('')+'</div>';
 }
 function filterPanelHtml(){
   const tree=structTree();
@@ -1664,7 +1682,7 @@ function filterPanelHtml(){
       h+='<div class="fp-row fp-f"><input type="checkbox" data-fp="floor" data-b="'+esc(b)+'" data-f="'+esc(f)+'" '+(fsel&&fsel===fids.length?'checked':'')+' aria-label="'+esc(f)+'"><button type="button" class="fp-caret" data-fp-toggle="'+esc(key)+'" aria-label="展开收起">'+(fpCollapsed.has(key)?'›':'⌄')+'</button><span class="fp-name">'+esc(f)+'</span><span class="fp-count">'+(fsel?fsel+'/'+fids.length:fids.length)+'</span>'+fpStar('floor','F:'+b+'|'+f,b+' · '+f,floorIds(b,f)[0])+'</div>';
       if(fpCollapsed.has(key))return;
       members.forEach(x=>{
-        h+='<div class="fp-row fp-m"><input type="checkbox" data-fp="member" data-id="'+esc(x.id)+'" '+(structSel.has(x.id)?'checked':'')+' aria-label="'+esc(x.name)+'"><span class="fp-name">'+esc(x.name)+'</span>'+fpStar('member',x.id,x.name,x.id)+'</div>';
+        h+='<div class="fp-row fp-m"><input type="checkbox" data-fp="member" data-id="'+esc(x.id)+'" '+(structSel.has(x.id)?'checked':'')+' aria-label="'+esc(x.name)+'"><span class="fp-name">'+esc(x.name)+'</span>'+fpLocateBtn(x.id)+fpStar('member',x.id,x.name,x.id)+'</div>';
       });
     });
   });
@@ -1703,6 +1721,7 @@ function bindFilterEvents(){
     const fv=e.target.closest('[data-fp-fav]');if(fv){e.preventDefault();e.stopPropagation();favToggle(fv.dataset.fpFav,fv.dataset.favKind,fv.dataset.favLabel,fv.dataset.favCid);renderFilterPanel();return}
     const fr=e.target.closest('[data-fav-remove]');if(fr){favRemove(fr.dataset.favRemove);renderFilterPanel();return}
     const fl=e.target.closest('[data-fav-locate]');if(fl){favLocate(fl.dataset.favLocate);return}
+    const lc=e.target.closest('[data-fp-locate]');if(lc){e.preventDefault();e.stopPropagation();locateTreeComponent(lc.dataset.fpLocate);return}
     const tg=e.target.closest('[data-fp-toggle]');
     if(tg){const k=tg.dataset.fpToggle;if(fpCollapsed.has(k))fpCollapsed.delete(k);else fpCollapsed.add(k);renderFilterPanel();return}
   });
